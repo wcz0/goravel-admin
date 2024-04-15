@@ -14,7 +14,7 @@ func Admin() {
 	// admin-api
 	facades.Route().Prefix("admin-api").Group(func(router route.Router) {
 		router.Get("login", authController.LoginPage)
-		router.Post("login", authController.Ligin)
+		router.Post("login", authController.Login)
 		router.Post("register", authController.Register)
 		router.Post("_settings", indexController.SaveSetting)
 		router.Get("_settings", indexController.GetSetting)

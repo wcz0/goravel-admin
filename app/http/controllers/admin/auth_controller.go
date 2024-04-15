@@ -18,26 +18,17 @@ func NewAuthController() *AuthController {
 }
 
 func (a *AuthController) Login(ctx http.Context) http.Response {
-
 	return a.DataSuccess(ctx, map[string]string{
 		"token": "token",
 	})
 }
 
 func (a *AuthController) Logout(ctx http.Context) http.Response {
-
-	return a.Success(ctx, map[string]string{
-		"token": "token",
-	})
-
+	return a.Success(ctx)
 }
 
 func (a *AuthController) Register(ctx http.Context) http.Response {
-
-	return a.DataSuccess(ctx, map[string]string{
-		"token": "token",
-	})
-
+	return a.Success(ctx)
 }
 
 func (a *AuthController) LoginPage(ctx http.Context) http.Response {
@@ -56,15 +47,15 @@ func (a *AuthController) LoginPage(ctx http.Context) http.Response {
 				map[string]any{
 					"actionType": "custom",
 					"script": `
-					let loginParams = localStorage.getItem(window.$owl.getCacheKey('loginParams'))
-					if(loginParams){
-						loginParams = JSON.parse(decodeURIComponent(window.atob(loginParams)))
-						doAction({
-							actionType: 'setValue',
-							componentId: 'login-form',
-							args: { value: loginParams }
-						})
-					}
+let loginParams = localStorage.getItem(window.$owl.getCacheKey('loginParams'))
+if(loginParams){
+	loginParams = JSON.parse(decodeURIComponent(window.atob(loginParams)))
+	doAction({
+		actionType: 'setValue',
+		componentId: 'login-form',
+		args: { value: loginParams }
+	})
+}
 `,
 				},
 			},
@@ -74,11 +65,11 @@ func (a *AuthController) LoginPage(ctx http.Context) http.Response {
 				map[string]any{
 					"actionType": "custom",
 					"script": `
-					let _data = {}
-					if(event.data.remember_me){
-						_data = { username: event.data.username, password: event.data.password }
-					}
-					window.$owl.afterLoginSuccess(_data, event.data.result.data.token)
+let _data = {}
+if(event.data.remember_me){
+	_data = { username: event.data.username, password: event.data.password }
+}
+window.$owl.afterLoginSuccess(_data, event.data.result.data.token)
 `,
 				},
 			},

@@ -1,6 +1,11 @@
 package admin
 
-import "goravel/app/http/controllers"
+import (
+	"goravel/app/http/controllers"
+	"github.com/goravel/framework/contracts/http"
+
+
+)
 
 type IndexController struct {
 	*controllers.Controller
@@ -10,12 +15,13 @@ func NewIndexController() *IndexController {
 	return &IndexController{}
 }
 
-func (i *IndexController) SaveSetting() {
+func (i *IndexController) SaveSetting(ctx http.Context) http.Response  {
+	return i.Success(ctx)
 
 }
 
-func (i *IndexController) GetSetting() {
-
+func (i *IndexController) GetSetting(ctx http.Context) http.Response {
+	return i.Success(ctx)
 }
 
 func (i *IndexController) NoContext() {
