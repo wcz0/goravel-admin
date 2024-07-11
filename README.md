@@ -18,14 +18,18 @@
 
 ## Getting started
 
+运行项目, 打开 localhost:3000/admin
+
 ```
 // Generate APP_KEY
 go run . artisan key:generate
-
-
+// 运行项目
+go run .
 ```
 
-执行命令, 执行前端项目
+
+
+执行命令, 更新前端资源 [skip]
 
 ```shell
 // make admin frontend static file
