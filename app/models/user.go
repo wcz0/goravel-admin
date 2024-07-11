@@ -6,12 +6,13 @@ import (
 )
 
 type User struct {
-	orm.Model
-	Id uint64
+	Id uint64 `gorm:"primaryKey"`
 	Username string
 	Name   string
 	Birthday carbon.Date
 	CardId string
 	Avatar string
+	UpdatedAt carbon.DateTime
+	CreatedAt carbon.DateTime
 	orm.SoftDeletes
 }

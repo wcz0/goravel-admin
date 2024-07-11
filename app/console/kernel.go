@@ -1,6 +1,8 @@
 package console
 
 import (
+	"goravel/app/console/commands"
+
 	"github.com/goravel/framework/contracts/console"
 	"github.com/goravel/framework/contracts/schedule"
 )
@@ -13,5 +15,7 @@ func (kernel *Kernel) Schedule() []schedule.Event {
 }
 
 func (kernel *Kernel) Commands() []console.Command {
-	return []console.Command{}
+	return []console.Command{
+		&commands.Service{},
+	}
 }

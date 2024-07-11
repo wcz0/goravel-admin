@@ -23,6 +23,7 @@ import (
 	"github.com/goravel/gin"
 
 	"goravel/app/providers"
+	"github.com/wcz0/goravel-authz"
 )
 
 // Boot Start all init methods of the current folder to bootstrap all config.
@@ -94,7 +95,8 @@ func init() {
 			&providers.ValidationServiceProvider{},
 			&providers.DatabaseServiceProvider{},
 			&gin.ServiceProvider{},
-			&providers.SnowflakeServiceProvider{},
+			&authz.ServiceProvider{},
+			// &redis.ServiceProvider{},
 		},
 	})
 }

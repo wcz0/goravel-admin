@@ -2,28 +2,43 @@ package admin
 
 import (
 	"goravel/app/http/controllers"
+	"goravel/app/services"
 	"goravel/app/tools"
 
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
+
 	"github.com/wcz0/gamis"
 )
 
 type AuthController struct {
 	*controllers.Controller
+	*services.AdminUserService
 }
 
 func NewAuthController() *AuthController {
-	return &AuthController{}
+	return &AuthController{
+		Controller:      controllers.NewController(),
+		AdminUserService: services.NewAdminUserService(),
+	}
 }
 
 func (a *AuthController) Login(ctx http.Context) http.Response {
-	return a.DataSuccess(ctx, map[string]string{
-		"token": "token",
+	validator, err := ctx.Request().Validate(map[string]string{
+		"username": "required|max_len:32",
+		"password": "required|min_len:5|max_len:32",
 	})
+	if err != nil {
+		return a.MsgError(ctx, err.Error())
+	}
+	if validator.Fails() {
+		return a.MsgError(ctx, validator.Errors().All())
+	}
+	return a.AdminUserService.Login(ctx)
 }
 
 func (a *AuthController) Logout(ctx http.Context) http.Response {
+	facades.Auth().Guard("admin").Logout(ctx)
 	return a.Success(ctx)
 }
 
@@ -106,4 +121,8 @@ window.$owl.afterLoginSuccess(_data, event.data.result.data.token)
 	}).Body(
 		gamis.Wrapper().ClassName("h-screen w-full flex items-center justify-center").Body(card),
 	))
+}
+
+func (a *AuthController) GetUserSetting(c http.Context) http.Response {
+	return a.Success(c)
 }

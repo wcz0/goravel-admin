@@ -13,15 +13,23 @@ func init() {
 		"logo":           config.Env("ADMIN_LOGO", "/admin/logo.png"),
 		"default_avatar": "/admin/avatar.png",
 
+		"route": map[string]any{
+			"prefix": "admin-api",
+			"domain": "",
+			"mideleware": []string{
+				"admin",
+			},
+		},
+
 		// TODO: 未实现
-		// "auth": map[string]any{
-		// 	"login_captcha": config.Env("ADMIN_LOGIN_CAPTCHA", false),
-		// 	"enable":        true,
-		// 	"model":         "admin_user",
-		// 	"controller":    "admin",
-		// 	"guard":         "admin_user",
-		// 	"except":        []any{},
-		// },
+		"auth": map[string]any{
+			"login_captcha": config.Env("ADMIN_LOGIN_CAPTCHA", false),
+			// 	"enable":        true,
+			// 	"model":         "admin_user",
+			// 	"controller":    "admin",
+			// 	"guard":         "admin_user",
+			// 	"except":        []any{},
+		},
 
 		// TODO: 未实现
 		// "upload": map[string]any{
@@ -37,12 +45,12 @@ func init() {
 
 		// TODO: 未实现
 		// 是否显示 [开发者工具]
-		// "show_development_tools": config.Env("ADMIN_SHOW_DEVELOPMENT_TOOLS", true),
+		"show_development_tools": config.Env("ADMIN_SHOW_DEVELOPMENT_TOOLS", false),
 
 		// 是否显示 [权限] 功能中的自动生成按钮
-		// "show_auto_generate_permission_button": config.Env("ADMIN_SHOW_AUTO_GENERATE_PERMISSION_BUTTON", true),
+		"show_auto_generate_permission_button": config.Env("ADMIN_SHOW_AUTO_GENERATE_PERMISSION_BUTTON", false),
 
-		// 扩展
+		// TODO: 未实现 扩展
 		// "extension": map[string]any{
 		// 	"dir": base_path("extensions"),
 		// },
@@ -69,7 +77,7 @@ func init() {
 			 */
 			"keep_alive_exclude": []any{},
 			// 底部信息
-			"footer": "<a href='https://github.com/wcz0/goravel-admin' target='_blank'>Owl Admin</a>",
+			"footer": "<a href='https://github.com/wcz0/goravel-admin' target='_blank'>Goravel Admin</a>",
 		},
 	})
 }

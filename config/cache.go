@@ -24,6 +24,13 @@ func init() {
 			"memory": map[string]any{
 				"driver": "memory",
 			},
+			// "redis": map[string]any{
+			// 	"driver": "custom",
+			// 	"connection": "default",
+			// 	"via": func() (cache.Driver, error) {
+			// 		return redisfacades.Redis("memory"), nil // The `redis` value is the key of `stores`
+			// 	},
+			// },
 		},
 
 		// Cache Key Prefix
