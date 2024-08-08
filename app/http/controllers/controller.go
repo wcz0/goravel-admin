@@ -143,7 +143,7 @@ func (c *Controller) GetCreatePath(ctx http.Context) string {
 	return tools.GetAdmin(ctx.Request().FullUrl() + "/create")
 }
 
-func (c *Controller) BaseCRUD(ctx http.Context) *renderers.BaseRenderer {
+func (c *Controller) BaseCRUD(ctx http.Context) *renderers.CRUDTable {
 	crud := gamis.CRUDTable().PerPage(20).AffixHeader(false).FilterTogglable(true).FilterDefaultVisible(false).
 		Api(c.GetListGetDataPath(ctx)).QuickSaveApi(c.GetQuickEditPath(ctx)).QuickSaveItemApi(c.GetQuickEditItemPath(ctx)).
 		BulkActions([]any{
@@ -155,7 +155,7 @@ func (c *Controller) BaseCRUD(ctx http.Context) *renderers.BaseRenderer {
 		}).HeaderToolbar([]any{
 
 		})
-
+	return crud
 }
 
 // func (c *Controller) GetListGetDataPath() string {
@@ -177,6 +177,8 @@ func (c *Controller) BulkDeleteButton(ctx http.Context) *renderers.DialogAction 
 
 // 创建按钮
 func (c *Controller) CreateButton(ctx http.Context, dialog bool, size string) *renderers.OtherAction {
-	if dialog {
-		form := 
-	}
+	// if dialog {
+	// 	form :=
+	// }
+	return nil
+}

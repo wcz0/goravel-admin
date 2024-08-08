@@ -3,7 +3,6 @@ package admin
 import (
 	"goravel/app/http/controllers"
 	"goravel/app/services"
-	"goravel/app/tools"
 
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
@@ -78,24 +77,24 @@ func (r *PermissionController) Index(ctx http.Context) http.Response {
 	if r.ActionOfGetData(ctx) {
 		return r.AdminPermissionService.List(ctx)
 	}
-	return r.DataSuccess(ctx, list(ctx))
+	// return r.DataSuccess(ctx, list(ctx))
+	return r.Success(ctx)
 }
 
 // 返回列表页面
 func (p *PermissionController) list(ctx http.Context) *renderers.Page {
-	var autoBtn any;
+	// var autoBtn any;
 	// 自动生成权限 按钮开关
 	if facades.Config().GetBool("admin.show_auto_generate_permission_button") {
-		autoBtn = gamis.AjaxAction().Label("自动生成权限").Level("success").
-			ConfirmText("确定要自动生成权限吗?").Api(tools.GetAdmin("system/_admin_permissions_auto_generate"))
+		// autoBtn = gamis.AjaxAction().Label("自动生成权限").Level("success").
+		// 	ConfirmText("确定要自动生成权限吗?").Api(tools.GetAdmin("system/_admin_permissions_auto_generate"))
 	}
 
 	// 自动生成权限
 	// crud := gamis.CRUDTable().PerPage(20).AffixHeader(false).FilterTogglable(true).FilterDefaultVisible(false).
 	// 	Api(tools.GetAdmin("system/_admin_permissions_auto_generate"))
 
-	crud := p.Controller.BaseCRUD(ctx).Api(p.GetListGetDataPath(ctx)).QuickSaveApi().
+	// crud := p.Controller.BaseCRUD(ctx).Api(p.GetListGetDataPath(ctx)).QuickSaveApi()
 
-
-
+	return gamis.Page().Title("权限列表")
 }
