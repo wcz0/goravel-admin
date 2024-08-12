@@ -19,10 +19,13 @@ import (
 	"github.com/goravel/framework/route"
 	"github.com/goravel/framework/schedule"
 	"github.com/goravel/framework/testing"
+	"github.com/goravel/framework/translation"
 	"github.com/goravel/framework/validation"
 	"github.com/goravel/gin"
+	"github.com/goravel/redis"
 
 	"goravel/app/providers"
+
 	"github.com/wcz0/goravel-authz"
 )
 
@@ -62,6 +65,10 @@ func init() {
 		// will not be safe. Please do this before deploying an application!
 		"key": config.Env("APP_KEY", ""),
 
+		"locale": "zh",
+
+		"fallback_locale": "zh",
+
 		// Autoload service providers
 		//
 		// The service providers listed here will be automatically loaded on the
@@ -96,7 +103,9 @@ func init() {
 			&providers.DatabaseServiceProvider{},
 			&gin.ServiceProvider{},
 			&authz.ServiceProvider{},
-			// &redis.ServiceProvider{},
+			&redis.ServiceProvider{},
+			&translation.ServiceProvider{},
+			// &session.ServiceProvider{},
 		},
 	})
 }

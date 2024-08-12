@@ -13,6 +13,10 @@ func NewErrorHandler() *ErrorHandler {
 	return &ErrorHandler{}
 }
 
+func (e *ErrorHandler) Json(ctx http.Context, json any) http.Response {
+	return ctx.Response().Success().Json(json)
+}
+
 func (e *ErrorHandler) Success(ctx http.Context) http.Response {
 	return ctx.Response().Success().Json(http.Json{
 		"status": enums.StatusSuccess,

@@ -28,7 +28,7 @@ func (s *AdminUserService) Login(ctx http.Context) http.Response {
 	if facades.Hash().Check(ctx.Request().Input("password"), adminUser.Password) {
 		return s.MsgError(ctx, "Password error.")
 	}
-	token, err := facades.Auth().Login(ctx, &adminUser)
+	token, err := facades.Auth(ctx).Login(&adminUser)
 	if err != nil {
 		return s.MsgError(ctx, err.Error())
 	}

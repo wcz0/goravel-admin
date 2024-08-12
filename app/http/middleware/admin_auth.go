@@ -11,7 +11,7 @@ import (
 func AdminAuth() http.Middleware {
 	return func(ctx http.Context) {
 		var user models.AdminUser
-		err := facades.Auth().User(ctx, &user)
+		err := facades.Auth(ctx).User(&user)
 		if err != nil {
 			response.NewUnauthorizedError().Response(ctx)
 		}

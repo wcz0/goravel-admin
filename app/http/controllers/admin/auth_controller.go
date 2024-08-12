@@ -2,6 +2,7 @@ package admin
 
 import (
 	"goravel/app/http/controllers"
+	"goravel/app/models"
 	"goravel/app/services"
 	"goravel/app/tools"
 
@@ -14,12 +15,16 @@ import (
 type AuthController struct {
 	*controllers.Controller
 	*services.AdminUserService
+	*services.AdminSettingService
+	cacheKey string
 }
 
 func NewAuthController() *AuthController {
 	return &AuthController{
-		Controller:      controllers.NewController(),
-		AdminUserService: services.NewAdminUserService(),
+		Controller:          controllers.NewController(),
+		AdminUserService:    services.NewAdminUserService(),
+		AdminSettingService: services.NewAdminSettingService(),
+		cacheKey:            "app_setting_",
 	}
 }
 
@@ -38,7 +43,7 @@ func (a *AuthController) Login(ctx http.Context) http.Response {
 }
 
 func (a *AuthController) Logout(ctx http.Context) http.Response {
-	facades.Auth().Guard("admin").Logout(ctx)
+	facades.Auth(ctx).Guard("admin").Logout()
 	return a.Success(ctx)
 }
 
@@ -47,21 +52,28 @@ func (a *AuthController) Register(ctx http.Context) http.Response {
 }
 
 func (a *AuthController) LoginPage(ctx http.Context) http.Response {
-
-	form := gamis.Form().PanelClassName("border-none").Id("login-form").Title("").Api(tools.GetAdmin("login")).InitApi("/no-content").Body([]any{
-		gamis.TextControl().Name("username").Placeholder("请输入用户名").Required(true),
-		gamis.TextControl().Type("input-password").Name("password").Placeholder("请输入密码").Required(true),
-		// captcha
-		gamis.VanillaAction().ActionType("submit").Label("登录").ClassName("w-full"),
-	}).Actions([]any{})
-
-	failAction := map[string]any{}
-	event := map[string]any{
-		"inited": map[string]any{
-			"actions": []any{
-				map[string]any{
-					"actionType": "custom",
-					"script": `
+	lang := a.AdminSettingService.Get("admin_locale", "zh_CN", false).(string)
+	form := gamis.Form().
+		PanelClassName("border-none").
+		Id("login-form").
+		Title("").
+		Api(tools.GetAdmin("/login")).
+		InitApi("/no-content").
+		Body([]any{
+			gamis.TextControl().Name("username").Placeholder(tools.AdminLang("username", lang)).Required(true),
+			gamis.TextControl().Type("input-password").Name("password").Placeholder(tools.AdminLang("password", lang)).Required(true),
+			// captcha
+			gamis.VanillaAction().ActionType("submit").Label("登录").ClassName("w-full"),
+			gamis.CheckboxControl().Name("remember_me").Option(tools.Lang("remember_me", lang)).Value(true),
+			gamis.VanillaAction().ActionType("submit").Label(tools.Lang("login", lang)).Level("primary").ClassName("w-full"),
+		}).
+		Actions([]any{}).
+		OnEvent(map[string]any{
+			"inited": map[string]any{
+				"actions": []any{
+					map[string]any{
+						"actionType": "custom",
+						"script": `
 let loginParams = localStorage.getItem(window.$owl.getCacheKey('loginParams'))
 if(loginParams){
 	loginParams = JSON.parse(decodeURIComponent(window.atob(loginParams)))
@@ -72,29 +84,32 @@ if(loginParams){
 	})
 }
 `,
+					},
 				},
 			},
-		},
-		"submitSucc": map[string]any{
-			"actions": []any{
-				map[string]any{
-					"actionType": "custom",
-					"script": `
+			"submitSucc": map[string]any{
+				"actions": []any{
+					map[string]any{
+						"actionType": "custom",
+						"script": `
 let _data = {}
 if(event.data.remember_me){
 	_data = { username: event.data.username, password: event.data.password }
 }
 window.$owl.afterLoginSuccess(_data, event.data.result.data.token)
 `,
+					},
 				},
 			},
-		},
-	}
-
-	for k, v := range failAction {
-		event[k] = v
-	}
-	form.OnEvent(event)
+			"submitFail": map[string]any{
+				"actions": []any{
+					map[string]any{
+						"actionType": "reload",
+						"componentId": "captcha-service",
+					},
+				},
+			},
+		})
 
 	card := gamis.Card().ClassName("w-96 m:w-full").Body([]any{
 		gamis.Flex().Justify("space-between").ClassName("px-2.5 pb-2.5").Items([]any{
@@ -104,7 +119,7 @@ window.$owl.afterLoginSuccess(_data, event.data.result.data.token)
 		form,
 	})
 
-	return a.DataSuccess(ctx, gamis.Page().ClassName("login-bg").Css(map[string]any{
+	return a.Json(ctx, gamis.Page().ClassName("login-bg").Css(map[string]any{
 		".captcha-box .cxd-Image--thumb": map[string]any{
 			"padding":                    "0",
 			"cursor":                     "pointer",
@@ -125,4 +140,30 @@ window.$owl.afterLoginSuccess(_data, event.data.result.data.token)
 
 func (a *AuthController) GetUserSetting(c http.Context) http.Response {
 	return a.Success(c)
+}
+
+
+func (a *AuthController) Get(key string, default_ any, fresh bool ) any {
+	var adminSetting models.AdminSetting
+	if fresh {
+		value := facades.Orm().Query().Where("key", key).Select("values").First(&adminSetting)
+		if value == nil {
+			return default_
+		}
+	}
+	value, err := facades.Cache().RememberForever(a.cacheKey, func() (any, error) {
+		err := facades.Orm().Query().Where("key", key).Select("values").First(&adminSetting)
+		if err!=nil {
+			return nil, err
+		}
+		return adminSetting.Values, nil
+	})
+	if err != nil {
+		return default_
+	}
+	if value != nil {
+		return value
+	}else {
+		return default_
+	}
 }

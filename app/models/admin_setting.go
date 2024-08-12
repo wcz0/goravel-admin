@@ -10,3 +10,7 @@ type AdminSetting struct {
 	CreatedAt carbon.DateTime
 	UpdateAt  carbon.DateTime
 }
+
+func NewAdminSetting() *AdminSetting {
+	return &AdminSetting{}
+}

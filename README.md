@@ -18,7 +18,7 @@
 
 ## Getting started
 
-运行项目, 打开 localhost:3000/admin
+运行项目, 打开 localhost:8080/admin
 
 ```
 // Generate APP_KEY

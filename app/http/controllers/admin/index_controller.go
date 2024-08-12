@@ -2,6 +2,7 @@ package admin
 
 import (
 	"goravel/app/http/controllers"
+	"goravel/app/services"
 	"goravel/app/tools"
 
 	"github.com/goravel/framework/contracts/http"
@@ -10,11 +11,13 @@ import (
 
 type IndexController struct {
 	*controllers.Controller
+	adminSettingService *services.AdminSettingService
 }
 
 func NewIndexController() *IndexController {
 	return &IndexController{
 		Controller: controllers.NewController(),
+		adminSettingService: services.NewAdminSettingService(),
 	}
 }
 
@@ -35,15 +38,15 @@ func (i *IndexController) GetSetting(ctx http.Context) http.Response {
 		"nav":      getNav(),
 		"assets":   getAssets(),
 		"app_name": config.Get("app.name"),
-		"locale":   config.Get("app.locale", "zh-CN"),
+		"locale":   i.adminSettingService.Get("admin_locale", "zh_CN", false),
 		"layout":   config.Get("admin.layout"),
-		"logo":     config.Get("admin.logo"),
+		"logo":     config.Env("APP_URL").(string) + config.Get("admin.logo").(string),
 
 		"login_captcha":          config.Get("admin.auth.login_captcha"),
 		"locale_options":         tools.Map2options(localOptions.(map[string]string)),
 		"show_development_tools": config.Get("admin.show_development_tools"),
-		"system_theme_setting":   config.Get("admin.system_theme_setting"),
-		"enabled_extensions":     config.Get("admin.enabled_extensions"),
+		"system_theme_setting":   i.adminSettingService.Get("system_theme_setting", nil, false),
+		"enabled_extensions":     []string{},
 	}
 	return i.DataSuccess(ctx, data)
 }
@@ -100,16 +103,16 @@ func (i *IndexController) GetDashBoard() {
 func getAssets() any {
 	return map[string]any{
 		"css":     []string{},
-		"js":      [],
-		"scripts": "",
-		"styles":  "",
+		"js":      []string{},
+		"scripts": []string{},
+		"styles":  []string{},
 	}
 }
 
 // TODO: 设计未确定
 func getNav() any {
 	return map[string]any{
-		"appendNav":  "",
-		"prependNav": "",
+		"appendNav":  nil,
+		"prependNav": nil,
 	}
 }

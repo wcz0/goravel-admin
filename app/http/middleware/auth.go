@@ -11,7 +11,7 @@ import (
 func Auth() http.Middleware {
 	return func(ctx http.Context) {
 		var user models.User
-		err := facades.Auth().User(ctx, &user)
+		err := facades.Auth(ctx).User(&user)
 		if err != nil {
 			response.NewUnauthorizedError().Response(ctx)
 		}

@@ -2,19 +2,18 @@ package tools
 
 import "github.com/goravel/framework/facades"
 
-
 var url string
 
 func init() {
 	url = facades.Config().Env("APP_URL", "http://localhost").(string)
 }
 
-func  GetAdmin(str string) string {
+func GetAdmin(str string) string {
 	return url + "/admin-api" + str
 }
 
 func GetAdminNil() string {
-	return url + "/admin-api";
+	return url + "/admin-api"
 }
 
 func GetApi(str string) string {
