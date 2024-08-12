@@ -51,8 +51,10 @@ func (a *AuthController) Register(ctx http.Context) http.Response {
 	return a.Success(ctx)
 }
 
+// LoginPage 登录页面 需要写入设置 开启amis页面登录
 func (a *AuthController) LoginPage(ctx http.Context) http.Response {
-	lang := a.AdminSettingService.Get("admin_locale", "zh_CN", false).(string)
+	lang := facades.Lang(ctx)
+
 	form := gamis.Form().
 		PanelClassName("border-none").
 		Id("login-form").
@@ -60,12 +62,12 @@ func (a *AuthController) LoginPage(ctx http.Context) http.Response {
 		Api(tools.GetAdmin("/login")).
 		InitApi("/no-content").
 		Body([]any{
-			gamis.TextControl().Name("username").Placeholder(tools.AdminLang("username", lang)).Required(true),
-			gamis.TextControl().Type("input-password").Name("password").Placeholder(tools.AdminLang("password", lang)).Required(true),
+			gamis.TextControl().Name("username").Placeholder(lang.Get("username")).Required(true),
+			gamis.TextControl().Type("input-password").Name("password").Placeholder(lang.Get("password")).Required(true),
 			// captcha
 			gamis.VanillaAction().ActionType("submit").Label("登录").ClassName("w-full"),
-			gamis.CheckboxControl().Name("remember_me").Option(tools.Lang("remember_me", lang)).Value(true),
-			gamis.VanillaAction().ActionType("submit").Label(tools.Lang("login", lang)).Level("primary").ClassName("w-full"),
+			gamis.CheckboxControl().Name("remember_me").Option(lang.Get("remember_me")).Value(true),
+			gamis.VanillaAction().ActionType("submit").Label(lang.Get("login")).Level("primary").ClassName("w-full"),
 		}).
 		Actions([]any{}).
 		OnEvent(map[string]any{

@@ -2,7 +2,7 @@ import {useEffect} from 'react'
 import AmisLogin from './AmisLogin'
 import {useMount, useRequest} from 'ahooks'
 import {getCacheKey, inLoginPage, registerGlobalFunction, Token} from '@/utils/common'
-import DefaultLogin from './DefaultLogin'
+// import DefaultLogin from './DefaultLogin'
 import useSetting from '@/hooks/useSetting'
 import {useHistory} from 'react-router'
 import {useDispatch} from 'react-redux'
@@ -82,12 +82,13 @@ const Login = () => {
     })
 
     const Render = (mode: string) => {
-        switch (mode) {
-            case 'amis':
-                return <AmisLogin/>
-            default:
-                return <DefaultLogin/>
-        }
+        return <AmisLogin/>
+        // switch (mode) {
+        //     case 'amis':
+        //         return <AmisLogin/>
+        //     default:
+        //         return <DefaultLogin/>
+        // }
     }
 
     return Render(loginTemplate)

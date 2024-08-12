@@ -13,12 +13,12 @@ type AdminSettingService struct {
 
 func NewAdminSettingService() *AdminSettingService {
 	return &AdminSettingService{
-		Service: NewService(),
+		Service:  NewService(),
 		cacheKey: "app_setting_",
 	}
 }
 
-func (a *AdminSettingService) Get(key string, default_ any, fresh bool ) any {
+func (a *AdminSettingService) Get(key string, default_ any, fresh bool) any {
 	var adminSetting models.AdminSetting
 	if fresh {
 		value := facades.Orm().Query().Where("key", key).Select("values").First(&adminSetting)
@@ -26,9 +26,9 @@ func (a *AdminSettingService) Get(key string, default_ any, fresh bool ) any {
 			return default_
 		}
 	}
-	value, err := facades.Cache().RememberForever(a.cacheKey + key, func() (any, error) {
+	value, err := facades.Cache().RememberForever(a.cacheKey+key, func() (any, error) {
 		err := facades.Orm().Query().Where("key", key).Select("values").First(&adminSetting)
-		if err!=nil {
+		if err != nil {
 			return nil, err
 		}
 		return adminSetting.Values, nil
@@ -38,7 +38,7 @@ func (a *AdminSettingService) Get(key string, default_ any, fresh bool ) any {
 	}
 	if value != nil {
 		return value
-	}else {
+	} else {
 		return default_
 	}
 }
