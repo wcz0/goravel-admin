@@ -58,7 +58,7 @@ func (e *ErrorHandler) MsgDataSuccess(ctx http.Context, msg any, data any) http.
 }
 
 func (e *ErrorHandler) Error(ctx http.Context) http.Response {
-	return ctx.Response().Json(http.StatusInternalServerError, http.Json{
+	return ctx.Response().Success().Json(http.Json{
 		"status": enums.StatusFailed,
 		"code": enums.Failed,
 		"msg": enums.CodeEnum(enums.Failed).Message(),
@@ -68,7 +68,7 @@ func (e *ErrorHandler) Error(ctx http.Context) http.Response {
 }
 
 func (e *ErrorHandler) MsgError(ctx http.Context, msg any) http.Response {
-	return ctx.Response().Json(http.StatusInternalServerError, http.Json{
+	return ctx.Response().Success().Json(http.Json{
 		"status": enums.StatusFailed,
 		"code": enums.Failed,
 		"msg": msg,
@@ -78,7 +78,7 @@ func (e *ErrorHandler) MsgError(ctx http.Context, msg any) http.Response {
 }
 
 func (e *ErrorHandler) DataError(ctx http.Context, data any) http.Response {
-	return ctx.Response().Json(http.StatusInternalServerError, http.Json{
+	return ctx.Response().Success().Json(http.Json{
 		"status": enums.StatusFailed,
 		"code": enums.Failed,
 		"msg": "Error.",
@@ -88,7 +88,7 @@ func (e *ErrorHandler) DataError(ctx http.Context, data any) http.Response {
 }
 
 func (e *ErrorHandler) MsgDataError(ctx http.Context, msg any, data any) http.Response {
-	return ctx.Response().Json(http.StatusInternalServerError, http.Json{
+	return ctx.Response().Success().Json(http.Json{
 		"status": enums.StatusFailed,
 		"code": enums.Failed,
 		"msg": msg,
@@ -111,7 +111,7 @@ func (e *ErrorHandler) FormError(ctx http.Context, msg any) http.Response {
 	if msg != "" {
 		msg = "Form validation error."
 	}
-	return ctx.Response().Json(http.StatusUnprocessableEntity, http.Json{
+	return ctx.Response().Success().Json(http.Json{
 		"status": enums.StatusFailed,
 		"code": 422,
 		"msg": msg,

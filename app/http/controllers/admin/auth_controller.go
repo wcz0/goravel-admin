@@ -48,13 +48,25 @@ func (a *AuthController) Logout(ctx http.Context) http.Response {
 }
 
 func (a *AuthController) Register(ctx http.Context) http.Response {
-	return a.Success(ctx)
+	validator, err := ctx.Request().Validate(map[string]string{
+		// "username": "required|max_len:32",
+		"password": "required|min_len:5|max_len:32",
+	})
+	if err != nil {
+		return a.MsgError(ctx, err.Error())
+	}
+	if validator.Fails() {
+		return a.MsgError(ctx, validator.Errors().All())
+	}
+	password, err := facades.Hash().Make(ctx.Request().Input("password"))
+	if err != nil {
+		return a.Error(ctx)
+	}
+	return a.DataSuccess(ctx, password)
 }
 
 // LoginPage 登录页面 需要写入设置 开启amis页面登录
 func (a *AuthController) LoginPage(ctx http.Context) http.Response {
-	lang := facades.Lang(ctx)
-
 	form := gamis.Form().
 		PanelClassName("border-none").
 		Id("login-form").
@@ -62,12 +74,11 @@ func (a *AuthController) LoginPage(ctx http.Context) http.Response {
 		Api(tools.GetAdmin("/login")).
 		InitApi("/no-content").
 		Body([]any{
-			gamis.TextControl().Name("username").Placeholder(lang.Get("username")).Required(true),
-			gamis.TextControl().Type("input-password").Name("password").Placeholder(lang.Get("password")).Required(true),
+			gamis.TextControl().Name("username").Placeholder(tools.AdminLang(ctx, "username")).Required(true),
+			gamis.TextControl().Type("input-password").Name("password").Placeholder(tools.AdminLang(ctx, "password")).Required(true),
 			// captcha
-			gamis.VanillaAction().ActionType("submit").Label("登录").ClassName("w-full"),
-			gamis.CheckboxControl().Name("remember_me").Option(lang.Get("remember_me")).Value(true),
-			gamis.VanillaAction().ActionType("submit").Label(lang.Get("login")).Level("primary").ClassName("w-full"),
+			gamis.CheckboxControl().Name("remember_me").Option(tools.AdminLang(ctx, "remember_me")).Value(true),
+			gamis.VanillaAction().ActionType("submit").Label(tools.AdminLang(ctx, "login")).Level("primary").ClassName("w-full"),
 		}).
 		Actions([]any{}).
 		OnEvent(map[string]any{

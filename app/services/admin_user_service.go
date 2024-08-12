@@ -22,10 +22,7 @@ func (s *AdminUserService) Login(ctx http.Context) http.Response {
 	if err := facades.Orm().Query().Where("username", ctx.Request().Input("username")).First(&adminUser); err != nil {
 		return s.MsgError(ctx, err.Error())
 	}
-	if adminUser.ID == 0 {
-		return s.MsgError(ctx, "User not found.")
-	}
-	if facades.Hash().Check(ctx.Request().Input("password"), adminUser.Password) {
+	if !facades.Hash().Check(ctx.Request().Input("password"), adminUser.Password) {
 		return s.MsgError(ctx, "Password error.")
 	}
 	token, err := facades.Auth(ctx).Login(&adminUser)
