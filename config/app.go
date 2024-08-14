@@ -78,7 +78,6 @@ func init() {
 			&log.ServiceProvider{},
 			&console.ServiceProvider{},
 			&database.ServiceProvider{},
-			&cache.ServiceProvider{},
 			&http.ServiceProvider{},
 			&route.ServiceProvider{},
 			&schedule.ServiceProvider{},
@@ -106,6 +105,8 @@ func init() {
 			&redis.ServiceProvider{},
 			&translation.ServiceProvider{},
 			// &session.ServiceProvider{},
+			&cache.ServiceProvider{},
+
 		},
 	})
 }
