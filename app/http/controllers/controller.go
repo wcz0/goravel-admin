@@ -36,6 +36,7 @@ func (c *Controller) ActionOfExport(ctx http.Context) bool {
 	return ctx.Request().Input("_action") == "export"
 }
 
+// 
 func (c *Controller) ActionOfQuickEdit(ctx http.Context) bool {
 	return ctx.Request().Input("_action") == "quickEdit"
 }

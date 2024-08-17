@@ -117,7 +117,7 @@ window.$owl.afterLoginSuccess(_data, event.data.result.data.token)
 			"submitFail": map[string]any{
 				"actions": []any{
 					map[string]any{
-						"actionType": "reload",
+						"actionType":  "reload",
 						"componentId": "captcha-service",
 					},
 				},
@@ -151,12 +151,7 @@ window.$owl.afterLoginSuccess(_data, event.data.result.data.token)
 	))
 }
 
-func (a *AuthController) GetUserSetting(c http.Context) http.Response {
-	return a.Success(c)
-}
-
-
-func (a *AuthController) Get(key string, default_ any, fresh bool ) any {
+func (a *AuthController) Get(key string, default_ any, fresh bool) any {
 	var adminSetting models.AdminSetting
 	if fresh {
 		value := facades.Orm().Query().Where("key", key).Select("values").First(&adminSetting)
@@ -166,7 +161,7 @@ func (a *AuthController) Get(key string, default_ any, fresh bool ) any {
 	}
 	value, err := facades.Cache().RememberForever(a.cacheKey, func() (any, error) {
 		err := facades.Orm().Query().Where("key", key).Select("values").First(&adminSetting)
-		if err!=nil {
+		if err != nil {
 			return nil, err
 		}
 		return adminSetting.Values, nil
@@ -176,7 +171,33 @@ func (a *AuthController) Get(key string, default_ any, fresh bool ) any {
 	}
 	if value != nil {
 		return value
-	}else {
+	} else {
 		return default_
 	}
+}
+
+func (a *AuthController) CurrentUser(ctx http.Context) http.Response {
+	if !facades.Config().GetBool("admin.auth.enable") {
+		return a.Success(ctx)
+	}
+	userInfo := ctx.Value("user").(models.AdminUser)
+	menus := gamis.DropdownButton().HideCaret("true").Trigger("hover").
+		Label(userInfo.Name).
+		ClassName("h-full w-full").
+		BtnClassName("navbar-user w-full").
+		MenuClassName("min-w-0").
+		Set("icon", userInfo.Avatar).
+		Buttons([]any{
+			gamis.VanillaAction().
+				IconClassName("w-full").
+				Icon("fa fa-user-gear").
+				Label(tools.AdminLang(ctx, "user_setting")).
+				OnClick("window.location.href = '#/user_setting'"),
+			gamis.VanillaAction().
+				IconClassName("pr-2").
+				Label(tools.AdminLang(ctx, "logout")).
+				Icon("fa-solid fa-right-from-bracket").
+				OnClick("window.$owl.logout()"),
+		})
+	return a.DataSuccess(ctx, menus)
 }

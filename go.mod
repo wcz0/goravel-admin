@@ -7,7 +7,7 @@ require (
 	github.com/goravel/gin v1.2.3
 	github.com/goravel/redis v1.2.0
 	github.com/stretchr/testify v1.9.0
-	github.com/wcz0/gamis v0.6.6
+	github.com/wcz0/gamis v0.6.10
 	github.com/wcz0/goravel-authz v0.2.0
 	github.com/yitter/idgenerator-go v1.3.3
 	golang.org/x/text v0.17.0
@@ -139,7 +139,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
-	github.com/nicksnyder/go-i18n/v2 v2.4.0
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect

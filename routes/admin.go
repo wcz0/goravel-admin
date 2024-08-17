@@ -32,8 +32,9 @@ func Admin() {
 			router.Post("upload_image", index.ImageUpload)
 			router.Post("upload_file", index.FileUpload)
 			router.Get("menus", index.GetMenus)
-			router.Get("current-user", auth.GetUserSetting)
+			router.Get("current-user", auth.CurrentUser)
 			router.Post("upload_rich", index.RichFileUpload)
+			router.Get("user_setting", user.GetUserSetting)
 			router.Put("user_setting", user.PutUserSetting)
 
 			// router.Middleware(middleware.Casbin()).Group(func(router route.Router) {
@@ -43,7 +44,7 @@ func Admin() {
 					router.Resource("roles", admin.NewRoleController())
 					router.Resource("permissions", admin.NewPermissionController())
 					router.Resource("menus", admin.NewMenuController())
-					
+
 
 				})
 			// })

@@ -3,17 +3,20 @@ package tools
 import "github.com/goravel/framework/facades"
 
 var url string
+var adminUrl string
 
 func init() {
-	url = facades.Config().Env("APP_URL", "http://localhost").(string)
+	config := facades.Config()
+	url = config.Env("APP_URL").(string)
+	adminUrl = config.GetString("admin.route.prefix")
 }
 
 func GetAdmin(str string) string {
-	return url + "/admin-api" + str
+	return url + adminUrl + str
 }
 
 func GetAdminNil() string {
-	return url + "/admin-api"
+	return url + adminUrl
 }
 
 func GetApi(str string) string {
@@ -36,12 +39,12 @@ func GetUrlNil() string {
  * 上传图片地址
  */
 func GetImageUrl() string {
-	return url + "/admin-api/upload_image"
+	return url + adminUrl + "/upload_image"
 }
 
 /**
  * 上传文件地址
  */
 func GetFileUrl() string {
-	return url + "/admin-api/upload_file"
+	return url + adminUrl + "/upload_file"
 }

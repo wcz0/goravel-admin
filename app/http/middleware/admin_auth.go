@@ -13,12 +13,12 @@ func AdminAuth() http.Middleware {
 		var user models.AdminUser
 		err := facades.Auth(ctx).User(&user)
 		if err != nil {
-			response.NewUnauthorizedError().Response(ctx)
+			ctx.Response().Success().Json(response.Unauthorized)
 		}
 		if user.ID == 0 {
-			response.NewUnauthorizedError().Response(ctx)
+			ctx.Response().Success().Json(response.Unauthorized)
 		}
-		ctx.WithValue("adminUser", user)
+		ctx.WithValue("user", user)
 		ctx.Request().Next()
 	}
 }

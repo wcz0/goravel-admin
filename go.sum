@@ -100,8 +100,6 @@ github.com/AzureAD/microsoft-authentication-library-for-go v1.1.0/go.mod h1:wP83
 github.com/AzureAD/microsoft-authentication-library-for-go v1.2.1 h1:DzHpqpoJVaCgOUdVHxE8QB52S6NiVdDQvGlny1qvPqA=
 github.com/AzureAD/microsoft-authentication-library-for-go v1.2.1/go.mod h1:wP83P5OoQ5p6ip3ScPr0BAq0BvuPAvacpEuSzyouqAI=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/BurntSushi/toml v1.3.2 h1:o7IhLm0Msx3BaB+n3Ag7L8EVlByGnpq14C4YWiu/gL8=
-github.com/BurntSushi/toml v1.3.2/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/MarvinJWendt/testza v0.1.0/go.mod h1:7AxNvlfeHP7Z/hDQ5JtE3OKYT3XFUeLCDE2DQninSqs=
 github.com/MarvinJWendt/testza v0.2.1/go.mod h1:God7bhG8n6uQxwdScay+gjm9/LnO4D3kkcZX4hv9Rp8=
@@ -547,8 +545,6 @@ github.com/muesli/termenv v0.15.2 h1:GohcuySI0QmI3wN8Ok9PtKGkgkFIk7y6Vpb5PvrY+Wo
 github.com/muesli/termenv v0.15.2/go.mod h1:Epx+iuz8sNs7mNKhxzH4fWXGNpZwUaJKRS1noLXviQ8=
 github.com/ncruces/go-strftime v0.1.9 h1:bY0MQC28UADQmHmaF5dgpLmImcShSi2kHU9XLdhx/f4=
 github.com/ncruces/go-strftime v0.1.9/go.mod h1:Fwc5htZGVVkseilnfgOVb9mKy6w1naJmn9CehxcKcls=
-github.com/nicksnyder/go-i18n/v2 v2.4.0 h1:3IcvPOAvnCKwNm0TB0dLDTuawWEj+ax/RERNC+diLMM=
-github.com/nicksnyder/go-i18n/v2 v2.4.0/go.mod h1:nxYSZE9M0bf3Y70gPQjN9ha7XNHX7gMc814+6wVyEI4=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=
@@ -685,8 +681,12 @@ github.com/unrolled/secure v1.15.0/go.mod h1:BmF5hyM6tXczk3MpQkFf1hpKSRqCyhqcbiQ
 github.com/urfave/cli v1.22.5/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/urfave/cli/v2 v2.27.3 h1:/POWahRmdh7uztQ3CYnaDddk0Rm90PyOgIxgW2rr41M=
 github.com/urfave/cli/v2 v2.27.3/go.mod h1:m4QzxcD2qpra4z7WhzEGn74WZLViBnMpb1ToCAKdGRQ=
-github.com/wcz0/gamis v0.6.6 h1:lWuvjFBpME6FQbffCzvBIKA1s2sUnUk7TEHClqh0Psk=
-github.com/wcz0/gamis v0.6.6/go.mod h1:qxcBqAwy0IW5g+shRZ8wiEv9Z/CaVwOzuhcaefemssI=
+github.com/wcz0/gamis v0.6.8 h1:voKLvQ0ts5LTwmraFsXucT9LLh9L1VqM7Dy7EanX4F0=
+github.com/wcz0/gamis v0.6.8/go.mod h1:qxcBqAwy0IW5g+shRZ8wiEv9Z/CaVwOzuhcaefemssI=
+github.com/wcz0/gamis v0.6.9 h1:mMxhzmfr1u8HYb6I8eqBdSBorEZbSePJI7XaZv9XpXo=
+github.com/wcz0/gamis v0.6.9/go.mod h1:qxcBqAwy0IW5g+shRZ8wiEv9Z/CaVwOzuhcaefemssI=
+github.com/wcz0/gamis v0.6.10 h1:SbnbBO03Ftr83W5uz16l5t0TVcvhxoEQ0L4cXKjpr0A=
+github.com/wcz0/gamis v0.6.10/go.mod h1:qxcBqAwy0IW5g+shRZ8wiEv9Z/CaVwOzuhcaefemssI=
 github.com/wcz0/goravel-authz v0.2.0 h1:RqSWgvslUVnbIGOj/BX8gT9NyRL5tHR5RWm1ePdF1w8=
 github.com/wcz0/goravel-authz v0.2.0/go.mod h1:HlIPLGbI+S5txgpXP6xS/nbkB4EpV4C+0D3hTw3h4S4=
 github.com/xdg-go/pbkdf2 v1.0.0 h1:Su7DPu48wXMwC3bs7MCNG+z4FhcyEuz5dlvchbq0B0c=
