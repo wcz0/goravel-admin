@@ -10,7 +10,7 @@ func init() {
 		// App Name
 		"name": "Goravel Admin",
 
-		"logo":           config.Env("ADMIN_LOGO", "/admin/logo.png"),
+		"logo": config.Env("ADMIN_LOGO", "/admin/logo.png"),
 
 		"default_avatar": "/admin/avatar.png",
 
@@ -28,13 +28,15 @@ func init() {
 		},
 
 		"auth": map[string]any{
-			"login_captcha": config.Env("ADMIN_LOGIN_CAPTCHA", false),
-				"enable":        true,
+			"login_captcha":    config.Env("ADMIN_LOGIN_CAPTCHA", true),
+			"enable":           config.Env("ADMIN_ENABLE_AUTH", true),
+			"permission":       config.Env("ADMIN_ENABLE_PERMISSION", true),
+			"token_expiration": config.Env("ADMIN_TOKEN_EXPIRATION", 86400),
 			// TODO: 未实现
 			// 	"model":         "admin_user",
 			// 	"controller":    "admin",
 			// 	"guard":         "admin_user",
-			// 	"except":        []any{},
+			"except": []any{},
 		},
 
 		// TODO: 未实现

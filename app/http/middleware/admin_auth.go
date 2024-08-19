@@ -11,12 +11,10 @@ import (
 func AdminAuth() http.Middleware {
 	return func(ctx http.Context) {
 		var user models.AdminUser
-		err := facades.Auth(ctx).User(&user)
+		err := facades.Auth(ctx).Guard("admin").User(&user)
 		if err != nil {
-			ctx.Response().Success().Json(response.Unauthorized)
-		}
-		if user.ID == 0 {
-			ctx.Response().Success().Json(response.Unauthorized)
+			ctx.Request().AbortWithStatusJson(http.StatusOK, response.Unauthorized)
+			return
 		}
 		ctx.WithValue("user", user)
 		ctx.Request().Next()
