@@ -70,6 +70,8 @@ func (p *Permission) AuthIntercept(ctx http.Context) bool {
 
 func (p *Permission) CheckUserStatus(ctx http.Context) bool {
 
+	return false
+}
 
 func (p *Permission) PermissionIntercept(ctx http.Context) bool {
 	return false
