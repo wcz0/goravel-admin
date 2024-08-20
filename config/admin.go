@@ -19,9 +19,9 @@ func init() {
 		"route": map[string]any{
 			"prefix": config.Env("ADMIN_ROUTE_PREFIX", "admin-api"),
 			"domain": config.Env("ADMIN_DOMAIN"),
-			"middleware": []string{
-				"admin",
-			},
+			// "middleware": []string{
+			// 	"admin",
+			// },
 			"without_extra_routes": []string{
 				"/dashboard",
 			},
