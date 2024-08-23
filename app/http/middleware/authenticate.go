@@ -1,26 +1,20 @@
 package middleware
 
 import (
+	"goravel/app/core"
+	"goravel/app/response"
+
 	"github.com/goravel/framework/contracts/http"
-	"github.com/goravel/framework/facades"
 )
 
-func Casbin() http.Middleware {
+func Authenticate() http.Middleware {
 	return func(ctx http.Context) {
-		// route := ctx.Request().Path()
-		// user := ctx.Value("user").(models.User)
-		// if user.Id == 0 {
-		// 	ctx.Request().AbortWithStatusJson(http.StatusOK, response.Unauthorized)
-		// 	return
-		// }
-		// userId := strconv.FormatUint(user.Id, 10)
-		// method := ctx.Request().Method()
-		// facades.Enforcer().Enforce(userId, route, method)
-		config := facades.Config()
-		if config.GetBool("admin.auth.enable") {
-			ctx.Request().Next()
+		permission := core.NewPermission()
+		if permission.AuthIntercept(ctx) {
+			ctx.Request().AbortWithStatusJson(http.StatusOK, response.Unauthorized)
 			return
 		}
+		permission.CheckUserStatus(ctx)
 		ctx.Request().Next()
 	}
 }

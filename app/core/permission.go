@@ -9,7 +9,7 @@ import (
 )
 
 type Permission struct {
-	authExcept []string
+	authExcept       []string
 	permissionExcept []string
 	// adminConfig map[string]any
 	// routePrefix string
@@ -68,13 +68,12 @@ func (p *Permission) AuthIntercept(ctx http.Context) bool {
 	return !isExcept
 }
 
+/**
+	检查用户状态
+*/
 func (p *Permission) CheckUserStatus(ctx http.Context) {
-	var user models.AdminUser
-	err := facades.Auth(ctx).Guard("admin").User(&user)
-	if err != nil {
-		facades.Auth(ctx).Logout()
-	}
-	if user.Enabled == 0 {
+	user := ctx.Value("user").(models.AdminUser)
+	if user.ID == 0 || user.Enabled == 0 {
 		facades.Auth(ctx).Logout()
 	}
 }
@@ -99,7 +98,6 @@ func (p *Permission) PermissionIntercept(ctx http.Context) bool {
 	if len(excepted) == 0 {
 		return false
 	}
-
 	isExcept := false
 	for _, except := range excepted {
 		formattedPath := p.pathFormatting(except)
@@ -111,21 +109,17 @@ func (p *Permission) PermissionIntercept(ctx http.Context) bool {
 	if isExcept {
 		return false
 	}
-	user := ctx.Value("user")
-
-
-
-
+	// user := ctx.Value("user")
 
 	return false
 }
 
 func (p *Permission) pathMatches(ctx http.Context, except string) bool {
-    path := ctx.Request().Path()
-    if except == "/" {
-        return path == except
-    }
-    return path == strings.Trim(except, "/")
+	path := ctx.Request().Path()
+	if except == "/" {
+		return path == except
+	}
+	return path == strings.Trim(except, "/")
 }
 
 func (p *Permission) pathFormatting(path string) string {
@@ -140,19 +134,18 @@ func (p *Permission) pathFormatting(path string) string {
 	return prefix + "/" + path
 }
 
-func (p *Permission) checkRoutePermission(ctx http.Context) bool {
+// func (p *Permission) checkRoutePermission(ctx http.Context) bool {
 
+// 	args := strings.Split(middleware[len(middlewarePrefix):], ",")
 
-	args := strings.Split(middleware[len(middlewarePrefix):], ",")
+// 	method := args[0]
+// 	args = args[1:]
 
-	method := args[0]
-	args = args[1:]
+// 	if !hasMethod(AdminPermissionModel(), method) {
+// 		panic("Invalid permission method [" + method + "].")
+// 	}
 
-	if !hasMethod(AdminPermissionModel(), method) {
-		panic("Invalid permission method [" + method + "].")
-	}
+// 	callMethod(AdminPermissionModel(), method, args)
 
-	callMethod(AdminPermissionModel(), method, args)
-
-	return true
-}
+// 	return true
+// }

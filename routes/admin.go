@@ -28,7 +28,7 @@ func Admin() {
 		router.Get("no-content", index.NoContext)
 		router.Get("_download_export", index.DownloadExport)
 
-		router.Middleware(middleware.AdminAuth()).Group(func(router route.Router) {
+		router.Middleware(middleware.Authenticate()).Group(func(router route.Router) {
 			router.Post("upload_image", index.ImageUpload)
 			router.Post("upload_file", index.FileUpload)
 			router.Get("menus", index.GetMenus)

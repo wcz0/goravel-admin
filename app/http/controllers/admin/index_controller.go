@@ -51,8 +51,8 @@ func (i *IndexController) GetSetting(ctx http.Context) http.Response {
 	return i.DataSuccess(ctx, data)
 }
 
-func (i *IndexController) NoContext(c http.Context) http.Response {
-	return i.Success(c)
+func (i *IndexController) NoContext(ctx http.Context) http.Response {
+	return i.MsgSuccess(ctx, "")
 }
 
 func (i *IndexController) DownloadExport(c http.Context) http.Response {
