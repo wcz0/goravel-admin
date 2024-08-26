@@ -109,10 +109,14 @@ func (p *Permission) PermissionIntercept(ctx http.Context) bool {
 	if isExcept {
 		return false
 	}
-	// user := ctx.Value("user")
+	user := ctx.Value("user").(models.AdminUser)
+	if user.IsAdministrator() {
+		return false
+	}
 
-	return false
+	return user.AllPermissions().
 }
+
 
 func (p *Permission) pathMatches(ctx http.Context, except string) bool {
 	path := ctx.Request().Path()
@@ -134,18 +138,4 @@ func (p *Permission) pathFormatting(path string) string {
 	return prefix + "/" + path
 }
 
-// func (p *Permission) checkRoutePermission(ctx http.Context) bool {
 
-// 	args := strings.Split(middleware[len(middlewarePrefix):], ",")
-
-// 	method := args[0]
-// 	args = args[1:]
-
-// 	if !hasMethod(AdminPermissionModel(), method) {
-// 		panic("Invalid permission method [" + method + "].")
-// 	}
-
-// 	callMethod(AdminPermissionModel(), method, args)
-
-// 	return true
-// }
