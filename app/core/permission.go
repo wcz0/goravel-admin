@@ -1,7 +1,7 @@
 package core
 
 import (
-	"goravel/app/models"
+	"goravel/app/models/admin"
 	"strings"
 
 	"github.com/goravel/framework/contracts/http"
@@ -59,7 +59,7 @@ func (p *Permission) AuthIntercept(ctx http.Context) bool {
 			break
 		}
 	}
-	var user models.AdminUser
+	var user admin.AdminUser
 	err := facades.Auth(ctx).Guard("admin").User(&user)
 	if err != nil {
 		return false
@@ -72,7 +72,7 @@ func (p *Permission) AuthIntercept(ctx http.Context) bool {
 	检查用户状态
 */
 func (p *Permission) CheckUserStatus(ctx http.Context) {
-	user := ctx.Value("user").(models.AdminUser)
+	user := ctx.Value("user").(admin.AdminUser)
 	if user.ID == 0 || user.Enabled == 0 {
 		facades.Auth(ctx).Logout()
 	}
@@ -82,49 +82,51 @@ func (p *Permission) CheckUserStatus(ctx http.Context) {
 	权限拦截
 */
 func (p *Permission) PermissionIntercept(ctx http.Context) bool {
-	config := facades.Config()
-	if !config.GetBool("admin.permission.enable") {
-		return false
-	}
-	if ctx.Request().Path() == config.GetString("admin.route.prefix") {
-		return false
-	}
-	configExcept := config.Get("admin.permission.except").([]string)
-	excepted := append(p.permissionExcept, configExcept...)
-	excepted = append(excepted, p.authExcept...)
-	if config.GetBool("admin.show_development_tools") {
-		excepted = append(excepted, "/dev_tools*")
-	}
-	if len(excepted) == 0 {
-		return false
-	}
-	isExcept := false
-	for _, except := range excepted {
-		formattedPath := p.pathFormatting(except)
-		if p.pathMatches(ctx, formattedPath) {
-			isExcept = true
-			break
-		}
-	}
-	if isExcept {
-		return false
-	}
-	user := ctx.Value("user").(models.AdminUser)
-	if user.IsAdministrator() {
-		return false
-	}
+	// config := facades.Config()
+	// if !config.GetBool("admin.permission.enable") {
+	// 	return false
+	// }
+	// if ctx.Request().Path() == config.GetString("admin.route.prefix") {
+	// 	return false
+	// }
+	// configExcept := config.Get("admin.permission.except").([]string)
+	// excepted := append(p.permissionExcept, configExcept...)
+	// excepted = append(excepted, p.authExcept...)
+	// if config.GetBool("admin.show_development_tools") {
+	// 	excepted = append(excepted, "/dev_tools*")
+	// }
+	// if len(excepted) == 0 {
+	// 	return false
+	// }
+	// isExcept := false
+	// for _, except := range excepted {
+	// 	formattedPath := p.pathFormatting(except)
+	// 	if p.pathMatches(ctx, formattedPath) {
+	// 		isExcept = true
+	// 		break
+	// 	}
+	// }
+	// if isExcept {
+	// 	return false
+	// }
+	// user := ctx.Value("user").(admin.AdminUser)
+	// if user.IsAdministrator() {
+	// 	return false
+	// }
 
-	return user.AllPermissions().
+	// return user.AllPermissions()
+
+	return true
 }
 
 
-func (p *Permission) pathMatches(ctx http.Context, except string) bool {
-	path := ctx.Request().Path()
-	if except == "/" {
-		return path == except
-	}
-	return path == strings.Trim(except, "/")
-}
+// func (p *Permission) pathMatches(ctx http.Context, except string) bool {
+// 	path := ctx.Request().Path()
+// 	if except == "/" {
+// 		return path == except
+// 	}
+// 	return path == strings.Trim(except, "/")
+// }
 
 func (p *Permission) pathFormatting(path string) string {
 	prefix := "/" + strings.Trim(facades.Config().GetString("admin.route.prefix"), "/")

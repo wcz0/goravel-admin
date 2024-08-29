@@ -1,7 +1,7 @@
 package services
 
 import (
-	"goravel/app/models"
+	"goravel/app/models/admin"
 
 	"github.com/goravel/framework/facades"
 )
@@ -19,7 +19,7 @@ func NewAdminSettingService() *AdminSettingService {
 }
 
 func (a *AdminSettingService) Get(key string, default_ any, fresh bool) any {
-	var adminSetting models.AdminSetting
+	var adminSetting admin.AdminSetting
 	if fresh {
 		value := facades.Orm().Query().Where("key", key).Select("values").First(&adminSetting)
 		if value == nil {

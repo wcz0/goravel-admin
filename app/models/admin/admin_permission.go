@@ -1,6 +1,7 @@
-package models
+package admin
 
 import (
+	"goravel/app/models"
 	"goravel/app/tools"
 	"strings"
 
@@ -12,8 +13,8 @@ import (
 type AdminPermission struct {
 	Name string
 	Slug string
-	HttpMethod StringSlice `gorm:"type:json"`
-	HttpPath StringSlice `gorm:"type:json"`
+	HttpMethod models.StringSlice `gorm:"type:json"`
+	HttpPath models.StringSlice `gorm:"type:json"`
 	CustomOrder int
 	ParentId uint
 	orm.Model

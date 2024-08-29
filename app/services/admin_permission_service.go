@@ -1,7 +1,7 @@
 package services
 
 import (
-	"goravel/app/models"
+	"goravel/app/models/admin"
 
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
@@ -18,11 +18,11 @@ func NewAdminPermissionService() *AdminPermissionService {
 }
 
 func (s *AdminPermissionService) Store(ctx http.Context) http.Response {
-	permission := &models.AdminPermission{
+	permission := &admin.AdminPermission{
 		ParentId: uint(ctx.Request().InputInt("parent_id", 0)),
 		Name:     ctx.Request().Input("name"),
-		Value:    ctx.Request().Input("value"),
-		Method:   ctx.Request().Input("method"),
+		// Value:    ctx.Request().Input("value"),
+		// Method:   ctx.Request().Input("method"),
 	}
 	if err := facades.Orm().Query().Create(&permission); err != nil {
 		return s.MsgError(ctx, err.Error())
@@ -31,14 +31,14 @@ func (s *AdminPermissionService) Store(ctx http.Context) http.Response {
 }
 
 func (s *AdminPermissionService) Update(ctx http.Context) http.Response {
-	var permission models.AdminPermission
+	var permission admin.AdminPermission
 	if err := facades.Orm().Query().Where("id", ctx.Request().InputInt("id")).First(&permission); err != nil {
 		return s.MsgError(ctx, "Permission not found.")
 	}
 	permission.ParentId = uint(ctx.Request().InputInt("parent_id", 0))
 	permission.Name = ctx.Request().Input("name")
-	permission.Value = ctx.Request().Input("value")
-	permission.Method = ctx.Request().Input("method")
+	// permission.Value = ctx.Request().Input("value")
+	// permission.Method = ctx.Request().Input("method")
 	if err := facades.Orm().Query().Save(&permission); err != nil {
 		return s.MsgError(ctx, err.Error())
 	}
@@ -46,7 +46,7 @@ func (s *AdminPermissionService) Update(ctx http.Context) http.Response {
 }
 
 func (s *AdminPermissionService) Destroy(ctx http.Context) http.Response {
-	var permission models.AdminPermission
+	var permission admin.AdminPermission
 	if err := facades.Orm().Query().Where("id", ctx.Request().InputInt("id")).First(&permission); err != nil {
 		return s.MsgError(ctx, "Permission not found.")
 	}
@@ -57,7 +57,7 @@ func (s *AdminPermissionService) Destroy(ctx http.Context) http.Response {
 }
 
 func (s *AdminPermissionService) List(ctx http.Context) http.Response {
-	var permissions []models.AdminPermission
+	var permissions []admin.AdminPermission
 	if err := facades.Orm().Query().Get(&permissions); err != nil {
 		return s.MsgError(ctx, err.Error())
 	}
@@ -67,11 +67,11 @@ func (s *AdminPermissionService) List(ctx http.Context) http.Response {
 }
 
 type AdminPermissionTreeNode struct {
-    models.AdminPermission
+    admin.AdminPermission
     Children []*AdminPermissionTreeNode
 }
 
-func buildTree(nodes []models.AdminPermission, parent *models.AdminPermission) *AdminPermissionTreeNode {
+func buildTree(nodes []admin.AdminPermission, parent *admin.AdminPermission) *AdminPermissionTreeNode {
     tree := &AdminPermissionTreeNode{}
     for _, node := range nodes {
         if node.ParentId == parent.ID {

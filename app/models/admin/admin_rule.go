@@ -1,4 +1,4 @@
-package models
+package admin
 
 import "github.com/wcz0/goravel-authz/models"
 

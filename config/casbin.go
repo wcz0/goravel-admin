@@ -1,7 +1,6 @@
 package config
 
 import (
-	"goravel/app/models"
 
 	"github.com/goravel/framework/facades"
 	gmodels "github.com/wcz0/goravel-authz/models"
@@ -16,7 +15,7 @@ func init() {
 
 		"models": map[string]any{
 			"basic": gmodels.NewRule(),
-			"second": models.NewAdminRule(),
+			// "second": models.NewAdminRule(),
 		},
 	})
 }

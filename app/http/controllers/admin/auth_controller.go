@@ -2,7 +2,7 @@ package admin
 
 import (
 	"goravel/app/http/controllers"
-	"goravel/app/models"
+	"goravel/app/models/admin"
 	"goravel/app/services"
 	"goravel/app/tools"
 
@@ -152,7 +152,7 @@ window.$owl.afterLoginSuccess(_data, event.data.result.data.token)
 }
 
 func (a *AuthController) Get(key string, default_ any, fresh bool) any {
-	var adminSetting models.AdminSetting
+	var adminSetting admin.AdminSetting
 	if fresh {
 		value := facades.Orm().Query().Where("key", key).Select("values").First(&adminSetting)
 		if value == nil {
@@ -180,7 +180,7 @@ func (a *AuthController) CurrentUser(ctx http.Context) http.Response {
 	if !facades.Config().GetBool("admin.auth.enable") {
 		return a.Success(ctx)
 	}
-	userInfo := ctx.Value("user").(models.AdminUser)
+	userInfo := ctx.Value("user").(admin.AdminUser)
 	menus := gamis.DropdownButton().HideCaret("true").Trigger("hover").
 		Label(userInfo.Name).
 		ClassName("h-full w-full").

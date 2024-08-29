@@ -1,7 +1,7 @@
 package services
 
 import (
-	"goravel/app/models"
+	"goravel/app/models/admin"
 
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
@@ -18,7 +18,7 @@ func NewAdminUserService() *AdminUserService {
 }
 
 func (s *AdminUserService) Login(ctx http.Context) http.Response {
-	var adminUser models.AdminUser
+	var adminUser admin.AdminUser
 	if err := facades.Orm().Query().Where("username", ctx.Request().Input("username")).First(&adminUser); err != nil {
 		return s.MsgError(ctx, err.Error())
 	}
