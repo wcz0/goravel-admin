@@ -65,6 +65,7 @@ func (a *AuthController) Register(ctx http.Context) http.Response {
 	return a.DataSuccess(ctx, password)
 }
 
+
 // LoginPage 登录页面 需要写入设置 开启amis页面登录
 func (a *AuthController) LoginPage(ctx http.Context) http.Response {
 	form := gamis.Form().

@@ -30,33 +30,16 @@ func (a *AdminPermission) ShouldPassThrough(ctx http.Context) bool {
 		return true
 	}
 	routePrefix := facades.Config().GetString("admin.route.prefix")
+	// 遍历path, 查看请求是否在其中
 	for _, path := range a.HttpPath {
-		path := strings.Trim(routePrefix, "/") + path
-		if strings.Contains(path, ":") {
-
-		}
-	}
-	// TODO: 未写完
-	return true
-}
-
-func (a *AdminPermission) matchRequest(ctx http.Context, match map[string]any) bool {
-	path := match["path"].(string)
-	if path == "/" {
-		path = "/"
-	}else {
-		path = strings.Trim(path, "/")
-	}
-	if !tools.RequestIs(ctx, path) {
-		return false
-	}
-	methods, ok := match["methods"].([]string)
-	if !ok || len(methods) == 0 {
-		return true
-	}
-	for _, m := range methods {
-		if strings.ToUpper(m) == ctx.Request().Method() {
-			return true
+		path := strings.TrimSuffix(routePrefix, "/") + path
+		if tools.RequestIs(ctx, path) {
+			// 遍历method, 查看请求是否在其中
+			for _, method := range a.HttpMethod {
+				if tools.RequestMethodIs(ctx, method) {
+					return true
+				}
+			}
 		}
 	}
 	return false

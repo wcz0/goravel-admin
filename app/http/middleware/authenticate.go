@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"goravel/app/core"
+	"goravel/app/support/core"
 	"goravel/app/response"
 
 	"github.com/goravel/framework/contracts/http"

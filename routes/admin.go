@@ -37,7 +37,7 @@ func Admin() {
 			router.Get("user_setting", user.GetUserSetting)
 			router.Put("user_setting", user.PutUserSetting)
 
-			// router.Middleware(middleware.Casbin()).Group(func(router route.Router) {
+			router.Middleware(middleware.Permission()).Group(func(router route.Router) {
 
 				router.Prefix("system").Group(func(router route.Router) {
 					router.Resource("admin_users", admin.NewUserController())
@@ -47,7 +47,7 @@ func Admin() {
 
 
 				})
-			// })
+			})
 		})
 
 

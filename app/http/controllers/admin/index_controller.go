@@ -48,7 +48,7 @@ func (i *IndexController) GetSetting(ctx http.Context) http.Response {
 		"system_theme_setting":   i.adminSettingService.Get("system_theme_setting", nil, false),
 		"enabled_extensions":     []string{},
 	}
-	return i.DataSuccess(ctx, data)
+	return i.MsgDataSuccess(ctx, "", data)
 }
 
 func (i *IndexController) NoContext(ctx http.Context) http.Response {
@@ -61,12 +61,10 @@ func (i *IndexController) DownloadExport(c http.Context) http.Response {
 
 func (i *IndexController) ImageUpload(c http.Context) http.Response {
 	return i.Success(c)
-
 }
 
 func (i *IndexController) FileUpload(c http.Context) http.Response {
 	return i.Success(c)
-
 }
 
 func (i *IndexController) RichFileUpload(c http.Context) http.Response {

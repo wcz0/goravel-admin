@@ -29,7 +29,7 @@ func (s *AdminUserService) Login(ctx http.Context) http.Response {
 	if err != nil {
 		return s.MsgError(ctx, err.Error())
 	}
-	return s.DataSuccess(ctx, map[string]string{
+	return s.MsgDataSuccess(ctx, "登录成功", map[string]string{
 		"token": token,
 	})
 }

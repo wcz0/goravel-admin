@@ -7,6 +7,13 @@ var Unauthorized = map[string]any{
 	"doNotDisplayToast": 0,
 }
 
+var TokenExpired = map[string]any{
+	"code":              401,
+	"msg":               "Authentication failed: Token has expired.",
+	"data":              []any{},
+	"doNotDisplayToast": 0,
+}
+
 var FormError = map[string]any{
 	"code":              400,
 	"msg":               "Bad Request.",

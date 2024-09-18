@@ -681,10 +681,6 @@ github.com/unrolled/secure v1.15.0/go.mod h1:BmF5hyM6tXczk3MpQkFf1hpKSRqCyhqcbiQ
 github.com/urfave/cli v1.22.5/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/urfave/cli/v2 v2.27.3 h1:/POWahRmdh7uztQ3CYnaDddk0Rm90PyOgIxgW2rr41M=
 github.com/urfave/cli/v2 v2.27.3/go.mod h1:m4QzxcD2qpra4z7WhzEGn74WZLViBnMpb1ToCAKdGRQ=
-github.com/wcz0/gamis v0.6.8 h1:voKLvQ0ts5LTwmraFsXucT9LLh9L1VqM7Dy7EanX4F0=
-github.com/wcz0/gamis v0.6.8/go.mod h1:qxcBqAwy0IW5g+shRZ8wiEv9Z/CaVwOzuhcaefemssI=
-github.com/wcz0/gamis v0.6.9 h1:mMxhzmfr1u8HYb6I8eqBdSBorEZbSePJI7XaZv9XpXo=
-github.com/wcz0/gamis v0.6.9/go.mod h1:qxcBqAwy0IW5g+shRZ8wiEv9Z/CaVwOzuhcaefemssI=
 github.com/wcz0/gamis v0.6.10 h1:SbnbBO03Ftr83W5uz16l5t0TVcvhxoEQ0L4cXKjpr0A=
 github.com/wcz0/gamis v0.6.10/go.mod h1:qxcBqAwy0IW5g+shRZ8wiEv9Z/CaVwOzuhcaefemssI=
 github.com/wcz0/goravel-authz v0.2.0 h1:RqSWgvslUVnbIGOj/BX8gT9NyRL5tHR5RWm1ePdF1w8=

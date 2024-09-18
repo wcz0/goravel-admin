@@ -1,9 +1,12 @@
 package core
 
 import (
+	"errors"
 	"goravel/app/models/admin"
+	"goravel/app/response"
 	"strings"
 
+	"github.com/goravel/framework/auth"
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
 )
@@ -51,6 +54,7 @@ func (p *Permission) AuthIntercept(ctx http.Context) bool {
 	configExcept := config.Get("admin.auth.except").([]string)
 	mergedExcept := append(p.authExcept, p.permissionExcept...)
 	mergedExcept = append(mergedExcept, configExcept...)
+	// 白名单处理
 	isExcept := false
 	for _, except := range mergedExcept {
 		formattedPath := p.pathFormatting(except)
@@ -59,10 +63,17 @@ func (p *Permission) AuthIntercept(ctx http.Context) bool {
 			break
 		}
 	}
-	var user admin.AdminUser
-	err := facades.Auth(ctx).Guard("admin").User(&user)
+	// 用户登录
+	payload, err := facades.Auth(ctx).Guard("admin").Parse(ctx.Request().Header("Authorization"))
 	if err != nil {
-		return false
+		if errors.Is(err, auth.ErrorTokenExpired) {
+			ctx.Request().AbortWithStatusJson(http.StatusOK, response.TokenExpired)
+		}
+		return true
+	}
+	var user admin.AdminUser
+	if err := facades.Orm().Query().Where("id", payload.Key).First(&user); err != nil {
+		return true
 	}
 	ctx.WithValue("user", user)
 	return !isExcept
@@ -72,8 +83,11 @@ func (p *Permission) AuthIntercept(ctx http.Context) bool {
 	检查用户状态
 */
 func (p *Permission) CheckUserStatus(ctx http.Context) {
-	user := ctx.Value("user").(admin.AdminUser)
-	if user.ID == 0 || user.Enabled == 0 {
+	user := ctx.Value("user")
+	if user == nil {
+		return
+	}
+	if user.(admin.AdminUser).Enabled == 0 {
 		facades.Auth(ctx).Logout()
 	}
 }
@@ -82,51 +96,57 @@ func (p *Permission) CheckUserStatus(ctx http.Context) {
 	权限拦截
 */
 func (p *Permission) PermissionIntercept(ctx http.Context) bool {
-	// config := facades.Config()
-	// if !config.GetBool("admin.permission.enable") {
-	// 	return false
-	// }
-	// if ctx.Request().Path() == config.GetString("admin.route.prefix") {
-	// 	return false
-	// }
-	// configExcept := config.Get("admin.permission.except").([]string)
-	// excepted := append(p.permissionExcept, configExcept...)
-	// excepted = append(excepted, p.authExcept...)
-	// if config.GetBool("admin.show_development_tools") {
-	// 	excepted = append(excepted, "/dev_tools*")
-	// }
-	// if len(excepted) == 0 {
-	// 	return false
-	// }
-	// isExcept := false
-	// for _, except := range excepted {
-	// 	formattedPath := p.pathFormatting(except)
-	// 	if p.pathMatches(ctx, formattedPath) {
-	// 		isExcept = true
-	// 		break
-	// 	}
-	// }
-	// if isExcept {
-	// 	return false
-	// }
-	// user := ctx.Value("user").(admin.AdminUser)
-	// if user.IsAdministrator() {
-	// 	return false
-	// }
-
-	// return user.AllPermissions()
-
+	config := facades.Config()
+	if !config.GetBool("admin.permission.enable") {
+		return false
+	}
+	if ctx.Request().Path() == config.GetString("admin.route.prefix") {
+		return false
+	}
+	// 判断是否为白名单
+	configExcept := config.Get("admin.permission.except").([]string)
+	excepted := append(p.permissionExcept, configExcept...)
+	excepted = append(excepted, p.authExcept...)
+	if config.GetBool("admin.show_development_tools") {
+		excepted = append(excepted, "/dev_tools*")
+	}
+	if len(excepted) == 0 {
+		return false
+	}
+	// 白名单处理
+	isExcept := false
+	for _, except := range excepted {
+		formattedPath := p.pathFormatting(except)
+		if p.pathMatches(ctx, formattedPath) {
+			isExcept = true
+			break
+		}
+	}
+	if isExcept {
+		return false
+	}
+	// 判断是否为超级管理员
+	user := ctx.Value("user").(admin.AdminUser)
+	if user.IsAdministrator() {
+		return false
+	}
+	allPermissions := user.AllPermissions()
+	for _, permission := range allPermissions {
+		if !permission.ShouldPassThrough(ctx) {
+			return false
+		}
+	}
 	return true
 }
 
 
-// func (p *Permission) pathMatches(ctx http.Context, except string) bool {
-// 	path := ctx.Request().Path()
-// 	if except == "/" {
-// 		return path == except
-// 	}
-// 	return path == strings.Trim(except, "/")
-// }
+func (p *Permission) pathMatches(ctx http.Context, except string) bool {
+	path := ctx.Request().Path()
+	if except == "/" {
+		return path == except
+	}
+	return path == strings.Trim(except, "/")
+}
 
 func (p *Permission) pathFormatting(path string) string {
 	prefix := "/" + strings.Trim(facades.Config().GetString("admin.route.prefix"), "/")

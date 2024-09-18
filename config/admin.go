@@ -36,7 +36,7 @@ func init() {
 			// 	"model":         "admin_user",
 			// 	"controller":    "admin",
 			// 	"guard":         "admin_user",
-			"except": []any{},
+			"except": []string{},
 		},
 
 		// TODO: 未实现

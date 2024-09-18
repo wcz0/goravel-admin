@@ -101,12 +101,11 @@ func init() {
 			&providers.ValidationServiceProvider{},
 			&providers.DatabaseServiceProvider{},
 			&gin.ServiceProvider{},
-			&authz.ServiceProvider{},
-			&redis.ServiceProvider{},
 			&translation.ServiceProvider{},
 			// &session.ServiceProvider{},
+			&redis.ServiceProvider{},
 			&cache.ServiceProvider{},
-
+			&authz.ServiceProvider{},
 		},
 	})
 }
