@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"goravel/app/support/core"
-	"goravel/app/response"
 
 	"github.com/goravel/framework/contracts/http"
 )
@@ -10,10 +9,7 @@ import (
 func Authenticate() http.Middleware {
 	return func(ctx http.Context) {
 		permission := core.NewPermission()
-		if permission.AuthIntercept(ctx) {
-			ctx.Request().AbortWithStatusJson(http.StatusOK, response.Unauthorized)
-			return
-		}
+		permission.AuthIntercept(ctx)
 		permission.CheckUserStatus(ctx)
 		ctx.Request().Next()
 	}

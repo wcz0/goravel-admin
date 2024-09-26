@@ -46,37 +46,45 @@ func NewPermission() *Permission {
 	}
 }
 
-func (p *Permission) AuthIntercept(ctx http.Context) bool {
+/**
+* 检查用户是否登录
+* @return bool true 未登录 false 已登录
+*/
+func (p *Permission) AuthIntercept(ctx http.Context) {
 	config := facades.Config()
 	if !config.GetBool("admin.auth.enable") {
-		return false
+		return
 	}
-	configExcept := config.Get("admin.auth.except").([]string)
-	mergedExcept := append(p.authExcept, p.permissionExcept...)
-	mergedExcept = append(mergedExcept, configExcept...)
+	// configExcept := config.Get("admin.auth.except").([]string)
+	// mergedExcept := append(p.authExcept, p.permissionExcept...)
+	// mergedExcept = append(mergedExcept, configExcept...)
 	// 白名单处理
-	isExcept := false
-	for _, except := range mergedExcept {
-		formattedPath := p.pathFormatting(except)
-		if except == formattedPath {
-			isExcept = true
-			break
-		}
-	}
+	// isExcept := false
+	// for _, except := range mergedExcept {
+	// 	formattedPath := p.pathFormatting(except)
+	// 	if except == formattedPath {
+	// 		isExcept = true
+	// 		break
+	// 	}
+	// }
 	// 用户登录
-	payload, err := facades.Auth(ctx).Guard("admin").Parse(ctx.Request().Header("Authorization"))
+	token := ctx.Request().Header("Authorization")
+	payload, err := facades.Auth(ctx).Guard("admin").Parse(token)
 	if err != nil {
 		if errors.Is(err, auth.ErrorTokenExpired) {
 			ctx.Request().AbortWithStatusJson(http.StatusOK, response.TokenExpired)
+			return
+		}else{
+			ctx.Request().AbortWithStatusJson(http.StatusOK, response.Unauthorized)
+			return
 		}
-		return true
 	}
 	var user admin.AdminUser
 	if err := facades.Orm().Query().Where("id", payload.Key).First(&user); err != nil {
-		return true
+		ctx.Request().AbortWithStatusJson(http.StatusOK, response.Unauthorized)
+		return
 	}
 	ctx.WithValue("user", user)
-	return !isExcept
 }
 
 /**

@@ -22,6 +22,7 @@ func Admin() {
 	router.Prefix("admin-api").Group(func(router route.Router) {
 		router.Get("login", auth.LoginPage)
 		router.Post("login", auth.Login)
+		router.Get("logout", auth.Logout)
 		router.Post("register", auth.Register)
 		router.Post("_settings", index.SaveSetting)
 		router.Get("_settings", index.GetSetting)
@@ -44,13 +45,9 @@ func Admin() {
 					router.Resource("roles", admin.NewRoleController())
 					router.Resource("permissions", admin.NewPermissionController())
 					router.Resource("menus", admin.NewMenuController())
-
-
 				})
 			})
 		})
-
-
 	})
 
 }

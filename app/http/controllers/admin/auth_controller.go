@@ -65,7 +65,6 @@ func (a *AuthController) Register(ctx http.Context) http.Response {
 	return a.DataSuccess(ctx, password)
 }
 
-
 // LoginPage 登录页面 需要写入设置 开启amis页面登录
 func (a *AuthController) LoginPage(ctx http.Context) http.Response {
 	form := gamis.Form().
@@ -200,5 +199,13 @@ func (a *AuthController) CurrentUser(ctx http.Context) http.Response {
 				Icon("fa-solid fa-right-from-bracket").
 				OnClick("window.$owl.logout()"),
 		})
-	return a.DataSuccess(ctx, menus)
+	return a.DataSuccess(ctx, struct {
+		Name   string `json:"name"`
+		Avatar string `json:"avatar"`
+		Menus  any    `json:"menus"`
+	}{
+		Name:   userInfo.Name,
+		Avatar: userInfo.Avatar,
+		Menus:  menus,
+	})
 }

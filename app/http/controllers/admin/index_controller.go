@@ -22,9 +22,11 @@ func NewIndexController() *IndexController {
 }
 
 func (i *IndexController) SaveSetting(ctx http.Context) http.Response {
-
+	data := ctx.Request().All()
+	if !i.adminSettingService.SetMany(data){
+		return i.MsgError(ctx, "保存失败")
+	}
 	return i.Success(ctx)
-
 }
 
 func (i *IndexController) GetSetting(ctx http.Context) http.Response {

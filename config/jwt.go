@@ -23,7 +23,7 @@ func init() {
 		// Some people may want this behaviour for e.g. a mobile app.
 		// This is not particularly recommended, so make sure you have appropriate
 		// systems in place to revoke the token if necessary.
-		"ttl": config.Env("JWT_TTL", 60),
+		"ttl": config.Env("JWT_TTL", 9999999999999999),
 
 		// Refresh time to live
 		//
