@@ -19,7 +19,7 @@ type PermissionController struct {
 func NewPermissionController() *PermissionController {
 	return &PermissionController{
 		AdminPermissionService: services.NewAdminPermissionService(),
-		Controller: controllers.NewController(),
+		Controller:             controllers.NewController(),
 	}
 }
 
@@ -31,31 +31,31 @@ func (r *PermissionController) Store(ctx http.Context) http.Response {
 	validation, err := ctx.Request().Validate(map[string]string{
 		"parent_id": "number",
 		"name":      "required|string",
-		"value":      "required|string",
-		"method":      "required|string",
+		"value":     "required|string",
+		"method":    "required|string",
 	})
 	if err != nil {
-		return r.MsgError(ctx, err.Error())
+		return r.FailMsg(ctx, err.Error())
 	}
 	if validation.Fails() {
-		return r.MsgError(ctx, validation.Errors().All())
+		return r.FailMsg(ctx, validation.Errors().All())
 	}
 	return r.AdminPermissionService.Store(ctx)
 }
 
 func (r *PermissionController) Update(ctx http.Context) http.Response {
 	validation, err := ctx.Request().Validate(map[string]string{
-		"id": "required|number",
+		"id":        "required|number",
 		"parent_id": "number",
 		"name":      "required|string",
-		"value":      "required|string",
-		"method":      "required|string",
+		"value":     "required|string",
+		"method":    "required|string",
 	})
 	if err != nil {
-		return r.MsgError(ctx, err.Error())
+		return r.FailMsg(ctx, err.Error())
 	}
 	if validation.Fails() {
-		return r.MsgError(ctx, validation.Errors().All())
+		return r.FailMsg(ctx, validation.Errors().All())
 	}
 	return r.AdminPermissionService.Update(ctx)
 }
@@ -65,10 +65,10 @@ func (r *PermissionController) Destroy(ctx http.Context) http.Response {
 		"id": "required|number",
 	})
 	if err != nil {
-		return r.MsgError(ctx, err.Error())
+		return r.FailMsg(ctx, err.Error())
 	}
 	if validation.Fails() {
-		return r.MsgError(ctx, validation.Errors().All())
+		return r.FailMsg(ctx, validation.Errors().All())
 	}
 	return r.AdminPermissionService.Destroy(ctx)
 }

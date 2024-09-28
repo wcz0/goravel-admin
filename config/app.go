@@ -106,6 +106,7 @@ func init() {
 			&redis.ServiceProvider{},
 			&cache.ServiceProvider{},
 			&authz.ServiceProvider{},
+			&providers.AdminServiceProvider{},
 		},
 	})
 }

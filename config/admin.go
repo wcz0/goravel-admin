@@ -75,14 +75,14 @@ func init() {
 				// 是否显示 [全屏] 按钮
 				"full_screen": config.Env("ADMIN_HEADER_FULL_SCREEN", true),
 				// 是否显示 [多语言] 按钮
-				"locale_toggle": config.Env("ADMIN_HEADER_LOCALE_TOGGLE", false),
+				"locale_toggle": config.Env("ADMIN_HEADER_LOCALE_TOGGLE", true),
 				// 是否显示 [主题配置] 按钮
 				"theme_config": config.Env("ADMIN_HEADER_THEME_CONFIG", true),
 			},
 			// 多语言选项
 			"locale_options": map[string]string{
-				"zh-CN": "简体中文",
 				"en":    "English",
+				"zh_CN": "简体中文",
 			},
 			/*
 			 * keep_alive 页面缓存黑名单

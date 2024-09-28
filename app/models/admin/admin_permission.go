@@ -19,6 +19,7 @@ type AdminPermission struct {
 	ParentId uint
 	orm.Model
 	AdminRoles []*AdminRole `gorm:"many2many:admin_role_permissions;joinForeignKey:permission_id;joinReferences:role_id"`
+	AdminMenus []*AdminMenu `gorm:"many2many:admin_permission_menu;joinForeignKey:permission_id;joinReferences:menu_id"`
 }
 
 func NewPermission () *AdminPermission {

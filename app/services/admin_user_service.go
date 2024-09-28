@@ -20,16 +20,16 @@ func NewAdminUserService() *AdminUserService {
 func (s *AdminUserService) Login(ctx http.Context) http.Response {
 	var adminUser admin.AdminUser
 	if err := facades.Orm().Query().Where("username", ctx.Request().Input("username")).First(&adminUser); err != nil {
-		return s.MsgError(ctx, err.Error())
+		return s.FailMsg(ctx, err.Error())
 	}
 	if !facades.Hash().Check(ctx.Request().Input("password"), adminUser.Password) {
-		return s.MsgError(ctx, "Password error.")
+		return s.FailMsg(ctx, "Password error.")
 	}
 	token, err := facades.Auth(ctx).Login(&adminUser)
 	if err != nil {
-		return s.MsgError(ctx, err.Error())
+		return s.FailMsg(ctx, err.Error())
 	}
-	return s.MsgDataSuccess(ctx, "登录成功", map[string]string{
+	return s.SuccessMsgData(ctx, "登录成功", map[string]string{
 		"token": token,
 	})
 }

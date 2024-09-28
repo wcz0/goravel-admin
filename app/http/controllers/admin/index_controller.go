@@ -3,6 +3,7 @@ package admin
 import (
 	"goravel/app/http/controllers"
 	"goravel/app/services"
+	"goravel/app/support/core"
 	"goravel/app/tools"
 
 	"github.com/goravel/framework/contracts/http"
@@ -16,15 +17,14 @@ type IndexController struct {
 
 func NewIndexController() *IndexController {
 	return &IndexController{
-		Controller: controllers.NewController(),
+		Controller:          controllers.NewController(),
 		adminSettingService: services.NewAdminSettingService(),
 	}
 }
 
 func (i *IndexController) SaveSetting(ctx http.Context) http.Response {
-	data := ctx.Request().All()
-	if !i.adminSettingService.SetMany(data){
-		return i.MsgError(ctx, "保存失败")
+	if err := i.adminSettingService.SetMany(ctx.Request().All()); err != nil {
+		return i.FailMsg(ctx, err.Error())
 	}
 	return i.Success(ctx)
 }
@@ -32,8 +32,8 @@ func (i *IndexController) SaveSetting(ctx http.Context) http.Response {
 func (i *IndexController) GetSetting(ctx http.Context) http.Response {
 	config := facades.Config()
 	localOptions := config.Get("admin.layout.local_options", map[string]string{
-		"zh-CN": "中文",
 		"en":    "English",
+		"zh_CN": "简体中文",
 	})
 
 	data := map[string]any{
@@ -44,17 +44,17 @@ func (i *IndexController) GetSetting(ctx http.Context) http.Response {
 		"layout":   config.Get("admin.layout"),
 		"logo":     config.Env("APP_URL").(string) + config.Get("admin.logo").(string),
 
-		"login_captcha":          config.Get("admin.auth.login_captcha"),
+		"login_captcha":          config.GetBool("admin.auth.login_captcha"),
 		"locale_options":         tools.Map2options(localOptions.(map[string]string)),
 		"show_development_tools": config.Get("admin.show_development_tools"),
-		"system_theme_setting":   i.adminSettingService.Get("system_theme_setting", nil, false),
+		"system_theme_setting":   i.adminSettingService.Get("system_theme_setting", "", false),
 		"enabled_extensions":     []string{},
 	}
-	return i.MsgDataSuccess(ctx, "", data)
+	return i.SuccessMsgData(ctx, "", data)
 }
 
 func (i *IndexController) NoContext(ctx http.Context) http.Response {
-	return i.MsgSuccess(ctx, "")
+	return i.SuccessMsg(ctx, "")
 }
 
 func (i *IndexController) DownloadExport(c http.Context) http.Response {
@@ -90,9 +90,17 @@ func (i *IndexController) SearchIcon() {
 
 }
 
-func (i *IndexController) GetMenus(c http.Context) http.Response {
-	return i.Success(c)
-
+// GetMenus 获取菜单
+func (i *IndexController) GetMenus(ctx http.Context) http.Response {
+	instance, err := facades.App().Make("admin.menu")
+	if err != nil {
+		return i.FailMsg(ctx, "获取菜单失败")
+	}
+	menuInstance, ok := instance.(*core.Menu)
+	if !ok {
+		return i.FailMsg(ctx, "获取菜单失败2")
+	}
+	return i.SuccessData(ctx, menuInstance.All(ctx))
 }
 
 func (i *IndexController) GetDashBoard() {

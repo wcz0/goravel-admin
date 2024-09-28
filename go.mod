@@ -3,6 +3,7 @@ module goravel
 go 1.22.1
 
 require (
+	github.com/duke-git/lancet/v2 v2.3.2
 	github.com/goravel/framework v1.14.4
 	github.com/goravel/gin v1.2.3
 	github.com/goravel/redis v1.2.0

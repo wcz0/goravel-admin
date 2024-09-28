@@ -1,14 +1,14 @@
 package admin
 
 import (
-	"github.com/goravel/framework/support/carbon"
+	"github.com/goravel/framework/database/orm"
+
 )
 
 type AdminSetting struct {
-	Key       string
+	Key       string 
 	Values    string
-	CreatedAt carbon.DateTime
-	UpdateAt  carbon.DateTime
+	orm.Timestamps
 }
 
 func NewAdminSetting() *AdminSetting {

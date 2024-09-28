@@ -21,7 +21,10 @@ func NewAdminUser() *AdminUser {
 }
 
 func (a *AdminUser) IsAdministrator() bool {
-	bool, _ := a.IsRole("administrator")
+	bool, err := a.IsRole("administrator")
+	if err != nil {
+		return false
+	}
 	return bool
 }
 
@@ -31,7 +34,7 @@ func (a *AdminUser) IsRole(role string) (bool, error) {
 		return false, err
 	}
 	for _, v := range adminRole {
-		if v.Name == role {
+		if v.Slug == role {
 			return true, nil
 		}
 	}

@@ -34,10 +34,10 @@ func (a *AuthController) Login(ctx http.Context) http.Response {
 		"password": "required|min_len:5|max_len:32",
 	})
 	if err != nil {
-		return a.MsgError(ctx, err.Error())
+		return a.FailMsg(ctx, err.Error())
 	}
 	if validator.Fails() {
-		return a.MsgError(ctx, validator.Errors().All())
+		return a.FailMsg(ctx, validator.Errors().All())
 	}
 	return a.AdminUserService.Login(ctx)
 }
@@ -53,16 +53,16 @@ func (a *AuthController) Register(ctx http.Context) http.Response {
 		"password": "required|min_len:5|max_len:32",
 	})
 	if err != nil {
-		return a.MsgError(ctx, err.Error())
+		return a.FailMsg(ctx, err.Error())
 	}
 	if validator.Fails() {
-		return a.MsgError(ctx, validator.Errors().All())
+		return a.FailMsg(ctx, validator.Errors().All())
 	}
 	password, err := facades.Hash().Make(ctx.Request().Input("password"))
 	if err != nil {
-		return a.Error(ctx)
+		return a.Fail(ctx)
 	}
-	return a.DataSuccess(ctx, password)
+	return a.SuccessData(ctx, password)
 }
 
 // LoginPage 登录页面 需要写入设置 开启amis页面登录
@@ -199,7 +199,7 @@ func (a *AuthController) CurrentUser(ctx http.Context) http.Response {
 				Icon("fa-solid fa-right-from-bracket").
 				OnClick("window.$owl.logout()"),
 		})
-	return a.DataSuccess(ctx, struct {
+	return a.SuccessData(ctx, struct {
 		Name   string `json:"name"`
 		Avatar string `json:"avatar"`
 		Menus  any    `json:"menus"`

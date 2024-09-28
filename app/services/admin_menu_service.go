@@ -9,7 +9,3 @@ func NewAdminMenuService() *AdminMenuService {
 		Service:  NewService(),
 	}
 }
-
-func (a *AdminMenuService) All() []map[string]interface{} {
-
-}

@@ -22,7 +22,6 @@ func (u *UserController) PutUserSetting(c http.Context) http.Response {
 	return u.Success(c)
 }
 
-
 func (r *UserController) Index(ctx http.Context) http.Response {
 	return nil
 }
@@ -49,7 +48,7 @@ func (a *UserController) GetUserSetting(ctx http.Context) http.Response {
 		PanelClassName("px-48 m:px-0").
 		Mode("horizontal").
 		InitApi("/current-user").
-		Api("put:"+ tools.GetAdmin("/current-user")).
+		Api("put:" + tools.GetAdmin("/current-user")).
 		Body([]any{
 			gamis.ImageControl().Label(tools.AdminLang(ctx, "admin_user.avatar")).Name("avatar").Receiver(tools.GetAdmin("upload_image")),
 			gamis.TextControl().Label(tools.AdminLang(ctx, "admin_user.name")).Name("name").Required(true),
@@ -57,5 +56,5 @@ func (a *UserController) GetUserSetting(ctx http.Context) http.Response {
 			gamis.TextControl().Type("input-password").Label(tools.AdminLang(ctx, "admin_user.password")).Name("password"),
 			gamis.TextControl().Type("input-password").Label(tools.AdminLang(ctx, "admin_user.confirm_password")).Name("confirm_password").Required(true),
 		})
-	return a.DataSuccess(ctx, gamis.Page().Body(form))
+	return a.SuccessData(ctx, gamis.Page().Body(form))
 }

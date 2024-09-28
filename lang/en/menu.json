@@ -1,0 +1,9 @@
+{
+    "dashboard": "Dashboard",
+    "admin_system": "System Management",
+    "admin_users": "Admin Users",
+    "admin_roles": "Roles",
+    "admin_permission": "Permissions",
+    "admin_menu": "Menu",
+    "admin_setting": "Settings"
+}

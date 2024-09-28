@@ -19,100 +19,100 @@ func (e *ErrorHandler) Json(ctx http.Context, json any) http.Response {
 
 func (e *ErrorHandler) Success(ctx http.Context) http.Response {
 	return ctx.Response().Success().Json(http.Json{
-		"status": enums.StatusSuccess,
-		"code": enums.Success,
-		"msg": enums.CodeEnum(enums.Success).Message(),
-		"data": []any{},
+		"status":            enums.StatusSuccess,
+		"code":              enums.Success,
+		"msg":               enums.CodeEnum(enums.Success).Message(),
+		"data":              []any{},
 		"doNotDisplayToast": 0,
 	})
 }
 
-func (e *ErrorHandler) MsgSuccess(ctx http.Context, msg any) http.Response {
+func (e *ErrorHandler) SuccessMsg(ctx http.Context, msg any) http.Response {
 	return ctx.Response().Success().Json(http.Json{
-		"status": enums.StatusSuccess,
-		"code": enums.Success,
-		"msg": msg,
-		"data": []any{},
+		"status":            enums.StatusSuccess,
+		"code":              enums.Success,
+		"msg":               msg,
+		"data":              []any{},
 		"doNotDisplayToast": 0,
 	})
 }
 
-func (e *ErrorHandler) DataSuccess(ctx http.Context, data any) http.Response {
+func (e *ErrorHandler) SuccessData(ctx http.Context, data any) http.Response {
 	return ctx.Response().Success().Json(http.Json{
-		"status": enums.StatusSuccess,
-		"code": enums.Success,
-		"msg": enums.CodeEnum(enums.Success).Message(),
-		"data": data,
+		"status":            enums.StatusSuccess,
+		"code":              enums.Success,
+		"msg":               enums.CodeEnum(enums.Success).Message(),
+		"data":              data,
 		"doNotDisplayToast": 0,
 	})
 }
 
-func (e *ErrorHandler) MsgDataSuccess(ctx http.Context, msg any, data any) http.Response {
+func (e *ErrorHandler) SuccessMsgData(ctx http.Context, msg any, data any) http.Response {
 	return ctx.Response().Success().Json(http.Json{
-		"status": enums.StatusSuccess,
-		"code": enums.Success,
-		"msg": msg,
-		"data": data,
+		"status":            enums.StatusSuccess,
+		"code":              enums.Success,
+		"msg":               msg,
+		"data":              data,
 		"doNotDisplayToast": 0,
 	})
 }
 
-func (e *ErrorHandler) CodeMsgSuccess(ctx http.Context, code int, msg any) http.Response {
+func (e *ErrorHandler) SuccessCodeMsg(ctx http.Context, code int, msg any) http.Response {
 	return ctx.Response().Success().Json(http.Json{
-		"status": enums.StatusSuccess,
-		"code": code,
-		"msg": msg,
-		"data": []any{},
+		"status":            enums.StatusSuccess,
+		"code":              code,
+		"msg":               msg,
+		"data":              []any{},
 		"doNotDisplayToast": 0,
 	})
 }
 
-func (e *ErrorHandler) Error(ctx http.Context) http.Response {
+func (e *ErrorHandler) Fail(ctx http.Context) http.Response {
 	return ctx.Response().Success().Json(http.Json{
-		"status": enums.StatusFailed,
-		"code": enums.Failed,
-		"msg": enums.CodeEnum(enums.Failed).Message(),
-		"data": []any{},
+		"status":            enums.StatusFailed,
+		"code":              enums.Failed,
+		"msg":               enums.CodeEnum(enums.Failed).Message(),
+		"data":              []any{},
 		"doNotDisplayToast": 0,
 	})
 }
 
-func (e *ErrorHandler) MsgError(ctx http.Context, msg any) http.Response {
+func (e *ErrorHandler) FailMsg(ctx http.Context, msg any) http.Response {
 	return ctx.Response().Success().Json(http.Json{
-		"status": enums.StatusFailed,
-		"code": enums.Failed,
-		"msg": msg,
-		"data": []any{},
+		"status":            enums.StatusFailed,
+		"code":              enums.Failed,
+		"msg":               msg,
+		"data":              []any{},
 		"doNotDisplayToast": 0,
 	})
 }
 
-func (e *ErrorHandler) DataError(ctx http.Context, data any) http.Response {
+func (e *ErrorHandler) FailData(ctx http.Context, data any) http.Response {
 	return ctx.Response().Success().Json(http.Json{
-		"status": enums.StatusFailed,
-		"code": enums.Failed,
-		"msg": "Error.",
-		"data": data,
+		"status":            enums.StatusFailed,
+		"code":              enums.Failed,
+		"msg":               "Error.",
+		"data":              data,
 		"doNotDisplayToast": 0,
 	})
 }
 
-func (e *ErrorHandler) MsgDataError(ctx http.Context, msg any, data any) http.Response {
+func (e *ErrorHandler) FailMsgData(ctx http.Context, msg any, data any) http.Response {
 	return ctx.Response().Success().Json(http.Json{
-		"status": enums.StatusFailed,
-		"code": enums.Failed,
-		"msg": msg,
-		"data": data,
+		"status":            enums.StatusFailed,
+		"code":              enums.Failed,
+		"msg":               msg,
+		"data":              data,
 		"doNotDisplayToast": 0,
 	})
 }
 
-func (e *ErrorHandler) CodeMsgError(ctx http.Context, code int, msg any) http.Response {
+func (e *ErrorHandler) FailCodeMsg(ctx http.Context, code int, msg string) http.Response {
 	return ctx.Response().Json(code, http.Json{
-		"status": enums.StatusFailed,
-		"code": code,
-		"msg": msg,
-		"data": []any{},
+		"status":            enums.StatusFailed,
+		"code":              code,
+		"msg":               msg,
+		"data":              []any{},
 		"doNotDisplayToast": 0,
 	})
 }

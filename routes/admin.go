@@ -19,7 +19,7 @@ func Admin() {
 	// router.Get("test", index.Test)
 
 	// admin-api
-	router.Prefix("admin-api").Group(func(router route.Router) {
+	router.Prefix("admin-api").Middleware(middleware.AdminLang()).Group(func(router route.Router) {
 		router.Get("login", auth.LoginPage)
 		router.Post("login", auth.Login)
 		router.Get("logout", auth.Logout)
@@ -38,6 +38,7 @@ func Admin() {
 			router.Get("user_setting", user.GetUserSetting)
 			router.Put("user_setting", user.PutUserSetting)
 
+			router.Resource("dashboard", admin.NewHomeController())
 			router.Middleware(middleware.Permission()).Group(func(router route.Router) {
 
 				router.Prefix("system").Group(func(router route.Router) {
