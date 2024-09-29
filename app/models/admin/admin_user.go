@@ -48,3 +48,7 @@ func (a *AdminUser) AllPermissions() []AdminPermission {
 	}
 	return adminPermissions
 }
+
+func (a *AdminUser) PrimaryKey() string {
+	return "id"
+}

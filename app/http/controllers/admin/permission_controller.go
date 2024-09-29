@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"goravel/app/http/controllers"
 	"goravel/app/services"
 
 	"github.com/goravel/framework/contracts/http"
@@ -12,14 +11,12 @@ import (
 )
 
 type PermissionController struct {
-	*services.AdminPermissionService
-	*controllers.Controller
+	*Controller[*services.AdminPermissionService] // 继承
 }
 
 func NewPermissionController() *PermissionController {
 	return &PermissionController{
-		AdminPermissionService: services.NewAdminPermissionService(),
-		Controller:             controllers.NewController(),
+		Controller: NewAdminController[*services.AdminPermissionService](services.NewAdminPermissionService()),
 	}
 }
 
@@ -40,7 +37,7 @@ func (r *PermissionController) Store(ctx http.Context) http.Response {
 	if validation.Fails() {
 		return r.FailMsg(ctx, validation.Errors().All())
 	}
-	return r.AdminPermissionService.Store(ctx)
+	return r.Controller.Service.Store(ctx)
 }
 
 func (r *PermissionController) Update(ctx http.Context) http.Response {
@@ -57,7 +54,7 @@ func (r *PermissionController) Update(ctx http.Context) http.Response {
 	if validation.Fails() {
 		return r.FailMsg(ctx, validation.Errors().All())
 	}
-	return r.AdminPermissionService.Update(ctx)
+	return r.Controller.Service.Update(ctx)
 }
 
 func (r *PermissionController) Destroy(ctx http.Context) http.Response {
@@ -70,12 +67,12 @@ func (r *PermissionController) Destroy(ctx http.Context) http.Response {
 	if validation.Fails() {
 		return r.FailMsg(ctx, validation.Errors().All())
 	}
-	return r.AdminPermissionService.Destroy(ctx)
+	return r.Controller.Service.Destroy(ctx)
 }
 
 func (r *PermissionController) Index(ctx http.Context) http.Response {
 	if r.ActionOfGetData(ctx) {
-		return r.AdminPermissionService.List(ctx)
+		return r.Controller.Service.List(ctx)
 	}
 	// return r.DataSuccess(ctx, list(ctx))
 	return r.Success(ctx)

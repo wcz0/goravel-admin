@@ -1,19 +1,17 @@
 package admin
 
 import (
-	"goravel/app/http/controllers"
-
 	"github.com/goravel/framework/contracts/http"
 	"github.com/wcz0/gamis"
 )
 
 type HomeController struct {
-	*controllers.Controller
+	*Controller[string]
 }
 
 func NewHomeController() *HomeController {
 	return &HomeController{
-		Controller: controllers.NewController(),
+		Controller: NewAdminController[string](""),
 	}
 }
 

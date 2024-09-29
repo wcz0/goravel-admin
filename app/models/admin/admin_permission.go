@@ -45,3 +45,8 @@ func (a *AdminPermission) ShouldPassThrough(ctx http.Context) bool {
 	}
 	return false
 }
+
+
+func (a *AdminPermission) PrimaryKey() string {
+	return "id"
+}

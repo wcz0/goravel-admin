@@ -8,12 +8,12 @@ import (
 )
 
 type AdminUserService struct {
-	*Service
+	*AdminService[*admin.AdminUser]
 }
 
 func NewAdminUserService() *AdminUserService {
 	return &AdminUserService{
-		Service: NewService(),
+		AdminService: NewAdminService[*admin.AdminUser](admin.NewAdminUser()),
 	}
 }
 

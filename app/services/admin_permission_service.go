@@ -8,12 +8,12 @@ import (
 )
 
 type AdminPermissionService struct {
-	*Service
+	*AdminService[*admin.AdminPermission]
 }
 
 func NewAdminPermissionService() *AdminPermissionService {
 	return &AdminPermissionService{
-		Service: NewService(),
+		AdminService: NewAdminService[*admin.AdminPermission](admin.NewPermission()),
 	}
 }
 
