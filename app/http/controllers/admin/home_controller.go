@@ -225,7 +225,7 @@ func (h *HomeController) frameworkInfo() *renderers.Card {
 				Justify("center").
 				AlignItems("center").
 				Items([]any{
-					gamis.Image().Src(tools.Url(config.GetString("app.logo"))),
+					gamis.Image().Src(tools.Url(config.GetString("admin.logo"))),
 					gamis.Wrapper().ClassName("text-3xl mt-9 font-bold").Body(config.GetString("admin.name")),
 					gamis.Flex().ClassName("w-full mt-5").Justify("center").Items([]any{
 						link("Github", "https://github.com/wcz0/goravel-admin"),

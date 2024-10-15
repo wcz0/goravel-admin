@@ -1,7 +1,7 @@
 package admin
 
 import (
-	"goravel/app/http/controllers"
+	"goravel/app/services"
 	"goravel/app/tools"
 
 	"github.com/goravel/framework/contracts/http"
@@ -9,12 +9,12 @@ import (
 )
 
 type UserController struct {
-	*controllers.Controller
+	*Controller[*services.AdminUserService]
 }
 
 func NewUserController() *UserController {
 	return &UserController{
-		Controller: controllers.NewController(),
+		Controller: NewAdminController[*services.AdminUserService](services.NewAdminUserService()),
 	}
 }
 
