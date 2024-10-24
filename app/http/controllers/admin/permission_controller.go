@@ -11,12 +11,12 @@ import (
 )
 
 type PermissionController struct {
-	*Controller[*services.AdminPermissionService] // 继承
+	*ControllerImpl[*services.AdminPermissionService] // 继承
 }
 
 func NewPermissionController() *PermissionController {
 	return &PermissionController{
-		Controller: NewAdminController[*services.AdminPermissionService](services.NewAdminPermissionService()),
+		ControllerImpl: NewAdminController[*services.AdminPermissionService](services.NewAdminPermissionService()),
 	}
 }
 
@@ -37,7 +37,7 @@ func (r *PermissionController) Store(ctx http.Context) http.Response {
 	if validation.Fails() {
 		return r.FailMsg(ctx, validation.Errors().All())
 	}
-	return r.Controller.Service.Store(ctx)
+	return r.ControllerImpl.Service.Store(ctx)
 }
 
 func (r *PermissionController) Update(ctx http.Context) http.Response {
@@ -54,7 +54,7 @@ func (r *PermissionController) Update(ctx http.Context) http.Response {
 	if validation.Fails() {
 		return r.FailMsg(ctx, validation.Errors().All())
 	}
-	return r.Controller.Service.Update(ctx)
+	return r.ControllerImpl.Service.Update(ctx)
 }
 
 func (r *PermissionController) Destroy(ctx http.Context) http.Response {
@@ -67,12 +67,12 @@ func (r *PermissionController) Destroy(ctx http.Context) http.Response {
 	if validation.Fails() {
 		return r.FailMsg(ctx, validation.Errors().All())
 	}
-	return r.Controller.Service.Destroy(ctx)
+	return r.ControllerImpl.Service.Destroy(ctx)
 }
 
 func (r *PermissionController) Index(ctx http.Context) http.Response {
 	if r.ActionOfGetData(ctx) {
-		return r.Controller.Service.List(ctx)
+		return r.ControllerImpl.Service.List(ctx)
 	}
 	// return r.DataSuccess(ctx, list(ctx))
 	return r.Success(ctx)

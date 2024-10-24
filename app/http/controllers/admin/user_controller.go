@@ -6,15 +6,16 @@ import (
 
 	"github.com/goravel/framework/contracts/http"
 	"github.com/wcz0/gamis"
+	"github.com/wcz0/gamis/renderers"
 )
 
 type UserController struct {
-	*Controller[*services.AdminUserService]
+	*ControllerImpl[*services.AdminUserService]
 }
 
 func NewUserController() *UserController {
 	return &UserController{
-		Controller: NewAdminController[*services.AdminUserService](services.NewAdminUserService()),
+		ControllerImpl: NewAdminController[*services.AdminUserService](services.NewAdminUserService()),
 	}
 }
 
@@ -57,4 +58,10 @@ func (a *UserController) GetUserSetting(ctx http.Context) http.Response {
 			gamis.TextControl().Type("input-password").Label(tools.AdminLang(ctx, "admin_user.confirm_password")).Name("confirm_password").Required(true),
 		})
 	return a.SuccessData(ctx, gamis.Page().Body(form))
+}
+
+func (a *UserController) List(ctx http.Context) *renderers.Page {
+	crud := a.BaseCRUD(ctx).HeaderToolbar([]any{}).Filter(a.BaseFilter().Body([]any{})).Columns([]any{})
+
+	return a.BaseList(crud)
 }

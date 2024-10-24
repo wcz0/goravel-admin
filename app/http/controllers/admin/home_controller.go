@@ -10,18 +10,18 @@ import (
 )
 
 type HomeController struct {
-	*Controller[string]
+	*ControllerImpl[string]
 }
 
 func NewHomeController() *HomeController {
 	return &HomeController{
-		Controller: NewAdminController[string](""),
+		ControllerImpl: NewAdminController[string](""),
 	}
 }
 
 // GET /resource
 func (h *HomeController) Index(ctx http.Context) http.Response {
-	page := h.Controller.BasePage().Css(h.css(ctx)).Body([]any{
+	page := h.ControllerImpl.BasePage().Css(h.css(ctx)).Body([]any{
 		gamis.Grid().ClassName("mb-1").Columns([]any{
 			h.frameworkInfo().Set("md", 5),
 			gamis.Flex().Items([]any{
