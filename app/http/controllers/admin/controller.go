@@ -24,6 +24,7 @@ type ControllerImpl[T any] struct {
 	Extra Extra
 }
 
+// 基础属性
 type Extra struct {
 	AdminPrefix string
 	IsCreate    bool
@@ -49,6 +50,7 @@ func NewAdminController[T any](service T, extra ...Extra) *ControllerImpl[T] {
 	return a
 }
 
+// 获取基础url
 func (e *Extra) QueryPath(ctx http.Context) string {
 	path := ctx.Request().Path()
 	path = strings.TrimPrefix(path, e.AdminPrefix)
@@ -72,57 +74,80 @@ func (c *ControllerImpl[T]) ActionOfQuickEditItem(ctx http.Context) bool {
 }
 
 
-// func (c *AdminController[T]Impl) GetListGetDataPath() string {
-// 	return tools.GetAdmin(c.Controller.QueryPath() + "?_action=getData")
-// }
-
-
-
-
-
-
 /**
  * QueryPathTrait
  */
 
  // 获取列表数据
 func (c *ControllerImpl[T]) GetListGetDataPath(ctx http.Context) string {
-	return tools.GetAdmin(ctx.Request().Path() + "?_action=getData")
+	return tools.GetAdmin(c.Extra.QueryPath(ctx) + "?_action=getData")
 }
 
 // 获取导出数据
 func (c *ControllerImpl[T]) GetExportPath(ctx http.Context) string {
-	return tools.GetAdmin(ctx.Request().FullUrl() + "?_action=export")
+	return tools.GetAdmin(c.Extra.QueryPath(ctx) + "?_action=export")
 }
 
-// 删除路径 TODO: 未测试
-// func (c *AdminController[T]Impl) GetDeletePath(ctx http.Context) string {
-// 	return "delete:" + tools.GetAdmin(c.Controller.QueryPath()+"/"+ctx.Request().Input("id"))
-// }
+// 删除路径 ?
+func (c *ControllerImpl[T]) GetDeletePath(ctx http.Context, primaryKey ...string) string {
+	key := "id"
+	if len(primaryKey) > 0 {
+		key = primaryKey[0]
+	}
+	return "delete:" + tools.GetAdmin(c.Extra.QueryPath(ctx)+"/${"+key+"}")
+}
 
-// 批量删除 TODO: 未测试
+// 批量删除 ?
 func (c *ControllerImpl[T]) GetBulkDeletePath(ctx http.Context) string {
-	return "delete:" + tools.GetAdmin(c.Extra.QueryPath(ctx)+"/"+ctx.Request().Input("ids"))
+	return "delete:" + tools.GetAdmin(c.Extra.QueryPath(ctx)+"/${ids}")
 }
 
-// 获取编辑页面路径
-func (c *ControllerImpl[T]) GetEditPath(ctx http.Context) string {
-	return tools.GetAdmin(ctx.Request().Path() + "/" + ctx.Request().Input("id") + "/edit")
+// 获取编辑页面路径 ?
+func (c *ControllerImpl[T]) GetEditPath(ctx http.Context, primaryKey ...string) string {
+	key := "id"
+	if len(primaryKey) > 0 {
+		key = primaryKey[0]
+	}
+	return "/"+strings.Trim(c.Extra.QueryPath(ctx), "/")+"/${"+key+"}/edit"
 }
 
-// 获取编辑数据
-func (c *ControllerImpl[T]) GetEditGetDataPath(ctx http.Context) string {
-	return c.GetEditPath(ctx) + "?_action=getData"
+// 获取编辑数据 ?
+func (c *ControllerImpl[T]) GetEditGetDataPath(ctx http.Context, primaryKey ...string) string {
+	key := "id"
+	if len(primaryKey) > 0 {
+		key = primaryKey[0]
+	}
+	path := c.Extra.QueryPath(ctx)
+	paths := strings.Split(path, "/")
+	last := paths[len(paths)-1]
+	if last == "edit" {
+		path = "/${"+key+"}/edit"
+	}
+	return tools.GetAdmin(path + "?_action=getData")
 }
 
-// 详情页面
-func (c *ControllerImpl[T]) GetShowPath(ctx http.Context) string {
-	return tools.GetAdmin(ctx.Request().Path() + "/" + ctx.Request().Input("id"))
+// 详情页面 ?
+func (c *ControllerImpl[T]) GetShowPath(ctx http.Context, primaryKey ...string) string {
+	key := "id"
+	if len(primaryKey) > 0 {
+		key = primaryKey[0]
+	}
+	return "/"+strings.Trim(c.Extra.QueryPath(ctx), "/")+"/${"+key+"}"
 }
 
-// 编辑保存
-func (c *ControllerImpl[T]) GetUpdatePath(ctx http.Context) string {
-	return "put:" + tools.GetAdmin(ctx.Request().Path()+"/"+ctx.Request().Input("id"))
+// 编辑保存 ?
+func (c *ControllerImpl[T]) GetUpdatePath(ctx http.Context, primaryKey ...string) string {
+	key := "id"
+	if len(primaryKey) > 0 {
+		key = primaryKey[0]
+	}
+	path := c.Extra.QueryPath(ctx)
+	paths := strings.Split(path, "/")
+	last := paths[len(paths)-1]
+	if last == "edit" {
+		path = "/${"+key+"}/edit"
+	}
+	return "put:" + tools.GetAdmin(path)
 }
 
 // 获取快速编辑数据
@@ -135,7 +160,7 @@ func (c *ControllerImpl[T]) GetQuickEditItemPath(ctx http.Context) string {
 	return tools.GetAdmin(ctx.Request().FullUrl() + "?_action=quickEditItem")
 }
 
-// 获取详情
+// 获取详情 ?
 func (c *ControllerImpl[T]) GetShowGetDataPath(ctx http.Context) (string, error) {
 	path := c.Extra.QueryPath(ctx)
 	// 获取字段值
@@ -245,7 +270,7 @@ func (c *ControllerImpl[T]) rowEditButton(ctx http.Context, form renderers.Form,
 	}
 	action := gamis.LinkAction().Link(c.GetEditPath(ctx))
 	if dialog {
-		
+
 	}
 	action = action.Label(title).Level("link")
 	return action
@@ -339,12 +364,12 @@ func (c *ControllerImpl[T]) BaseDetail(ctx http.Context) *renderers.Form {
 		InitApi(api)
 }
 
-// 基础列表
+// 基础列表 #
 func (c *ControllerImpl[T]) BaseList(crud any) *renderers.Page {
-	return c.BasePage().Body(crud)
+	return gamis.Page().ClassName("m:overflow-auto").Body(crud)
 }
 
-// 导出按钮
+// 导出按钮 ?
 func (c *ControllerImpl[T]) ExportAction(ctx http.Context, disableSelectedItem bool) *renderers.Service {
 	return gamis.Service().
 		Id("export-action").
