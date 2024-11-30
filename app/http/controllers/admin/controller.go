@@ -233,62 +233,125 @@ func (a *ControllerImpl[T]) BackButton(ctx http.Context) *renderers.OtherAction 
  */
 func (c *ControllerImpl[T]) BulkDeleteButton(ctx http.Context) *renderers.DialogAction {
 	return gamis.DialogAction().
-		Label("删除").
+		Label(tools.AdminLang(ctx, "admin.delete")).
 		Icon("fa-solid fa-trash-can").
 		Dialog(
-			gamis.Dialog().Title("删除").
+			gamis.Dialog().Title(tools.AdminLang(ctx, "admin.delete")).
 				ClassName("py-2").Actions([]any{
-				gamis.Action().ActionType("cancel").Label(tools.AdminLang(ctx, "admin.cancel")),
-				gamis.Action().ActionType("submit").Label(tools.AdminLang(ctx, "admin.delete")).Level("danger"),
+					gamis.Action().ActionType("cancel").Label(tools.AdminLang(ctx, "admin.cancel")),
+					gamis.Action().ActionType("submit").Label(tools.AdminLang(ctx, "admin.delete")).Level("danger"),
 			}).Body([]any{
 				gamis.Form().WrapWithPanel(false).Api(c.GetBulkDeletePath(ctx)).Body([]any{
 					gamis.Tpl().ClassName("py-2").Tpl(tools.AdminLang(ctx, "admin.confirm_delete")),
 				}),
-			}))
+			}),
+		)
 }
+
 
 
 
 // 创建按钮
-func (c *ControllerImpl[T]) CreateButton(ctx http.Context, form renderers.Form, dialog bool, size string, title string, _type string) *renderers.OtherAction {
+func (c *ControllerImpl[T]) CreateButton(ctx http.Context, form renderers.Form, dialog bool, size string, title string, _type string) *renderers.LinkAction {
 	if title == "" {
 		title = tools.AdminLang(ctx, "admin.create")
 	}
 	action := gamis.LinkAction().Link(c.GetCreatePath(ctx))
+
 	if dialog {
-		form = *form.Api()
+		form = *form.Api(c.GetStorePath(ctx)).OnEvent(map[string]any{})
+		if _type == "drawer" {
+			action = (*renderers.LinkAction)(gamis.DrawerAction().Drawer(
+				gamis.Drawer().Title(title).Body(form).Size(size),
+			))
+		} else {
+			action = (*renderers.LinkAction)(gamis.DialogAction().Dialog(
+				gamis.Dialog().Title(title).Body(form).Size(size),
+			))
+		}
 	}
 
-	return nil
+	action.Label(title).Icon("fa fa-add").Level("primary")
+	return action
 }
 
 // 行编辑按钮
-func (c *ControllerImpl[T]) rowEditButton(ctx http.Context, form renderers.Form, dialog bool, size string, title string) *renderers.LinkAction {
-	// todo
+func (c *ControllerImpl[T]) RowEditButton(ctx http.Context, form renderers.Form, dialog bool, size string, title string, _type string) *renderers.LinkAction {
 	if title == "" {
 		title = tools.AdminLang(ctx, "admin.edit")
 	}
 	action := gamis.LinkAction().Link(c.GetEditPath(ctx))
 	if dialog {
-
+		form = *form.Api(c.GetUpdatePath(ctx)).Api(c.GetEditGetDataPath(ctx)).			InitApi(c.GetEditGetDataPath(ctx)).Redirect("").OnEvent(map[string]any{})
+		if _type == "drawer" {
+			action = (*renderers.LinkAction)(gamis.DrawerAction().Drawer(
+				gamis.Drawer().Title(title).Body(form).Size(size),
+			))
+		} else {
+			action = (*renderers.LinkAction)(gamis.DialogAction().Dialog(
+				gamis.Dialog().Title(title).Body(form).Size(size),
+			))
+		}
 	}
 	action = action.Label(title).Level("link")
 	return action
 }
 
 // 行详情按钮
-func (c *ControllerImpl[T]) rowShowButton(ctx http.Context, dialog bool, size string, title string) *renderers.DialogAction {
-	return nil
+func (c *ControllerImpl[T]) RowShowButton(ctx http.Context, form renderers.Form, dialog bool, size string, title string, _type string) *renderers.LinkAction {
+	if title == "" {
+		title = tools.AdminLang(ctx, "admin.show")
+	}
+	action := gamis.LinkAction().Link(c.GetShowPath(ctx))
+	if dialog {
+		if _type == "drawer" {
+			action = (*renderers.LinkAction)(gamis.DrawerAction().Drawer(
+				gamis.Drawer().Title(title).Body(form).Size(size).Actions([]any{}).CloseOnEsc("").CloseOnOutside(""),
+			))
+		} else {
+			action = (*renderers.LinkAction)(gamis.DialogAction().Dialog(
+				gamis.Dialog().Title(title).Body(form).Size(size).Actions([]any{}).CloseOnEsc("").CloseOnOutside(""),
+			))
+		}
+	}
+	action = action.Label(title).Level("link")
+	return action
 }
 
 // 行删除按钮
-func (c *ControllerImpl[T]) rowDeleteButton(ctx http.Context, dialog bool, size string, title string) *renderers.DialogAction {
-	return nil
+func (c *ControllerImpl[T]) RowDeleteButton(ctx http.Context, dialog bool, title string) *renderers.DialogAction {
+	if title == "" {
+		title = tools.AdminLang(ctx, "admin.delete")
+	}
+	action := gamis.DialogAction().Label(title).Level("link").ClassName("text-danger").Dialog(
+		gamis.Dialog().Title(title).ClassName("py-2").Actions([]any{
+			gamis.Action().ActionType("cancel").Label(tools.AdminLang(ctx, "admin.cancel")),
+			gamis.Action().ActionType("submit").Label(tools.AdminLang(ctx, "admin.delete")).Level("danger"),
+		}).Body([]any{
+			gamis.Form().WrapWithPanel(false).Api(c.GetDeletePath(ctx)).Body([]any{
+				gamis.Tpl().ClassName("py-2").Tpl(tools.AdminLang(ctx, "admin.confirm_delete")),
+			}),
+		}),
+	)
+	return action
 }
 
 // 行操作按钮
-func (c *ControllerImpl[T]) rowActions(ctx http.Context, dialog bool, size string, title string) []any {
-	return nil
+func (c *ControllerImpl[T]) RowActions(ctx http.Context, form renderers.Form, dialog any, size string) *renderers.Operation {
+	// 判断 dialog 是否为切片
+	dialogValue := reflect.ValueOf(dialog)
+	if dialogValue.Kind() == reflect.Slice {
+		// 如果是切片，遍历处理
+			return gamis.Operation().Label(tools.AdminLang(ctx, "admin.operation")).Buttons(dialog)
+	} else {
+	// 添加删除按钮
+	return gamis.Operation().Label(tools.AdminLang(ctx, "admin.delete")).Buttons([]any{
+		c.RowShowButton(ctx, form, false, size, "", ""),
+		c.RowEditButton(ctx, form, false, size, "", ""),
+		c.RowDeleteButton(ctx, false, ""),
+	})
+}
+
 }
 
 // 基础筛选器
@@ -300,8 +363,8 @@ func (c *ControllerImpl[T]) BaseFilter() *renderers.Form {
 }
 
 // 基础筛选 - 条件构造器
-func (c *ControllerImpl[T]) baseFilterConditionBuilder(ctx http.Context) map[string]any {
-	return nil
+func (c *ControllerImpl[T]) BaseFilterConditionBuilder(ctx http.Context) *renderers.ConditionBuilderControl{
+	return gamis.ConditionBuilderControl().Name("filter_condition_builder")
 }
 
 // 基础 CRUD

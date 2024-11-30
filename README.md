@@ -1,6 +1,6 @@
 <div align="center">
 
-# 项目还处于wip状态. 
+# 项目还处于wip状态.
 
 <img src="https://www.goravel.dev/logo.png" width="300" alt="Logo">
 
@@ -29,20 +29,6 @@ go run . artisan key:generate
 go run .
 ```
 
-
-
-执行命令, 更新前端资源 [skip]
-
-```shell
-// make admin frontend static file
-cd a-admin
-// install front library
-pnpm i
-// generate static file
-pnpm build
-// copy file to Public folder
-cp -r dist/* ../public/admin/
-```
 
 ## Roadmap
 
