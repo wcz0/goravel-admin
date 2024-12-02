@@ -50,6 +50,7 @@ func NewAdminController[T any](service T, extra ...Extra) *ControllerImpl[T] {
 	return a
 }
 
+
 // 获取基础url
 func (e *Extra) QueryPath(ctx http.Context) string {
 	path := ctx.Request().Path()
@@ -80,12 +81,12 @@ func (c *ControllerImpl[T]) ActionOfQuickEditItem(ctx http.Context) bool {
 
  // 获取列表数据
 func (c *ControllerImpl[T]) GetListGetDataPath(ctx http.Context) string {
-	return tools.GetAdmin(c.Extra.QueryPath(ctx) + "?_action=getData")
+	return tools.Url(c.Extra.QueryPath(ctx) + "?_action=getData")
 }
 
 // 获取导出数据
 func (c *ControllerImpl[T]) GetExportPath(ctx http.Context) string {
-	return tools.GetAdmin(c.Extra.QueryPath(ctx) + "?_action=export")
+	return tools.Url(c.Extra.QueryPath(ctx) + "?_action=export")
 }
 
 // 删除路径 ?
@@ -94,12 +95,12 @@ func (c *ControllerImpl[T]) GetDeletePath(ctx http.Context, primaryKey ...string
 	if len(primaryKey) > 0 {
 		key = primaryKey[0]
 	}
-	return "delete:" + tools.GetAdmin(c.Extra.QueryPath(ctx)+"/${"+key+"}")
+	return "delete:" + tools.Url(c.Extra.QueryPath(ctx)+"/${"+key+"}")
 }
 
 // 批量删除 ?
 func (c *ControllerImpl[T]) GetBulkDeletePath(ctx http.Context) string {
-	return "delete:" + tools.GetAdmin(c.Extra.QueryPath(ctx)+"/${ids}")
+	return "delete:" + tools.Url(c.Extra.QueryPath(ctx)+"/${ids}")
 }
 
 // 获取编辑页面路径 ?
@@ -123,7 +124,7 @@ func (c *ControllerImpl[T]) GetEditGetDataPath(ctx http.Context, primaryKey ...s
 	if last == "edit" {
 		path = "/${"+key+"}/edit"
 	}
-	return tools.GetAdmin(path + "?_action=getData")
+	return tools.Url(path + "?_action=getData")
 }
 
 // 详情页面 ?
@@ -147,17 +148,17 @@ func (c *ControllerImpl[T]) GetUpdatePath(ctx http.Context, primaryKey ...string
 	if last == "edit" {
 		path = "/${"+key+"}/edit"
 	}
-	return "put:" + tools.GetAdmin(path)
+	return "put:" + tools.Url(path)
 }
 
 // 获取快速编辑数据
 func (c *ControllerImpl[T]) GetQuickEditPath(ctx http.Context) string {
-	return tools.GetAdmin(ctx.Request().FullUrl() + "?_action=quickEdit")
+	return tools.Url(ctx.Request().FullUrl()) + "?_action=quickEdit"
 }
 
 // 获取快速编辑项目数据
 func (c *ControllerImpl[T]) GetQuickEditItemPath(ctx http.Context) string {
-	return tools.GetAdmin(ctx.Request().FullUrl() + "?_action=quickEditItem")
+	return tools.Url(ctx.Request().FullUrl()) + "?_action=quickEditItem"
 }
 
 // 获取详情 ?
@@ -181,7 +182,7 @@ func (c *ControllerImpl[T]) GetShowGetDataPath(ctx http.Context) (string, error)
 		return "", errors.New("primary key not found")
 	}
 	path = path + "/{" + values[0].String() + "}"
-	return tools.GetAdmin(path + "?_action=getData"), nil
+	return tools.Url(path + "?_action=getData"), nil
 }
 
 // 新增页面
@@ -191,7 +192,7 @@ func (c *ControllerImpl[T]) GetCreatePath(ctx http.Context) string {
 
 // 获取 新增 保存 的路径
 func (c *ControllerImpl[T]) GetStorePath(ctx http.Context) string {
-	return "post:" + tools.GetAdmin(ctx.Request().Path())
+	return "post:" + tools.Url(c.Extra.QueryPath(ctx))
 }
 
 /**
@@ -222,7 +223,7 @@ func (a *ControllerImpl[T]) BackButton(ctx http.Context) *renderers.OtherAction 
 	path = strings.TrimPrefix(path, a.Extra.AdminPrefix)
 	script := fmt.Sprintf(`window.$owl.hasOwnProperty('closeTabByPath') && window.$owl.closeTabByPath('%s')`, path)
 	return gamis.OtherAction().
-		Label(tools.AdminLang(ctx, "admin.back")).
+		Label(tools.AdminLang(ctx, "back")).
 		Icon("fa-solid fa-chevron-left").
 		Level("primary").
 		OnClick("window.history.back();" + script)
@@ -233,16 +234,16 @@ func (a *ControllerImpl[T]) BackButton(ctx http.Context) *renderers.OtherAction 
  */
 func (c *ControllerImpl[T]) BulkDeleteButton(ctx http.Context) *renderers.DialogAction {
 	return gamis.DialogAction().
-		Label(tools.AdminLang(ctx, "admin.delete")).
+		Label(tools.AdminLang(ctx, "delete")).
 		Icon("fa-solid fa-trash-can").
 		Dialog(
-			gamis.Dialog().Title(tools.AdminLang(ctx, "admin.delete")).
+			gamis.Dialog().Title(tools.AdminLang(ctx, "delete")).
 				ClassName("py-2").Actions([]any{
-					gamis.Action().ActionType("cancel").Label(tools.AdminLang(ctx, "admin.cancel")),
-					gamis.Action().ActionType("submit").Label(tools.AdminLang(ctx, "admin.delete")).Level("danger"),
+					gamis.Action().ActionType("cancel").Label(tools.AdminLang(ctx, "cancel")),
+					gamis.Action().ActionType("submit").Label(tools.AdminLang(ctx, "delete")).Level("danger"),
 			}).Body([]any{
 				gamis.Form().WrapWithPanel(false).Api(c.GetBulkDeletePath(ctx)).Body([]any{
-					gamis.Tpl().ClassName("py-2").Tpl(tools.AdminLang(ctx, "admin.confirm_delete")),
+					gamis.Tpl().ClassName("py-2").Tpl(tools.AdminLang(ctx, "confirm_delete")),
 				}),
 			}),
 		)
@@ -252,14 +253,14 @@ func (c *ControllerImpl[T]) BulkDeleteButton(ctx http.Context) *renderers.Dialog
 
 
 // 创建按钮
-func (c *ControllerImpl[T]) CreateButton(ctx http.Context, form renderers.Form, dialog bool, size string, title string, _type string) *renderers.LinkAction {
+func (c *ControllerImpl[T]) CreateButton(ctx http.Context, form *renderers.Form, dialog bool, size string, title string, _type string) *renderers.LinkAction {
 	if title == "" {
-		title = tools.AdminLang(ctx, "admin.create")
+		title = tools.AdminLang(ctx, "create")
 	}
 	action := gamis.LinkAction().Link(c.GetCreatePath(ctx))
 
 	if dialog {
-		form = *form.Api(c.GetStorePath(ctx)).OnEvent(map[string]any{})
+		form = form.Api(c.GetStorePath(ctx)).OnEvent(map[string]any{})
 		if _type == "drawer" {
 			action = (*renderers.LinkAction)(gamis.DrawerAction().Drawer(
 				gamis.Drawer().Title(title).Body(form).Size(size),
@@ -276,13 +277,13 @@ func (c *ControllerImpl[T]) CreateButton(ctx http.Context, form renderers.Form, 
 }
 
 // 行编辑按钮
-func (c *ControllerImpl[T]) RowEditButton(ctx http.Context, form renderers.Form, dialog bool, size string, title string, _type string) *renderers.LinkAction {
+func (c *ControllerImpl[T]) RowEditButton(ctx http.Context, form *renderers.Form, dialog bool, size string, title string, _type string) *renderers.LinkAction {
 	if title == "" {
-		title = tools.AdminLang(ctx, "admin.edit")
+		title = tools.AdminLang(ctx, "edit")
 	}
 	action := gamis.LinkAction().Link(c.GetEditPath(ctx))
 	if dialog {
-		form = *form.Api(c.GetUpdatePath(ctx)).Api(c.GetEditGetDataPath(ctx)).			InitApi(c.GetEditGetDataPath(ctx)).Redirect("").OnEvent(map[string]any{})
+		form = form.Api(c.GetUpdatePath(ctx)).Api(c.GetEditGetDataPath(ctx)).InitApi(c.GetEditGetDataPath(ctx)).Redirect("").OnEvent(map[string]any{})
 		if _type == "drawer" {
 			action = (*renderers.LinkAction)(gamis.DrawerAction().Drawer(
 				gamis.Drawer().Title(title).Body(form).Size(size),
@@ -298,9 +299,9 @@ func (c *ControllerImpl[T]) RowEditButton(ctx http.Context, form renderers.Form,
 }
 
 // 行详情按钮
-func (c *ControllerImpl[T]) RowShowButton(ctx http.Context, form renderers.Form, dialog bool, size string, title string, _type string) *renderers.LinkAction {
+func (c *ControllerImpl[T]) RowShowButton(ctx http.Context, form *renderers.Form, dialog bool, size string, title string, _type string) *renderers.LinkAction {
 	if title == "" {
-		title = tools.AdminLang(ctx, "admin.show")
+		title = tools.AdminLang(ctx, "show")
 	}
 	action := gamis.LinkAction().Link(c.GetShowPath(ctx))
 	if dialog {
@@ -319,17 +320,17 @@ func (c *ControllerImpl[T]) RowShowButton(ctx http.Context, form renderers.Form,
 }
 
 // 行删除按钮
-func (c *ControllerImpl[T]) RowDeleteButton(ctx http.Context, dialog bool, title string) *renderers.DialogAction {
+func (c *ControllerImpl[T]) RowDeleteButton(ctx http.Context, title string) *renderers.DialogAction {
 	if title == "" {
-		title = tools.AdminLang(ctx, "admin.delete")
+		title = tools.AdminLang(ctx, "delete")
 	}
 	action := gamis.DialogAction().Label(title).Level("link").ClassName("text-danger").Dialog(
 		gamis.Dialog().Title(title).ClassName("py-2").Actions([]any{
-			gamis.Action().ActionType("cancel").Label(tools.AdminLang(ctx, "admin.cancel")),
-			gamis.Action().ActionType("submit").Label(tools.AdminLang(ctx, "admin.delete")).Level("danger"),
+			gamis.Action().ActionType("cancel").Label(tools.AdminLang(ctx, "cancel")),
+			gamis.Action().ActionType("submit").Label(tools.AdminLang(ctx, "delete")).Level("danger"),
 		}).Body([]any{
 			gamis.Form().WrapWithPanel(false).Api(c.GetDeletePath(ctx)).Body([]any{
-				gamis.Tpl().ClassName("py-2").Tpl(tools.AdminLang(ctx, "admin.confirm_delete")),
+				gamis.Tpl().ClassName("py-2").Tpl(tools.AdminLang(ctx, "confirm_delete")),
 			}),
 		}),
 	)
@@ -337,18 +338,18 @@ func (c *ControllerImpl[T]) RowDeleteButton(ctx http.Context, dialog bool, title
 }
 
 // 行操作按钮
-func (c *ControllerImpl[T]) RowActions(ctx http.Context, form renderers.Form, dialog any, size string) *renderers.Operation {
+func (c *ControllerImpl[T]) RowActions(ctx http.Context, form *renderers.Form, dialog any, size string) *renderers.Operation {
 	// 判断 dialog 是否为切片
 	dialogValue := reflect.ValueOf(dialog)
 	if dialogValue.Kind() == reflect.Slice {
 		// 如果是切片，遍历处理
-			return gamis.Operation().Label(tools.AdminLang(ctx, "admin.operation")).Buttons(dialog)
+			return gamis.Operation().Label(tools.AdminLang(ctx, "actions")).Buttons(dialog)
 	} else {
 	// 添加删除按钮
-	return gamis.Operation().Label(tools.AdminLang(ctx, "admin.delete")).Buttons([]any{
+	return gamis.Operation().Label(tools.AdminLang(ctx, "actions")).Buttons([]any{
 		c.RowShowButton(ctx, form, false, size, "", ""),
 		c.RowEditButton(ctx, form, false, size, "", ""),
-		c.RowDeleteButton(ctx, false, ""),
+		c.RowDeleteButton(ctx, ""),
 	})
 }
 
@@ -370,7 +371,9 @@ func (c *ControllerImpl[T]) BaseFilterConditionBuilder(ctx http.Context) *render
 // 基础 CRUD
 func (c *ControllerImpl[T]) BaseCRUD(ctx http.Context) *renderers.CRUDTable {
 	crud := gamis.CRUDTable().PerPage(20).AffixHeader(false).FilterTogglable(true).FilterDefaultVisible(false).
-		Api(c.GetListGetDataPath(ctx)).QuickSaveApi(c.GetQuickEditPath(ctx)).QuickSaveItemApi(c.GetQuickEditItemPath(ctx)).
+		Api(c.GetListGetDataPath(ctx)).
+		QuickSaveApi(c.GetQuickEditPath(ctx)).
+		QuickSaveItemApi(c.GetQuickEditItemPath(ctx)).
 		BulkActions([]any{
 			c.BulkDeleteButton(ctx),
 		}).PerPageAvailable([]int{10, 20, 50, 100}).FooterToolbar([]string{
@@ -382,7 +385,7 @@ func (c *ControllerImpl[T]) BaseCRUD(ctx http.Context) *renderers.CRUDTable {
 }
 
 // 基础顶部工具栏
-func (c *ControllerImpl[T]) BaseHeaderToolBar() any {
+func (c *ControllerImpl[T]) BaseHeaderToolBar() []any {
 	return []any{
 		"bulkActions",
 		gamis.Component("reload").Align("right"),
@@ -442,4 +445,57 @@ func (c *ControllerImpl[T]) ExportAction(ctx http.Context, disableSelectedItem b
 		}).Body([]any{
 
 		})
+}
+
+// 图片上传路径
+func (c *ControllerImpl[T]) UploadImagePath(ctx http.Context) string {
+	return tools.GetAdmin("upload_image")
+}
+
+func (c *ControllerImpl[T]) UploadImage(ctx http.Context) http.Response {
+	return c.upload(ctx, "file")
+}
+
+func (c *ControllerImpl[T]) UploadFilePath(ctx http.Context) http.Response {
+	return c.upload(ctx, "files")
+}
+
+func (c *ControllerImpl[T]) UploadFile(ctx http.Context) http.Response {
+	return c.upload(ctx, "file")
+}
+
+func (c *ControllerImpl[T]) UploadRichPath(ctx http.Context) http.Response {
+	return c.upload(ctx, "files")
+}
+
+func (c *ControllerImpl[T]) UploadRich(ctx http.Context) http.Response {
+	return c.upload(ctx, "files")
+}
+
+// 上传文件
+func (c *ControllerImpl[T]) upload(ctx http.Context, _type string) http.Response {
+	file, err := ctx.Request().File("file")
+	if err != nil {
+		return c.FailMsg(ctx, tools.AdminLang(ctx, "upload_file_error"))
+	}
+	config := facades.Config()
+	path, err := file.Store(config.GetString("admin.upload.directory") + _type)
+	if err != nil {
+		return c.FailMsg(ctx, tools.AdminLang(ctx, "upload_file_error"))
+	}
+	return c.SuccessData(ctx, map[string]string{
+		"value": path,
+	})
+}
+
+func (c *ControllerImpl[T]) ChunkUploadStart(ctx http.Context) http.Response {
+	return c.Success(ctx)
+}
+
+func (c *ControllerImpl[T]) ChunkUpload(ctx http.Context) http.Response {
+	return c.Success(ctx)
+}
+
+func (c *ControllerImpl[T]) ChunkUploadFinish(ctx http.Context) http.Response {
+	return c.Success(ctx)
 }

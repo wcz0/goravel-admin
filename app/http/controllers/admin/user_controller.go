@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"goravel/app/models/admin"
 	"goravel/app/services"
 	"goravel/app/tools"
 
@@ -24,7 +25,54 @@ func (u *UserController) PutUserSetting(c http.Context) http.Response {
 }
 
 func (r *UserController) Index(ctx http.Context) http.Response {
-	return nil
+	if r.ActionOfGetData(ctx) {
+		return r.ControllerImpl.Service.List(ctx)
+	}
+	if r.ActionOfExport(ctx) {
+		return r.ControllerImpl.Service.Export(ctx)
+	}
+	return r.SuccessData(ctx, r.list(ctx))
+}
+
+func (r *UserController) list(ctx http.Context) *renderers.Page {
+	HeaderToolbar := []any{
+		r.CreateButton(ctx, r.form(ctx), true, "md", "", ""),
+	}
+	HeaderToolbar = append(HeaderToolbar, r.BaseHeaderToolBar()...)
+	isAdmin := "false"
+	currentUser, ok := ctx.Value("admin_user").(*admin.AdminUser)
+	if !ok || currentUser == nil {
+		isAdmin = "false"
+	}
+
+	if currentUser.IsAdministrator() {
+		isAdmin = "true"
+	}
+
+	crud := r.BaseCRUD(ctx).HeaderToolbar(HeaderToolbar).Filter(
+		r.BaseFilter().Body([]any{
+			gamis.TextControl().Name("keyword").Label(tools.AdminLang(ctx, "keyword")).Size("md").Placeholder(tools.AdminLang(ctx, "admin_user.search_username")),
+		}),
+	).Columns([]any{
+		gamis.TableColumn().Name("id").Label("ID").Sortable(true),
+		gamis.TableColumn().Name("Avatar").Label(tools.AdminLang(ctx, "admin_user.avatar")).Set("type", "avatar").Set("src", "${avatar}"),
+		gamis.TableColumn().Name("Username").Label(tools.AdminLang(ctx, "username")),
+		gamis.TableColumn().Name("Name").Label(tools.AdminLang(ctx, "admin_user.name")),
+		gamis.TableColumn().Name("AdminRoles").Label(tools.AdminLang(ctx, "admin_user.roles")).Set("type", "each").Set("items", map[string]any{
+			"type":      "tag",
+			"label":     "${name}",
+			"className": "my-1",
+		}),
+		gamis.TableColumn().Name("Enabled").Label(tools.AdminLang(ctx, "extensions.card.status")).QuickEdit(map[string]any{
+			"type": "switch", "mode": "inline", "disabledOn": "${id == 1}", "saveImmediately": true}),
+		gamis.TableColumn().Name("created_at").Label(tools.AdminLang(ctx, "created_at")).Set("type", "datetime").Sortable(true),
+		r.RowActions(ctx, r.form(ctx), []any{
+			r.RowEditButton(ctx, r.form(ctx), true, "md", "", "").HiddenOn("${administrator && " + isAdmin + "}"),
+			r.RowDeleteButton(ctx, "").HiddenOn("${id == 1}"),
+		}, "md"),
+	})
+
+	return r.BaseList(crud)
 }
 
 func (r *UserController) Show(ctx http.Context) http.Response {
@@ -58,6 +106,28 @@ func (a *UserController) GetUserSetting(ctx http.Context) http.Response {
 			gamis.TextControl().Type("input-password").Label(tools.AdminLang(ctx, "admin_user.confirm_password")).Name("confirm_password").Required(true),
 		})
 	return a.SuccessData(ctx, gamis.Page().Body(form))
+}
+
+func (a *UserController) form(ctx http.Context) *renderers.Form {
+	return a.BaseForm(ctx, false).Body([]any{
+		gamis.ImageControl().Name("avatar").Label(tools.AdminLang(ctx, "admin_user.avatar")).Receiver(a.UploadImagePath(ctx)),
+		gamis.TextControl().Name("username").Label(tools.AdminLang(ctx, ".username")).Required(true),
+		gamis.TextControl().Name("name").Label(tools.AdminLang(ctx, "admin_user.name")).Required(true),
+		gamis.TextControl().Name("password").Label(tools.AdminLang(ctx, "admin_user.password")).Type("input-password"),
+		gamis.TextControl().Name("confirm_password").Label(tools.AdminLang(ctx, "admin_user.confirm_password")).Type("input-password").Required(true),
+		gamis.SelectControl().Name("roles").Label(tools.AdminLang(ctx, "admin_user.roles")).
+			Searchable(true).Multiple(true).LabelField("name").
+			ValueField("id").
+			JoinValues(false).
+			ExtractValue("").
+			DisabledOn("${id == 1}").
+			Options(a.Service.RoleOptions(ctx)),
+		gamis.SwitchControl().Name("enabled").Label(tools.AdminLang(ctx, "extensions.card.status")).
+			OnText(tools.AdminLang(ctx, "admin_user.enabled")).
+			OffText(tools.AdminLang(ctx, "admin_user.disabled")).
+			DisabledOn("${id == 1}").
+			Value(true),
+	})
 }
 
 func (a *UserController) List(ctx http.Context) *renderers.Page {
