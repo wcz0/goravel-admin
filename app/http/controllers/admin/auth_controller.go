@@ -49,7 +49,7 @@ func (a *AuthController) Logout(ctx http.Context) http.Response {
 
 func (a *AuthController) Register(ctx http.Context) http.Response {
 	validator, err := ctx.Request().Validate(map[string]string{
-		// "username": "required|max_len:32",
+		"username": "required|max_len:32",
 		"password": "required|min_len:5|max_len:32",
 	})
 	if err != nil {
@@ -189,7 +189,7 @@ func (a *AuthController) CurrentUser(ctx http.Context) http.Response {
 		Set("icon", userInfo.Avatar).
 		Buttons([]any{
 			gamis.VanillaAction().
-				IconClassName("w-full").
+				IconClassName("pr-2").
 				Icon("fa fa-user-gear").
 				Label(tools.AdminLang(ctx, "user_setting")).
 				OnClick("window.location.href = '#/user_setting'"),

@@ -110,12 +110,12 @@ func (a *UserController) GetUserSetting(ctx http.Context) http.Response {
 
 func (a *UserController) form(ctx http.Context) *renderers.Form {
 	return a.BaseForm(ctx, false).Body([]any{
-		gamis.ImageControl().Name("avatar").Label(tools.AdminLang(ctx, "admin_user.avatar")).Receiver(a.UploadImagePath(ctx)),
-		gamis.TextControl().Name("username").Label(tools.AdminLang(ctx, ".username")).Required(true),
-		gamis.TextControl().Name("name").Label(tools.AdminLang(ctx, "admin_user.name")).Required(true),
-		gamis.TextControl().Name("password").Label(tools.AdminLang(ctx, "admin_user.password")).Type("input-password"),
-		gamis.TextControl().Name("confirm_password").Label(tools.AdminLang(ctx, "admin_user.confirm_password")).Type("input-password").Required(true),
-		gamis.SelectControl().Name("roles").Label(tools.AdminLang(ctx, "admin_user.roles")).
+		gamis.ImageControl().Name("Avatar").Label(tools.AdminLang(ctx, "admin_user.avatar")).Receiver(a.UploadImagePath(ctx)),
+		gamis.TextControl().Name("Username").Label(tools.AdminLang(ctx, "username")).Required(true),
+		gamis.TextControl().Name("Name").Label(tools.AdminLang(ctx, "admin_user.name")).Required(true),
+		gamis.TextControl().Name("Password").Label(tools.AdminLang(ctx, "password")).Type("input-password"),
+		gamis.TextControl().Name("confirmPassword").Label(tools.AdminLang(ctx, "confirm_password")).Type("input-password"),
+		gamis.SelectControl().Name("AdminRoles").Label(tools.AdminLang(ctx, "admin_user.roles")).
 			Searchable(true).Multiple(true).LabelField("name").
 			ValueField("id").
 			JoinValues(false).
@@ -123,8 +123,8 @@ func (a *UserController) form(ctx http.Context) *renderers.Form {
 			DisabledOn("${id == 1}").
 			Options(a.Service.RoleOptions(ctx)),
 		gamis.SwitchControl().Name("enabled").Label(tools.AdminLang(ctx, "extensions.card.status")).
-			OnText(tools.AdminLang(ctx, "admin_user.enabled")).
-			OffText(tools.AdminLang(ctx, "admin_user.disabled")).
+			OnText(tools.AdminLang(ctx, "extensions.status_map.enabled")).
+			OffText(tools.AdminLang(ctx, "extensions.status_map.disabled")).
 			DisabledOn("${id == 1}").
 			Value(true),
 	})
@@ -135,3 +135,7 @@ func (a *UserController) List(ctx http.Context) *renderers.Page {
 
 	return a.BaseList(crud)
 }
+
+// func (a *UserController) detail(ctx http.Context) *renderers.Form {
+// 	return a.BaseDetail(ctx).Body([]any{})
+// }

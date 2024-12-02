@@ -47,7 +47,7 @@ func (i *IndexController) GetSetting(ctx http.Context) http.Response {
 		"login_captcha":          config.GetBool("admin.auth.login_captcha"),
 		"locale_options":         tools.Map2options(localOptions.(map[string]string)),
 		"show_development_tools": config.Get("admin.show_development_tools"),
-		"system_theme_setting":   i.adminSettingService.Get("system_theme_setting", "", false),
+		"system_theme_setting":   i.adminSettingService.Get("system_theme_setting", nil, false),
 		"enabled_extensions":     []string{},
 	}
 	return i.SuccessMsgData(ctx, "", data)
@@ -107,7 +107,6 @@ func (i *IndexController) GetDashBoard() {
 
 }
 
-// TODO: 设计未确定
 func getAssets() any {
 	return map[string]any{
 		"css":     []string{},
@@ -117,10 +116,28 @@ func getAssets() any {
 	}
 }
 
-// TODO: 设计未确定
 func getNav() any {
 	return map[string]any{
 		"appendNav":  nil,
-		"prependNav": nil,
+		// "prependNav": nil,
+		"prependNav": map[string]any{
+			"type": "flex",
+			"items": []any{
+				map[string]any{
+					"type": "alert",
+					"className": "m-0 mr-5",
+					"body": "Version: <b>v0.0.2</b>",
+				},
+				map[string]any{
+					"type": "button",
+					"actionType": "url",
+					"icon": "fa-brands fa-github",
+					"blank": true,
+					"url": "https://github.com/wcz0/goravel-admin",
+					"tooltip": "Goravel-Admin",
+					"className": "mr-2 rounded-full",
+				},
+			},
+		},
 	}
 }

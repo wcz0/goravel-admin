@@ -26,7 +26,7 @@ import (
 
 	"goravel/app/providers"
 
-	"github.com/wcz0/goravel-authz"
+	authz "github.com/wcz0/goravel-authz"
 )
 
 // Boot Start all init methods of the current folder to bootstrap all config.

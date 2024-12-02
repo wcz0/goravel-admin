@@ -449,7 +449,7 @@ func (c *ControllerImpl[T]) ExportAction(ctx http.Context, disableSelectedItem b
 
 // 图片上传路径
 func (c *ControllerImpl[T]) UploadImagePath(ctx http.Context) string {
-	return tools.GetAdmin("upload_image")
+	return tools.Url(c.Extra.AdminPrefix + "upload_image")
 }
 
 func (c *ControllerImpl[T]) UploadImage(ctx http.Context) http.Response {

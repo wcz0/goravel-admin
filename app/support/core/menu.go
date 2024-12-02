@@ -15,8 +15,8 @@ type Meta struct {
 	Title        string `json:"title"`
 	Icon         string `json:"icon"`
 	Hide         bool  `json:"hide"`
-	SingleLayout string `json:"singleLayout"`
-	CustomOrder int `json:"custom_order"`
+	// SingleLayout string `json:"singleLayout"`
+	Order int `json:"order"`
 }
 
 type Route struct {
@@ -98,6 +98,9 @@ func (m *Menu) list2Menu(ctx http.Context, list []admin.AdminMenu, parentId int,
 						_component = v.Component
 					}
 				}
+			if parentName != "" {
+				parentName = strings.TrimRight(parentName, "-") + "-"
+			}
 			route := Route{
 				Name: parentName + "["+ strconv.Itoa(int(v.ID)) +"]" ,
 				Path: v.Url,
@@ -118,7 +121,7 @@ func (m *Menu) list2Menu(ctx http.Context, list []admin.AdminMenu, parentId int,
 					Title: facades.Lang(ctx).Get("menu."+v.Title),
 					Icon: v.Icon,
 					Hide: v.Visible == 0,
-					CustomOrder: v.CustomOrder,
+					Order: v.CustomOrder,
 				},
 			}
 			children := m.list2Menu(ctx, list, int(v.ID), route.Name)
@@ -185,7 +188,7 @@ func (m *Menu) Extra(ctx http.Context) []Route {
 				Hide:         true,
 				Title:        tools.AdminLang(ctx, "user_setting"),
 				Icon:         "material-symbols:manage-accounts",
-				SingleLayout: "basic",
+				// SingleLayout: "basic",
 			},
 		})
 	}

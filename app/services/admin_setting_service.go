@@ -1,9 +1,9 @@
 package services
 
 import (
+	"encoding/json"
+	"errors"
 	"goravel/app/models/admin"
-	"github.com/duke-git/lancet/v2/convertor"
-
 
 	"github.com/goravel/framework/facades"
 )
@@ -27,14 +27,20 @@ func NewAdminSettingService() *AdminSettingService {
  * @param fresh 是否强制从数据库获取
  * @return string
  */
-func (a *AdminSettingService) Get(key string, default_ string, fresh bool) string {
+func (a *AdminSettingService) Get(key string, default_ any, fresh bool) any {
 	var adminSetting admin.AdminSetting
 	if fresh {
-		value := facades.Orm().Query().Where("key", key).Select("values").First(&adminSetting)
-		if value == nil {
+		err := facades.Orm().Query().Where("key", key).Select("values").First(&adminSetting)
+		if err != nil {
 			return default_
 		}
+		var result any
+		if err := json.Unmarshal([]byte(adminSetting.Values), &result); err != nil {
+			return default_
+		}
+		return result
 	}
+
 	value, err := facades.Cache().RememberForever(a.cacheKey+key, func() (any, error) {
 		err := facades.Orm().Query().Where("key", key).Select("values").First(&adminSetting)
 		if err != nil {
@@ -42,32 +48,42 @@ func (a *AdminSettingService) Get(key string, default_ string, fresh bool) strin
 		}
 		return adminSetting.Values, nil
 	})
+
 	if err != nil {
 		return default_
 	}
+
 	if value != nil {
-		return value.(string)
+		var result any
+		if err := json.Unmarshal([]byte(value.(string)), &result); err != nil {
+			return default_
+		}
+		return result
 	} else {
 		return default_
 	}
 }
 
 func (a *AdminSettingService) SetMany(array map[string]any) error {
-	tx, err := facades.Orm().Query().Begin()
-	if err != nil {
-		return err
-	}
 	for key, value := range array {
-		str := convertor.ToString(value)
-		if err := a.Set(key, str); err != nil {
-			if err := tx.Rollback(); err != nil {
-				return err
-			}
+		// Marshal the value to a json string
+		jsonBytes, err := json.Marshal(value)
+		if err != nil {
 			return err
 		}
-	}
-	if err = tx.Commit(); err != nil {
-		return err
+
+		var adminSetting admin.AdminSetting
+		// 先查找是否存在
+		err = facades.Orm().Query().Where("key", key).
+			UpdateOrCreate(&adminSetting, admin.AdminSetting{Key: key}, admin.AdminSetting{Key: key, Values: string(jsonBytes)})
+		if err != nil {
+			return err
+		}
+		// 更新缓存
+		_bool := facades.Cache().Forever(a.cacheKey+key, string(jsonBytes))
+		if !_bool {
+			return errors.New("更新缓存失败")
+		}
 	}
 	return nil
 }

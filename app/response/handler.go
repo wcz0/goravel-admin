@@ -21,7 +21,7 @@ func (e *ErrorHandler) Success(ctx http.Context) http.Response {
 	return ctx.Response().Success().Json(http.Json{
 		"status":            enums.StatusSuccess,
 		"code":              enums.Success,
-		"msg":               enums.CodeEnum(enums.Success).Message(),
+		"msg":               "",
 		"data":              []any{},
 		"doNotDisplayToast": 0,
 	})
@@ -41,7 +41,7 @@ func (e *ErrorHandler) SuccessData(ctx http.Context, data any) http.Response {
 	return ctx.Response().Success().Json(http.Json{
 		"status":            enums.StatusSuccess,
 		"code":              enums.Success,
-		"msg":               enums.CodeEnum(enums.Success).Message(),
+		"msg":               "",
 		"data":              data,
 		"doNotDisplayToast": 0,
 	})
