@@ -17,7 +17,6 @@
 
 ## Getting started
 
-运行项目, 打开 localhost:8080/admin
 创建数据库, 导入SQL文件
 
 ```
@@ -27,9 +26,11 @@ go run . artisan key:generate
 go run .
 ```
 
+运行项目, 打开 host:port/admin
+
 登录
 账号:admin
-密码:admin
+密码:admin  
 
 
 ## Roadmap
