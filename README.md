@@ -1,7 +1,4 @@
 <div align="center">
-
-# 项目还处于wip状态.
-
 <img src="https://www.goravel.dev/logo.png" width="300" alt="Logo">
 
 [![Doc](https://pkg.go.dev/badge/github.com/goravel/framework)](https://pkg.go.dev/github.com/goravel/framework)
@@ -21,6 +18,7 @@
 ## Getting started
 
 运行项目, 打开 localhost:8080/admin
+创建数据库, 导入SQL文件
 
 ```
 // Generate APP_KEY
@@ -28,6 +26,10 @@ go run . artisan key:generate
 // 运行项目
 go run .
 ```
+
+登录
+账号:admin
+密码:admin
 
 
 ## Roadmap

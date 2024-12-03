@@ -19,7 +19,9 @@ func NewAdminUserService() *AdminUserService {
 
 func (s *AdminUserService) Login(ctx http.Context) http.Response {
 	var adminUser admin.AdminUser
-	if err := facades.Orm().Query().Where("username", ctx.Request().Input("username")).First(&adminUser); err != nil {
+	if err := facades.Orm().Query().Where("username", ctx.Request().Input("username")).
+		Where("enabled", 1).
+		First(&adminUser); err != nil {
 		return s.FailMsg(ctx, err.Error())
 	}
 	if !facades.Hash().Check(ctx.Request().Input("password"), adminUser.Password) {
