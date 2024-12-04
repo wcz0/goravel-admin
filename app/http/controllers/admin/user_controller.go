@@ -80,7 +80,13 @@ func (r *UserController) Show(ctx http.Context) http.Response {
 }
 
 func (r *UserController) Store(ctx http.Context) http.Response {
-	return nil
+	if r.ActionOfQuickEdit(ctx) {
+		return r.ControllerImpl.Service.QuickEdit(ctx)
+	}
+	if r.ActionOfQuickEditItem(ctx){
+		return r.ControllerImpl.Service.QuickEditItem(ctx)
+	}
+	return r.ControllerImpl.Service.Store(ctx)
 }
 
 func (r *UserController) Update(ctx http.Context) http.Response {

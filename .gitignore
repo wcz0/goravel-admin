@@ -19,3 +19,5 @@ output/
 manifest/output/
 temp/
 .env
+./storage/app/public
+./storage/framework/sessions

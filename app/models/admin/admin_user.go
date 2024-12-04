@@ -5,10 +5,15 @@ import (
 	"github.com/goravel/framework/facades"
 )
 
+const (
+	Enabled_OFF uint8 = iota  // 0
+	Enabled_ON                // 1
+)
+
 type AdminUser struct {
 	Username      string
 	Password      string
-	Enabled       int8
+	Enabled       uint8       `gorm:"type:tinyint unsigned;default:1;comment:启用状态(1:启用,0:禁用)"`
 	Name          string
 	Avatar        string
 	RememberToken string

@@ -31,9 +31,9 @@ func Admin() {
 		router.Middleware(middleware.Authenticate()).Group(func(router route.Router) {
 			router.Post("upload_image", index.ImageUpload)
 			router.Post("upload_file", index.FileUpload)
+			router.Post("upload_rich", index.RichFileUpload)
 			router.Get("menus", index.GetMenus)
 			router.Get("current-user", auth.CurrentUser)
-			router.Post("upload_rich", index.RichFileUpload)
 			router.Get("user_setting", user.GetUserSetting)
 			router.Put("user_setting", user.PutUserSetting)
 

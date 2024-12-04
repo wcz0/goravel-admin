@@ -3,6 +3,7 @@ package admin
 import (
 	"errors"
 	"fmt"
+	"goravel/app/enums"
 	"goravel/app/response"
 	"goravel/app/tools"
 	"reflect"
@@ -449,27 +450,75 @@ func (c *ControllerImpl[T]) ExportAction(ctx http.Context, disableSelectedItem b
 
 // 图片上传路径
 func (c *ControllerImpl[T]) UploadImagePath(ctx http.Context) string {
-	return tools.Url(c.Extra.AdminPrefix + "upload_image")
+	return tools.GetAdmin("/upload_image")
 }
 
 func (c *ControllerImpl[T]) UploadImage(ctx http.Context) http.Response {
-	return c.upload(ctx, "file")
+	return c.upload(ctx, "image")
 }
 
-func (c *ControllerImpl[T]) UploadFilePath(ctx http.Context) http.Response {
-	return c.upload(ctx, "files")
+func (c *ControllerImpl[T]) UploadFilePath(ctx http.Context) string {
+	return c.Extra.QueryPath(ctx) +"/upload_file"
 }
+
 
 func (c *ControllerImpl[T]) UploadFile(ctx http.Context) http.Response {
 	return c.upload(ctx, "file")
 }
 
-func (c *ControllerImpl[T]) UploadRichPath(ctx http.Context) http.Response {
-	return c.upload(ctx, "files")
+
+func (c *ControllerImpl[T]) UploadRichPath(ctx http.Context) string{
+	return c.Extra.QueryPath(ctx) +"/upload_rich"
 }
 
 func (c *ControllerImpl[T]) UploadRich(ctx http.Context) http.Response {
-	return c.upload(ctx, "files")
+	fromWangEditor := false
+	file, err := ctx.Request().File("file")
+	if err != nil {
+		fromWangEditor = true
+		file, err = ctx.Request().File("wangeditor-uploaded-image")
+		if err != nil {
+			file, err = ctx.Request().File("wangeditor-uploaded-video")
+			if err != nil {
+				return ctx.Response().Success().Json(http.Json{
+					"status":            enums.StatusFailed,
+					"code":              enums.Failed,
+					"msg":               tools.AdminLang(ctx, "upload_file_error"),
+					"data":              []any{},
+					"doNotDisplayToast": 0,
+					"errno": 1,
+				})
+			}
+		}
+	}
+	config := facades.Config()
+	path, err := file.Disk(config.GetString("admin.upload.disk")).Store(config.GetString("admin.upload.directory.rich"))
+	if err != nil {
+		return c.FailMsg(ctx, tools.AdminLang(ctx, "upload_file_error"))
+	}
+	link := facades.Storage().Disk(config.GetString("admin.upload.disk")).Url(path)
+	if fromWangEditor {
+		return ctx.Response().Success().Json(http.Json{
+			"status":            enums.StatusSuccess,
+			"code":              enums.Success,
+			"msg":               tools.AdminLang(ctx, "upload_file_success"),
+			"data":              map[string]string{
+				"url": link,
+			},
+			"doNotDisplayToast": 0,
+			"errno": 0,
+		})
+	}
+	return ctx.Response().Success().Json(http.Json{
+		"status":            enums.StatusSuccess,
+		"code":              enums.Success,
+		"msg":               tools.AdminLang(ctx, "upload_file_success"),
+		"data":              map[string]string{
+			"link": link,
+		},
+		"doNotDisplayToast": 0,
+		"link": link,
+	})
 }
 
 // 上传文件
@@ -479,7 +528,7 @@ func (c *ControllerImpl[T]) upload(ctx http.Context, _type string) http.Response
 		return c.FailMsg(ctx, tools.AdminLang(ctx, "upload_file_error"))
 	}
 	config := facades.Config()
-	path, err := file.Store(config.GetString("admin.upload.directory") + _type)
+	path, err := file.Disk(config.GetString("admin.upload.disk")).Store(config.GetString("admin.upload.directory" + _type))
 	if err != nil {
 		return c.FailMsg(ctx, tools.AdminLang(ctx, "upload_file_error"))
 	}
@@ -492,6 +541,7 @@ func (c *ControllerImpl[T]) ChunkUploadStart(ctx http.Context) http.Response {
 	return c.Success(ctx)
 }
 
+// TODO: 分片上传
 func (c *ControllerImpl[T]) ChunkUpload(ctx http.Context) http.Response {
 	return c.Success(ctx)
 }

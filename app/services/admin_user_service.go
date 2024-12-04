@@ -20,7 +20,7 @@ func NewAdminUserService() *AdminUserService {
 func (s *AdminUserService) Login(ctx http.Context) http.Response {
 	var adminUser admin.AdminUser
 	if err := facades.Orm().Query().Where("username", ctx.Request().Input("username")).
-		Where("enabled", 1).
+		Where("enabled", admin.Enabled_ON).
 		First(&adminUser); err != nil {
 		return s.FailMsg(ctx, err.Error())
 	}
@@ -84,4 +84,20 @@ func (a *AdminUserService) RoleOptions(ctx http.Context) []map[string]any {
 	}
 
 	return options
+}
+
+func (a *AdminUserService) QuickEdit(ctx http.Context) http.Response {
+	return a.Success(ctx)
+}
+
+func (a *AdminUserService) QuickEditItem(ctx http.Context) http.Response {
+	return a.Success(ctx)
+}
+
+func (a *AdminUserService) Update(ctx http.Context) http.Response {
+	return a.Success(ctx)
+}
+
+func (a *AdminUserService) Store(ctx http.Context) http.Response {
+	return a.Success(ctx)
 }

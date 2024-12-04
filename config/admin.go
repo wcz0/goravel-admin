@@ -39,15 +39,14 @@ func init() {
 			"except": []string{},
 		},
 
-		// TODO: 未实现
-		// "upload": map[string]any{
-		// 	"disk": "public",
-		// 	"directory": map[string]any{
-		// 		"image": "images",
-		// 		"file":  "files",
-		// 		"rich":  "rich",
-		// 	},
-		// },
+		"upload": map[string]any{
+			"disk": "public",
+			"directory": map[string]any{
+				"image": "images",
+				"file":  "files",
+				"rich":  "rich",
+			},
+		},
 
 		"https": config.Env("ADMIN_HTTPS", false),
 
