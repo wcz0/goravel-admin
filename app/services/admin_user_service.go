@@ -99,5 +99,9 @@ func (a *AdminUserService) Update(ctx http.Context) http.Response {
 }
 
 func (a *AdminUserService) Store(ctx http.Context) http.Response {
+	// TODO: 自己处理特殊情况
+	if err := a.AdminService.Store(ctx); err != nil {
+		return a.FailMsg(ctx, err.Error())
+	}
 	return a.Success(ctx)
 }

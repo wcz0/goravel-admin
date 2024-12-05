@@ -235,7 +235,7 @@ func (h *HomeController) frameworkInfo() *renderers.Card {
 	)
 }
 
-func (h *HomeController) css(ctx http.Context) map[string]any {
+func (h *HomeController) css(_ http.Context) map[string]any {
 	return map[string]any{
 		".clear-card-mb": []string{"0 !important"},
 		".cxd-Image": map[string]string{

@@ -11,4 +11,6 @@ func Web() {
 	facades.Route().StaticFS("/admin", http.Dir("./public/admin/"))
 	facades.Route().StaticFS("/admin-assets/assets", http.Dir("./public/admin/assets/"))
 	facades.Route().StaticFS("/admin-assets/scripts", http.Dir("./public/admin/scripts/"))
+	// public files
+	facades.Route().Static("storage", "./storage/app/public")
 }

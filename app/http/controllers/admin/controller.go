@@ -532,8 +532,9 @@ func (c *ControllerImpl[T]) upload(ctx http.Context, _type string) http.Response
 	if err != nil {
 		return c.FailMsg(ctx, tools.AdminLang(ctx, "upload_file_error"))
 	}
+	url := facades.Storage().Disk(config.GetString("admin.upload.disk")).Url(path)
 	return c.SuccessData(ctx, map[string]string{
-		"value": path,
+		"value": url,
 	})
 }
 

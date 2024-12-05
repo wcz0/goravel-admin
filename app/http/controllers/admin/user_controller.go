@@ -55,12 +55,12 @@ func (r *UserController) list(ctx http.Context) *renderers.Page {
 		}),
 	).Columns([]any{
 		gamis.TableColumn().Name("id").Label("ID").Sortable(true),
-		gamis.TableColumn().Name("Avatar").Label(tools.AdminLang(ctx, "admin_user.avatar")).Set("type", "avatar").Set("src", "${avatar}"),
+		gamis.TableColumn().Name("Avatar").Label(tools.AdminLang(ctx, "admin_user.avatar")).Set("type", "avatar").Set("src", "${Avatar}"),
 		gamis.TableColumn().Name("Username").Label(tools.AdminLang(ctx, "username")),
 		gamis.TableColumn().Name("Name").Label(tools.AdminLang(ctx, "admin_user.name")),
 		gamis.TableColumn().Name("AdminRoles").Label(tools.AdminLang(ctx, "admin_user.roles")).Set("type", "each").Set("items", map[string]any{
 			"type":      "tag",
-			"label":     "${name}",
+			"label":     "${Name}",
 			"className": "my-1",
 		}),
 		gamis.TableColumn().Name("Enabled").Label(tools.AdminLang(ctx, "extensions.card.status")).QuickEdit(map[string]any{
