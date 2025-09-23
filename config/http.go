@@ -5,8 +5,8 @@ import (
 	"github.com/goravel/framework/facades"
 	ginfacades "github.com/goravel/gin/facades"
 	// fiberfacades "github.com/goravel/fiber/facades"
-    // "github.com/gofiber/template/html/v2"
-    // "github.com/gofiber/fiber/v2"
+	// "github.com/gofiber/template/html/v2"
+	// "github.com/gofiber/fiber/v2"
 )
 
 func init() {
@@ -20,7 +20,7 @@ func init() {
 				"route": func() (route.Route, error) {
 					return ginfacades.Route("gin"), nil
 				},
-				"body_limit": 4096,
+				"body_limit":   4096,
 				"header_limit": 4096,
 			},
 			// "fiber": map[string]any{
@@ -57,6 +57,15 @@ func init() {
 				// ca.key
 				"key": "",
 			},
+		},
+		// HTTP Client Configuration
+		"client": map[string]any{
+			"base_url":                config.GetString("HTTP_CLIENT_BASE_URL"),
+			"timeout":                 config.GetDuration("HTTP_CLIENT_TIMEOUT"),
+			"max_idle_conns":          config.GetInt("HTTP_CLIENT_MAX_IDLE_CONNS"),
+			"max_idle_conns_per_host": config.GetInt("HTTP_CLIENT_MAX_IDLE_CONNS_PER_HOST"),
+			"max_conns_per_host":      config.GetInt("HTTP_CLIENT_MAX_CONN_PER_HOST"),
+			"idle_conn_timeout":       config.GetDuration("HTTP_CLIENT_IDLE_CONN_TIMEOUT"),
 		},
 	})
 }

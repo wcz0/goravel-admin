@@ -21,12 +21,14 @@ import (
 	"github.com/goravel/framework/testing"
 	"github.com/goravel/framework/translation"
 	"github.com/goravel/framework/validation"
+	"github.com/goravel/framework/session"
 	"github.com/goravel/gin"
-	"github.com/goravel/redis"
+	"github.com/goravel/mysql"
+
+	// "github.com/goravel/redis"
 
 	"goravel/app/providers"
-
-	authz "github.com/wcz0/goravel-authz"
+	// authz "github.com/wcz0/goravel-authz"
 )
 
 // Boot Start all init methods of the current folder to bootstrap all config.
@@ -102,11 +104,12 @@ func init() {
 			&providers.DatabaseServiceProvider{},
 			&gin.ServiceProvider{},
 			&translation.ServiceProvider{},
-			// &session.ServiceProvider{},
-			&redis.ServiceProvider{},
+			&session.ServiceProvider{},
+			// &redis.ServiceProvider{},
 			&cache.ServiceProvider{},
-			&authz.ServiceProvider{},
+			// &authz.ServiceProvider{},
 			&providers.AdminServiceProvider{},
+			&mysql.ServiceProvider{},
 		},
 	})
 }

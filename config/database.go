@@ -1,6 +1,8 @@
 package config
 
 import (
+	"github.com/goravel/framework/contracts/database/driver"
+	mysqlfacades "github.com/goravel/mysql/facades"
 	"github.com/goravel/framework/facades"
 )
 
@@ -23,35 +25,9 @@ func init() {
 				"loc":      "Local",
 				"prefix":   "",
 				"singular": false, // Table name is singular
-			},
-			"postgresql": map[string]any{
-				"driver":   "postgresql",
-				"host":     config.Env("DB_HOST", "127.0.0.1"),
-				"port":     config.Env("DB_PORT", 5432),
-				"database": config.Env("DB_DATABASE", "forge"),
-				"username": config.Env("DB_USERNAME", ""),
-				"password": config.Env("DB_PASSWORD", ""),
-				"sslmode":  "disable",
-				"timezone": "UTC", //Asia/Shanghai
-				"prefix":   "",
-				"singular": false, // Table name is singular
-			},
-			"sqlite": map[string]any{
-				"driver":   "sqlite",
-				"database": config.Env("DB_DATABASE", "forge"),
-				"prefix":   "",
-				"singular": false, // Table name is singular
-			},
-			"sqlserver": map[string]any{
-				"driver":   "sqlserver",
-				"host":     config.Env("DB_HOST", "127.0.0.1"),
-				"port":     config.Env("DB_PORT", 1433),
-				"database": config.Env("DB_DATABASE", "forge"),
-				"username": config.Env("DB_USERNAME", ""),
-				"password": config.Env("DB_PASSWORD", ""),
-				"charset":  "utf8mb4",
-				"prefix":   "",
-				"singular": false, // Table name is singular
+				"via": func() (driver.Driver, error) {
+					return mysqlfacades.Mysql("mysql")
+				},
 			},
 		},
 
@@ -94,7 +70,9 @@ func init() {
 		// This table keeps track of all the migrations that have already run for
 		// your application. Using this information, we can determine which of
 		// the migrations on disk haven't actually been run in the database.
-		"migrations": "migrations",
+		"migrations": map[string]any{
+			"table": "migrations",
+		},
 
 		// Redis Databases
 		//
