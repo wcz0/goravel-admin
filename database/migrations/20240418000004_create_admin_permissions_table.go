@@ -15,9 +15,8 @@ func (r *M20240418000004CreateAdminPermissionsTable) Signature() string {
 // Up Run the migrations.
 func (r *M20240418000004CreateAdminPermissionsTable) Up() error {
 	return facades.Schema().Create("admin_permissions", func(table schema.Blueprint) {
-		table.Primary("id")
-		table.UnsignedInteger("id").AutoIncrement()
-		table.UnsignedInteger("parent_id").Nullable().Default(0).Comment("父级权限ID")
+		table.BigIncrements("id")
+		table.UnsignedInteger("parent_id").Default(0).Comment("父级权限ID")
 		table.String("name", 255).Nullable().Default("").Comment("权限名称")
 		table.String("value", 255).Nullable().Default("").Comment("权限值")
 		table.String("method", 255).Nullable().Default("").Comment("请求方法")

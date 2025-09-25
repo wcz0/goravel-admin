@@ -26,8 +26,6 @@ import (
 	"github.com/goravel/mysql"
 	"github.com/goravel/redis"
 
-	// "github.com/goravel/redis"
-
 	"goravel/app/providers"
 	// authz "github.com/wcz0/goravel-authz"
 )

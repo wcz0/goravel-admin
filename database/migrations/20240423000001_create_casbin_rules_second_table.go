@@ -15,8 +15,7 @@ func (r *M20240423000001CreateCasbinRulesSecondTable) Signature() string {
 // Up Run the migrations.
 func (r *M20240423000001CreateCasbinRulesSecondTable) Up() error {
 	return facades.Schema().Create("casbin_rules_second", func(table schema.Blueprint) {
-		table.Primary("id")
-		table.UnsignedInteger("id").AutoIncrement()
+		table.BigIncrements("id")
 		table.String("ptype", 100).Default(nil)
 		table.String("v0", 100).Default(nil)
 		table.String("v1", 100).Default(nil)

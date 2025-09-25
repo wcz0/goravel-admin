@@ -15,8 +15,7 @@ func (r *M20240418000003CreateAdminPermissionMenuTable) Signature() string {
 // Up Run the migrations.
 func (r *M20240418000003CreateAdminPermissionMenuTable) Up() error {
 	return facades.Schema().Create("admin_permission_menu", func(table schema.Blueprint) {
-		table.Primary("id")
-		table.UnsignedInteger("id").AutoIncrement()
+		table.BigIncrements("id")
 		table.Integer("permission").Nullable()
 		table.Integer("menu").Nullable()
 		table.DateTime("created_at").Nullable()

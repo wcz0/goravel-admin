@@ -24,6 +24,7 @@ func (kernel Kernel) Migrations() []schema.Migration {
 		&migrations.M20240418000005CreateAdminExtensionsTable{},
 		&migrations.M20240419000001CreateAdminRolesTable{},
 		&migrations.M20240423000001CreateCasbinRulesSecondTable{},
+		&migrations.M20240418000001CreateAdminSettingsTable{},
 	}
 }
 
