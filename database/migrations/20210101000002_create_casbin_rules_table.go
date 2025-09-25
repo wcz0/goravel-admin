@@ -15,16 +15,15 @@ func (r *M20210101000002CreateCasbinRulesTable) Signature() string {
 // Up Run the migrations.
 func (r *M20210101000002CreateCasbinRulesTable) Up() error {
 	return facades.Schema().Create("casbin_rules", func(table schema.Blueprint) {
-		table.Primary("id")
-		table.UnsignedBigInteger("id").AutoIncrement()
-		table.String("ptype", 100).Nullable()
-		table.String("v0", 100).Nullable()
-		table.String("v1", 100).Nullable()
-		table.String("v2", 100).Nullable()
-		table.String("v3", 100).Nullable()
-		table.String("v4", 100).Nullable()
-		table.String("v5", 100).Nullable()
-		table.Unique("casbin_rules_unique", "ptype", "v0", "v1", "v2", "v3", "v4", "v5")
+		table.BigIncrements("id")
+		table.String("ptype", 100)
+		table.String("v0", 100)
+		table.String("v1", 100)
+		table.String("v2", 100)
+		table.String("v3", 100)
+		table.String("v4", 100)
+		table.String("v5", 100)
+		table.Unique( "ptype", "v0", "v1", "v2", "v3", "v4", "v5")
 	})
 }
 

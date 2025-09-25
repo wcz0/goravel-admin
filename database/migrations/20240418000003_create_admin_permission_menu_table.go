@@ -19,7 +19,8 @@ func (r *M20240418000003CreateAdminPermissionMenuTable) Up() error {
 		table.UnsignedInteger("id").AutoIncrement()
 		table.Integer("permission").Nullable()
 		table.Integer("menu").Nullable()
-		table.Timestamps()
+		table.DateTime("created_at").Nullable()
+		table.DateTime("updated_at").Nullable()
 	})
 }
 

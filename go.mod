@@ -8,6 +8,7 @@ require (
 	github.com/duke-git/lancet/v2 v2.3.2
 	github.com/goravel/framework v1.16.3
 	github.com/goravel/gin v1.4.0
+	github.com/goravel/mysql v1.4.0
 	github.com/goravel/redis v1.4.0
 	github.com/stretchr/testify v1.10.0
 	github.com/wcz0/gamis v0.6.13
@@ -98,7 +99,6 @@ require (
 	github.com/gookit/goutil v0.6.18 // indirect
 	github.com/gookit/validate v1.5.5 // indirect
 	github.com/goravel/file-rotatelogs/v2 v2.4.2 // indirect
-	github.com/goravel/mysql v1.4.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect

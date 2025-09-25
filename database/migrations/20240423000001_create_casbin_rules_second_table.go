@@ -17,14 +17,14 @@ func (r *M20240423000001CreateCasbinRulesSecondTable) Up() error {
 	return facades.Schema().Create("casbin_rules_second", func(table schema.Blueprint) {
 		table.Primary("id")
 		table.UnsignedInteger("id").AutoIncrement()
-		table.String("ptype", 100).Nullable()
-		table.String("v0", 100).Nullable()
-		table.String("v1", 100).Nullable()
-		table.String("v2", 100).Nullable()
-		table.String("v3", 100).Nullable()
-		table.String("v4", 100).Nullable()
-		table.String("v5", 100).Nullable()
-		table.Unique("casbin_rules_second_unique", "ptype", "v0", "v1", "v2", "v3", "v4", "v5")
+		table.String("ptype", 100).Default(nil)
+		table.String("v0", 100).Default(nil)
+		table.String("v1", 100).Default(nil)
+		table.String("v2", 100).Default(nil)
+		table.String("v3", 100).Default(nil)
+		table.String("v4", 100).Default(nil)
+		table.String("v5", 100).Default(nil)
+		table.Unique("ptype", "v0", "v1", "v2", "v3", "v4", "v5")
 	})
 }
 

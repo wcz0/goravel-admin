@@ -15,10 +15,10 @@ func (r *M20240419000001CreateAdminRolesTable) Signature() string {
 // Up Run the migrations.
 func (r *M20240419000001CreateAdminRolesTable) Up() error {
 	return facades.Schema().Create("admin_roles", func(table schema.Blueprint) {
-		table.Primary("id")
-		table.UnsignedInteger("id").AutoIncrement()
-		table.String("name", 255).Nullable().Default("").Comment("角色名称")
-		table.String("value", 255).Nullable().Default("").Comment("值")
+		table.BigIncrements("id")
+		table.String("name", 255).Default("").Comment("角色名称")
+		table.String("slug", 255).Default("").Comment("角色标识")
+		table.Unique("name", "slug")
 		table.Timestamps()
 		table.SoftDeletes()
 	})

@@ -18,12 +18,13 @@ import (
 	"github.com/goravel/framework/queue"
 	"github.com/goravel/framework/route"
 	"github.com/goravel/framework/schedule"
+	"github.com/goravel/framework/session"
 	"github.com/goravel/framework/testing"
 	"github.com/goravel/framework/translation"
 	"github.com/goravel/framework/validation"
-	"github.com/goravel/framework/session"
 	"github.com/goravel/gin"
 	"github.com/goravel/mysql"
+	"github.com/goravel/redis"
 
 	// "github.com/goravel/redis"
 
@@ -105,7 +106,7 @@ func init() {
 			&gin.ServiceProvider{},
 			&translation.ServiceProvider{},
 			&session.ServiceProvider{},
-			// &redis.ServiceProvider{},
+			&redis.ServiceProvider{},
 			&cache.ServiceProvider{},
 			// &authz.ServiceProvider{},
 			&providers.AdminServiceProvider{},

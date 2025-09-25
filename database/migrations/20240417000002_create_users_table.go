@@ -68,7 +68,7 @@ func (r *M20240417000002CreateUsersTable) Up() error {
 		table.UnsignedInteger("division_invite").Nullable().Default(0)
 		table.Timestamps()
 		table.SoftDeletes()
-		table.Unique("users_username_unique", "username")
+		table.Unique("username")
 	})
 }
 

@@ -14,17 +14,16 @@ func (r *M20240417000001CreateAdminUsersTable) Signature() string {
 
 // Up Run the migrations.
 func (r *M20240417000001CreateAdminUsersTable) Up() error {
-	return facades.Schema().Table("admin_users", func(table schema.Blueprint) {
-		table.Primary("id")
-		table.UnsignedInteger("id").AutoIncrement()
-		table.String("username", 120).Nullable().Default("")
-		table.String("password", 80).Nullable().Default("")
-		table.String("name", 255).Nullable().Default("")
+	return facades.Schema().Create("admin_users", func(table schema.Blueprint) {
+		table.BigIncrements("id")
+		table.String("username", 120)
+		table.String("password", 80)
+		table.TinyInteger("enabled").Default(1)
+		table.String("name", 255).Default("")
 		table.String("avatar", 255).Nullable()
 		table.String("remember_token", 100).Nullable()
 		table.Timestamps()
-		table.SoftDeletes()
-		table.Unique("admin_users_username_unique", "username")
+		table.Unique( "username")
 	})
 }
 
