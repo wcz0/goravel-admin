@@ -80,7 +80,6 @@ func (e *ErrorHandler) Fail(ctx http.Context) http.Response {
 func (e *ErrorHandler) FailMsg(ctx http.Context, msg any) http.Response {
 	return ctx.Response().Success().Json(http.Json{
 		"status":            enums.StatusFailed,
-		"code":              enums.Failed,
 		"msg":               msg,
 		"data":              []any{},
 		"doNotDisplayToast": 0,
@@ -90,7 +89,6 @@ func (e *ErrorHandler) FailMsg(ctx http.Context, msg any) http.Response {
 func (e *ErrorHandler) FailData(ctx http.Context, data any) http.Response {
 	return ctx.Response().Success().Json(http.Json{
 		"status":            enums.StatusFailed,
-		"code":              enums.Failed,
 		"msg":               "Error.",
 		"data":              data,
 		"doNotDisplayToast": 0,
@@ -100,7 +98,6 @@ func (e *ErrorHandler) FailData(ctx http.Context, data any) http.Response {
 func (e *ErrorHandler) FailMsgData(ctx http.Context, msg any, data any) http.Response {
 	return ctx.Response().Success().Json(http.Json{
 		"status":            enums.StatusFailed,
-		"code":              enums.Failed,
 		"msg":               msg,
 		"data":              data,
 		"doNotDisplayToast": 0,

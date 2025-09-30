@@ -15,11 +15,10 @@ func (r *M20240418000003CreateAdminPermissionMenuTable) Signature() string {
 // Up Run the migrations.
 func (r *M20240418000003CreateAdminPermissionMenuTable) Up() error {
 	return facades.Schema().Create("admin_permission_menu", func(table schema.Blueprint) {
-		table.BigIncrements("id")
-		table.Integer("permission").Nullable()
-		table.Integer("menu").Nullable()
-		table.DateTime("created_at").Nullable()
-		table.DateTime("updated_at").Nullable()
+		table.Integer("permission_id").Comment("权限ID")
+		table.Integer("menu_id").Comment("菜单ID")
+		table.Timestamps()
+		table.Index("permission_id", "menu_id")
 	})
 }
 

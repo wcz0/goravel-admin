@@ -41,6 +41,11 @@ func init() {
 		"providers": map[string]any{
 			"user": map[string]any{
 				"driver": "orm",
+				"model":  "goravel/app/models.User",
+			},
+			"admin": map[string]any{
+				"driver": "orm",
+				"model":  "goravel/app/models/admin.AdminUser",
 			},
 		},
 	})

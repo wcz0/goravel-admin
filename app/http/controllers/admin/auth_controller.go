@@ -29,15 +29,12 @@ func NewAuthController() *AuthController {
 }
 
 func (a *AuthController) Login(ctx http.Context) http.Response {
-	validator, err := ctx.Request().Validate(map[string]string{
-		"username": "required|max_len:32",
+	// 使用统一的验证错误处理方法
+	if hasError, response := a.HandleValidationErrors(ctx, map[string]string{
+		"username": "required|min_len:3|max_len:32",
 		"password": "required|min_len:5|max_len:32",
-	})
-	if err != nil {
-		return a.FailMsg(ctx, err.Error())
-	}
-	if validator.Fails() {
-		return a.FailMsg(ctx, validator.Errors().All())
+	}); hasError {
+		return response
 	}
 	return a.AdminUserService.Login(ctx)
 }
@@ -49,8 +46,8 @@ func (a *AuthController) Logout(ctx http.Context) http.Response {
 
 func (a *AuthController) Register(ctx http.Context) http.Response {
 	validator, err := ctx.Request().Validate(map[string]string{
-		"username": "required|max_len:32",
-		"password": "required|min_len:5|max_len:32",
+		"username": "required|string|min_len:max:32",
+		"password": "required|string|min_len:5|max_len:32",
 	})
 	if err != nil {
 		return a.FailMsg(ctx, err.Error())

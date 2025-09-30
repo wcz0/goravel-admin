@@ -11,7 +11,6 @@ import (
 func Admin() {
 	index := admin.NewIndexController()
 	auth := admin.NewAuthController()
-	// menu := admin.NewMenuController()
 	user := admin.NewUserController()
 	home := admin.NewHomeController()
 
@@ -45,7 +44,9 @@ func Admin() {
 					router.Get("users", user.Index)
 					router.Resource("admin_users", admin.NewUserController())
 					router.Resource("roles", admin.NewRoleController())
+					// 同时兼容权限管理的两种菜单路径：/system/permissions 与 /system/admin_permission
 					router.Resource("permissions", admin.NewPermissionController())
+					router.Resource("admin_permission", admin.NewPermissionController())
 					router.Resource("menus", admin.NewMenuController())
 				})
 			})

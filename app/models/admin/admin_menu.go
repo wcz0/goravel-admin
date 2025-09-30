@@ -24,10 +24,10 @@ type AdminMenu struct {
 	UrlType     uint8
 	Visible     uint8
 	IsHome      uint8
-	KeepAlive   uint8
 	Component   string
-	CustomOrder int
-	IFrameUrl   string `json:"iframe_url"`
+	CustomOrder int `gorm:"column:custom_order"`
+	KeepAlive   *uint8 `gorm:"column:keep_alive"`
+	IFrameUrl   *string `gorm:"column:iframe_url"`
 	IsFull      uint8
 	Extension   string
 	orm.Model

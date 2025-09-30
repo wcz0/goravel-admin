@@ -16,14 +16,14 @@ func (r *M20240417000001CreateAdminUsersTable) Signature() string {
 func (r *M20240417000001CreateAdminUsersTable) Up() error {
 	return facades.Schema().Create("admin_users", func(table schema.Blueprint) {
 		table.BigIncrements("id")
-		table.String("username", 120)
-		table.String("password", 80)
-		table.TinyInteger("enabled").Default(1)
-		table.String("name", 255).Default("")
-		table.String("avatar", 255).Nullable()
-		table.String("remember_token", 100).Nullable()
+		table.String("username", 120).Comment("用户名")
+		table.String("password", 80).Comment("密码")
+		table.TinyInteger("enabled").Default(1).Comment("是否启用")
+		table.String("name", 255).Default("").Comment("姓名")
+		table.String("avatar", 255).Nullable().Comment("头像")
+		table.String("remember_token", 100).Nullable().Comment("记住登录令牌")
 		table.Timestamps()
-		table.Unique( "username")
+		table.Unique("username")
 	})
 }
 

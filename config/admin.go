@@ -36,7 +36,16 @@ func init() {
 			// 	"model":         "admin_user",
 			// 	"controller":    "admin",
 			// 	"guard":         "admin_user",
-			"except": []string{},
+			"except": []string{
+				"system/admin_users",
+			},
+		},
+
+		"permission": map[string]any{
+			"enable": config.Env("ADMIN_ENABLE_PERMISSION", true),
+			"except": []string{
+				"system/admin_users",
+			},
 		},
 
 		"upload": map[string]any{

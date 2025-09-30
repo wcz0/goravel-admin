@@ -55,18 +55,14 @@ func (p *Permission) AuthIntercept(ctx http.Context) {
 	if !config.GetBool("admin.auth.enable") {
 		return
 	}
-	// configExcept := config.Get("admin.auth.except").([]string)
-	// mergedExcept := append(p.authExcept, p.permissionExcept...)
-	// mergedExcept = append(mergedExcept, configExcept...)
+	configExcept := config.Get("admin.auth.except").([]string)
+	mergedExcept := append(p.authExcept, configExcept...)
 	// 白名单处理
-	// isExcept := false
-	// for _, except := range mergedExcept {
-	// 	formattedPath := p.pathFormatting(except)
-	// 	if except == formattedPath {
-	// 		isExcept = true
-	// 		break
-	// 	}
-	// }
+	for _, except := range mergedExcept {
+		if p.pathMatches(ctx, except) {
+			return
+		}
+	}
 	// 用户登录
 	token := ctx.Request().Header("Authorization")
 	payload, err := facades.Auth(ctx).Guard("admin").Parse(token)
@@ -124,8 +120,7 @@ func (p *Permission) PermissionIntercept(ctx http.Context) bool {
 	// 白名单处理
 	isExcept := false
 	for _, except := range excepted {
-		formattedPath := p.pathFormatting(except)
-		if p.pathMatches(ctx, formattedPath) {
+		if ctx.Request().Path() == p.pathFormatting(except) {
 			isExcept = true
 			break
 		}
@@ -134,26 +129,47 @@ func (p *Permission) PermissionIntercept(ctx http.Context) bool {
 		return false
 	}
 	// 判断是否为超级管理员
-	user := ctx.Value("user").(admin.AdminUser)
-	if user.IsAdministrator() {
-		return false
+	userValue := ctx.Value("user")
+	if userValue == nil {
+		return true // 用户未登录，拒绝访问
 	}
+
+	user, ok := userValue.(admin.AdminUser)
+	if !ok {
+		return true // 类型断言失败，拒绝访问
+	}
+
+	if user.IsAdministrator() {
+		return false // 超级管理员，允许访问
+	}
+
 	allPermissions := user.AllPermissions()
+	if len(allPermissions) == 0 {
+		return true // 没有权限，拒绝访问
+	}
+
+	// 检查是否有匹配的权限
 	for _, permission := range allPermissions {
-		if !permission.ShouldPassThrough(ctx) {
-			return false
+		if permission.ShouldPassThrough(ctx) {
+			return false // 找到匹配权限，允许访问
 		}
 	}
-	return true
+	return true // 没有匹配的权限，拒绝访问
 }
 
 
 func (p *Permission) pathMatches(ctx http.Context, except string) bool {
 	path := ctx.Request().Path()
-	if except == "/" {
-		return path == except
+	// 去掉前缀进行匹配
+	prefix := "/" + strings.Trim(facades.Config().GetString("admin.route.prefix"), "/")
+	path = strings.TrimPrefix(path, prefix)
+	path = strings.Trim(path, "/")
+	except = strings.Trim(except, "/")
+
+	if except == "" {
+		return path == ""
 	}
-	return path == strings.Trim(except, "/")
+	return path == except
 }
 
 func (p *Permission) pathFormatting(path string) string {

@@ -18,11 +18,11 @@ func (r *M20240418000004CreateAdminPermissionsTable) Up() error {
 		table.BigIncrements("id")
 		table.UnsignedInteger("parent_id").Default(0).Comment("父级权限ID")
 		table.String("name", 255).Nullable().Default("").Comment("权限名称")
-		table.String("value", 255).Nullable().Default("").Comment("权限值")
-		table.String("method", 255).Nullable().Default("").Comment("请求方法")
-		table.String("path", 255).Nullable()
+		table.String("slug", 255).Nullable().Default("").Comment("权限标识")
+		table.Json("http_method").Nullable().Comment("请求方法")
+		table.Json("http_path").Nullable().Comment("请求路径")
+		table.Integer("custom_order").Default(0).Comment("排序")
 		table.Timestamps()
-		table.SoftDeletes()
 	})
 }
 
