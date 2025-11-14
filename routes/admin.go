@@ -44,7 +44,7 @@ func Admin() {
 				router.Prefix("system").Group(func(router route.Router) {
 					router.Get("users", user.Index)
 					router.Resource("admin_users", admin.NewUserController())
-					router.Resource("roles", admin.NewRoleController())
+					router.Resource("admin_roles", admin.NewRoleController())
 					router.Resource("permissions", admin.NewPermissionController())
 					router.Resource("menus", admin.NewMenuController())
 				})

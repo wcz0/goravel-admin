@@ -84,18 +84,18 @@ func (p *Permission) AuthIntercept(ctx http.Context) {
 		ctx.Request().AbortWithStatusJson(http.StatusOK, response.Unauthorized)
 		return
 	}
-	ctx.WithValue("user", user)
+	ctx.WithValue("admin_user", &user)
 }
 
 /**
 	检查用户状态
 */
 func (p *Permission) CheckUserStatus(ctx http.Context) {
-	user := ctx.Value("user")
+	user := ctx.Value("admin_user")
 	if user == nil {
 		return
 	}
-	if user.(admin.AdminUser).Enabled == 0 {
+	if user.(*admin.AdminUser).Enabled == 0 {
 		facades.Auth(ctx).Logout()
 	}
 }
@@ -108,19 +108,28 @@ func (p *Permission) PermissionIntercept(ctx http.Context) bool {
 	if !config.GetBool("admin.permission.enable") {
 		return false
 	}
-	if ctx.Request().Path() == config.GetString("admin.route.prefix") {
+	
+	// 获取当前路径
+	currentPath := ctx.Request().Path()
+	
+	// 如果是根路径，直接放行
+	if currentPath == "/" || currentPath == config.GetString("admin.route.prefix") {
 		return false
 	}
+	
 	// 判断是否为白名单
 	configExcept := config.Get("admin.permission.except").([]string)
 	excepted := append(p.permissionExcept, configExcept...)
 	excepted = append(excepted, p.authExcept...)
+	
 	if config.GetBool("admin.show_development_tools") {
 		excepted = append(excepted, "/dev_tools*")
 	}
+	
 	if len(excepted) == 0 {
 		return false
 	}
+	
 	// 白名单处理
 	isExcept := false
 	for _, except := range excepted {
@@ -130,21 +139,40 @@ func (p *Permission) PermissionIntercept(ctx http.Context) bool {
 			break
 		}
 	}
+	
 	if isExcept {
 		return false
 	}
+	
 	// 判断是否为超级管理员
-	user := ctx.Value("user").(admin.AdminUser)
+	user := ctx.Value("admin_user").(*admin.AdminUser)
 	if user.IsAdministrator() {
 		return false
 	}
+	
+	// 获取用户所有权限
 	allPermissions := user.AllPermissions()
+	
+	// 如果没有权限，返回拒绝
+	if len(allPermissions) == 0 {
+		return true // 拒绝访问
+	}
+	
+	// 检查权限是否通过
+	hasPermission := false
 	for _, permission := range allPermissions {
-		if !permission.ShouldPassThrough(ctx) {
-			return false
+		if permission.ShouldPassThrough(ctx) {
+			hasPermission = true
+			break
 		}
 	}
-	return true
+	
+	// 如果没有匹配到权限，拒绝访问
+	if !hasPermission {
+		return true // 拒绝访问
+	}
+	
+	return false // 允许访问
 }
 
 

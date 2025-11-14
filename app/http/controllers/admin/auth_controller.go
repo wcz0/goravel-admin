@@ -34,17 +34,17 @@ func (a *AuthController) Login(ctx http.Context) http.Response {
 		"password": "required|min_len:5|max_len:32",
 	})
 	if err != nil {
-		return a.FailMsg(ctx, err.Error())
+		return a.Controller.FailMsg(ctx, err.Error())
 	}
 	if validator.Fails() {
-		return a.FailMsg(ctx, validator.Errors().All())
+		return a.Controller.FailMsg(ctx, validator.Errors().All())
 	}
 	return a.AdminUserService.Login(ctx)
 }
 
 func (a *AuthController) Logout(ctx http.Context) http.Response {
 	facades.Auth(ctx).Guard("admin").Logout()
-	return a.Success(ctx)
+	return a.Controller.Success(ctx)
 }
 
 func (a *AuthController) Register(ctx http.Context) http.Response {
@@ -53,16 +53,16 @@ func (a *AuthController) Register(ctx http.Context) http.Response {
 		"password": "required|min_len:5|max_len:32",
 	})
 	if err != nil {
-		return a.FailMsg(ctx, err.Error())
+		return a.Controller.FailMsg(ctx, err.Error())
 	}
 	if validator.Fails() {
-		return a.FailMsg(ctx, validator.Errors().All())
+		return a.Controller.FailMsg(ctx, validator.Errors().All())
 	}
 	password, err := facades.Hash().Make(ctx.Request().Input("password"))
 	if err != nil {
-		return a.Fail(ctx)
+		return a.Controller.Fail(ctx)
 	}
-	return a.SuccessData(ctx, password)
+	return a.Controller.SuccessData(ctx, password)
 }
 
 // LoginPage 登录页面 需要写入设置 开启amis页面登录
@@ -132,7 +132,7 @@ window.$owl.afterLoginSuccess(_data, event.data.result.data.token)
 		form,
 	})
 
-	return a.Json(ctx, gamis.Page().ClassName("login-bg").Css(map[string]any{
+	return a.Controller.Json(ctx, gamis.Page().ClassName("login-bg").Css(map[string]any{
 		".captcha-box .cxd-Image--thumb": map[string]any{
 			"padding":                    "0",
 			"cursor":                     "pointer",
@@ -178,9 +178,9 @@ func (a *AuthController) Get(key string, default_ any, fresh bool) any {
 
 func (a *AuthController) CurrentUser(ctx http.Context) http.Response {
 	if !facades.Config().GetBool("admin.auth.enable") {
-		return a.Success(ctx)
+		return a.Controller.Success(ctx)
 	}
-	userInfo := ctx.Value("user").(admin.AdminUser)
+	userInfo := ctx.Value("admin_user").(*admin.AdminUser)
 	menus := gamis.DropdownButton().HideCaret("true").Trigger("hover").
 		Label(userInfo.Name).
 		ClassName("h-full w-full").
@@ -199,7 +199,7 @@ func (a *AuthController) CurrentUser(ctx http.Context) http.Response {
 				Icon("fa-solid fa-right-from-bracket").
 				OnClick("window.$owl.logout()"),
 		})
-	return a.SuccessData(ctx, struct {
+	return a.Controller.SuccessData(ctx, struct {
 		Name   string `json:"name"`
 		Avatar string `json:"avatar"`
 		Menus  any    `json:"menus"`

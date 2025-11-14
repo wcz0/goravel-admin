@@ -31,8 +31,9 @@ func (s *AdminUserService) Login(ctx http.Context) http.Response {
 	if err != nil {
 		return s.FailMsg(ctx, err.Error())
 	}
-	return s.SuccessMsgData(ctx, "登录成功", map[string]string{
+	return s.SuccessData(ctx, map[string]any{
 		"token": token,
+		"message": "登录成功",
 	})
 }
 
@@ -49,11 +50,15 @@ func (a *AdminUserService) List(ctx http.Context) http.Response {
 		return a.FailMsg(ctx, err.Error())
 	}
 
-	return a.SuccessData(ctx, users)
+	return a.SuccessData(ctx, map[string]any{
+		"items": users,
+	})
 }
 
 func (a *AdminUserService) Export(ctx http.Context) http.Response {
-	return a.SuccessData(ctx, []any{})
+	return a.SuccessData(ctx, map[string]any{
+		"items": []any{},
+	})
 }
 
 func (a *AdminUserService) RoleOptions(ctx http.Context) []map[string]any {
@@ -87,15 +92,15 @@ func (a *AdminUserService) RoleOptions(ctx http.Context) []map[string]any {
 }
 
 func (a *AdminUserService) QuickEdit(ctx http.Context) http.Response {
-	return a.Success(ctx)
+	return a.Success(ctx, "快速编辑成功")
 }
 
 func (a *AdminUserService) QuickEditItem(ctx http.Context) http.Response {
-	return a.Success(ctx)
+	return a.Success(ctx, "快速编辑项成功")
 }
 
 func (a *AdminUserService) Update(ctx http.Context) http.Response {
-	return a.Success(ctx)
+	return a.Success(ctx, "更新成功")
 }
 
 func (a *AdminUserService) Store(ctx http.Context) http.Response {
@@ -103,5 +108,5 @@ func (a *AdminUserService) Store(ctx http.Context) http.Response {
 	if err := a.AdminService.Store(ctx); err != nil {
 		return a.FailMsg(ctx, err.Error())
 	}
-	return a.Success(ctx)
+	return a.Success(ctx, "创建成功")
 }

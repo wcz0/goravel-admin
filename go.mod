@@ -11,7 +11,7 @@ require (
 	github.com/goravel/mysql v1.4.0
 	github.com/goravel/redis v1.4.0
 	github.com/stretchr/testify v1.10.0
-	github.com/wcz0/gamis v0.6.13
+	github.com/wcz0/gamis v0.6.19
 	github.com/wcz0/goravel-authz v0.2.0
 	github.com/yitter/idgenerator-go v1.3.3
 	golang.org/x/text v0.27.0

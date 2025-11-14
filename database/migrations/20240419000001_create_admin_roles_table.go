@@ -16,9 +16,13 @@ func (r *M20240419000001CreateAdminRolesTable) Signature() string {
 func (r *M20240419000001CreateAdminRolesTable) Up() error {
 	return facades.Schema().Create("admin_roles", func(table schema.Blueprint) {
 		table.BigIncrements("id")
-		table.String("name", 255).Default("").Comment("角色名称")
-		table.String("slug", 255).Default("").Comment("角色标识")
-		table.Unique("name", "slug")
+		table.String("name", 255).Comment("角色名称")
+		table.String("slug", 255).Comment("角色标识")
+		
+		// 唯一约束：name 和 slug 都应该是唯一的
+		table.Unique("name")
+		table.Unique("slug")
+		
 		table.Timestamps()
 		table.SoftDeletes()
 	})

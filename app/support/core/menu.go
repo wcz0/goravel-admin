@@ -57,17 +57,32 @@ func (m *Menu) All(ctx http.Context) []Route {
 func (m *Menu) userMenus(ctx http.Context) []admin.AdminMenu {
 	config := facades.Config()
 	if !config.GetBool("admin.auth.enable") {
+		facades.Log().Debug("menus: auth disabled")
 		return []admin.AdminMenu{}
 	}
-	user := ctx.Value("user").(admin.AdminUser)
+	user := ctx.Value("admin_user").(*admin.AdminUser)
+	if user == nil {
+		facades.Log().Debug("menus: user is nil")
+		return []admin.AdminMenu{}
+	}
+	
+	// 调试信息
+	facades.Log().Debug("menus: user", "username", user.Username, "isAdmin", user.IsAdministrator())
+	facades.Log().Debug("menus: permission enabled", config.GetBool("admin.auth.permission"))
+	
 	var list []admin.AdminMenu
 	if user.IsAdministrator() || !config.GetBool("admin.auth.permission") {
+		facades.Log().Debug("menus: querying all menus")
 		if err := facades.Orm().Query().OrderBy("custom_order").Get(&list); err != nil {
+			facades.Log().Error("menus: query error", "error", err.Error())
 			return []admin.AdminMenu{}
 		}
+		facades.Log().Debug("menus: found menus", "count", len(list))
 	} else {
 		// 获取用户角色权限菜单
+		facades.Log().Debug("menus: getting user role menus")
 		if err := facades.Orm().Query().With("AdminRoles.AdminPermissions.AdminMenus").Find(&user); err != nil {
+			facades.Log().Error("menus: user query error", "error", err.Error())
 			return []admin.AdminMenu{}
 		}
 		for _, role := range user.AdminRoles {
@@ -77,6 +92,7 @@ func (m *Menu) userMenus(ctx http.Context) []admin.AdminMenu {
 				}
 			}
 		}
+		facades.Log().Debug("menus: permission menus found", "count", len(list))
 	}
 	return list
 }

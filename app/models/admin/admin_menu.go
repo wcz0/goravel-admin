@@ -1,7 +1,7 @@
 package admin
 
 import (
-	"github.com/goravel/framework/database/orm"
+	"time"
 )
 
 const (
@@ -17,6 +17,7 @@ const (
 )
 
 type AdminMenu struct {
+	ID          uint
 	ParentId    uint32
 	Title       string
 	Icon        string
@@ -30,5 +31,6 @@ type AdminMenu struct {
 	IFrameUrl   string `json:"iframe_url"`
 	IsFull      uint8
 	Extension   string
-	orm.Model
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }

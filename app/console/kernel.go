@@ -18,5 +18,6 @@ func (kernel *Kernel) Commands() []console.Command {
 	return []console.Command{
 		&commands.Admin{},
 		&commands.Service{},
+		&commands.DumpAdminData{},
 	}
 }

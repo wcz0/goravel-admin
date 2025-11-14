@@ -1,24 +1,20 @@
 package services
 
 import (
-	"goravel/app/response"
 	"reflect"
 
 	"github.com/goravel/framework/contracts/http"
 
 	"github.com/goravel/framework/facades"
-
 )
 
 type AdminService[T any] struct {
-	*response.ErrorHandler
 	Model T
 }
 
 func NewAdminService[T any](model T) *AdminService[T] {
 	return &AdminService[T]{
-		ErrorHandler: response.NewErrorHandler(),
-		Model:        model,
+		Model: model,
 	}
 }
 
@@ -79,4 +75,31 @@ func (s *AdminService[T]) Store(ctx http.Context) error {
 	}
 
 	return nil
+}
+
+// Success 成功响应
+func (s *AdminService[T]) Success(ctx http.Context, msg string) http.Response {
+	return ctx.Response().Success().Json(http.Json{
+		"code": 200,
+		"msg":  msg,
+		"data": map[string]any{},
+	})
+}
+
+// SuccessData 成功响应（带数据）
+func (s *AdminService[T]) SuccessData(ctx http.Context, data map[string]any) http.Response {
+	return ctx.Response().Success().Json(http.Json{
+		"code": 200,
+		"msg":  "Success",
+		"data": data,
+	})
+}
+
+// FailMsg 失败响应
+func (s *AdminService[T]) FailMsg(ctx http.Context, msg string) http.Response {
+	return ctx.Response().Status(400).Json(http.Json{
+		"code": 400,
+		"msg":  msg,
+		"data": map[string]any{},
+	})
 }

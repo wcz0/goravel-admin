@@ -42,6 +42,9 @@ func init() {
 			"user": map[string]any{
 				"driver": "orm",
 			},
+			"admin": map[string]any{
+				"driver": "orm",
+			},
 		},
 	})
 }

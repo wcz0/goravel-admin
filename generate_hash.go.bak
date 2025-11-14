@@ -1,0 +1,28 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"os"
+
+	"golang.org/x/crypto/bcrypt"
+)
+
+func main() {
+	// 生成新密码的哈希值
+	newPassword := "admin"
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatal("Failed to hash password:", err)
+	}
+
+	fmt.Printf("Generated hash for password '%s':\n%s\n", newPassword, string(hashedPassword))
+	
+	// 将哈希值保存到文件中
+	err = os.WriteFile("password_hash.txt", hashedPassword, 0644)
+	if err != nil {
+		log.Fatal("Failed to save hash to file:", err)
+	}
+	
+	fmt.Println("Password hash saved to password_hash.txt")
+}
