@@ -2,6 +2,7 @@ package services
 
 import (
 	"goravel/app/models/admin"
+	"strings"
 
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
@@ -104,8 +105,17 @@ func (a *AdminUserService) Update(ctx http.Context) http.Response {
 }
 
 func (a *AdminUserService) Store(ctx http.Context) http.Response {
-	// TODO: 自己处理特殊情况
-	if err := a.AdminService.Store(ctx); err != nil {
+	// 获取请求参数
+	username := ctx.Request().Input("username")
+	password := ctx.Request().Input("password")
+	name := ctx.Request().Input("name")
+	avatar := ctx.Request().Input("avatar")
+	enabled := ctx.Request().InputInt("enabled", 1) // 默认启用
+	roles := ctx.Request().InputArray("roles") // 角色ID数组
+
+	// 检查用户名是否已存在
+	var existingUser admin.AdminUser
+	if err := facades.Orm().Query().Where("username", username).First(&existingUser); err != nil {
 		return a.FailMsg(ctx, err.Error())
 	}
 	return a.Success(ctx, "创建成功")

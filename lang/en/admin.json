@@ -40,6 +40,7 @@
     "upload_file_error": "Upload File Error",
     "parent": "Parent",
     "order": "Order",
+    "order_placeholder": "Order value, smaller numbers come first",
     "order_desc": "Order Desc",
     "order_asc": "Order Asc",
     "menus": "Menus",
@@ -180,6 +181,7 @@
     "admin_role": {
         "name": "Name",
         "slug": "Slug",
+        "description": "Description",
         "permissions": "Permissions",
         "slug_description": "unique identifier of a role",
         "name_already_exists": "Role Name Already Exists",
@@ -195,13 +197,13 @@
         "http_method": "Http Method",
         "http_method_description": "if you do not select the value is ANY",
         "http_path": "Http Path",
+        "http_path_placeholder": "RESTful path, like: /api/v1/users",
+        "http_path_description": "Multiple paths separated by newlines",
         "auto_generate": "Auto Generate",
         "auto_generate_confirm": "The permission information will be generated after the permission table and permission menu association table are truncated. Do you want to continue?",
         "parent_id_not_allow": "Parent Id Not Allow",
         "name_already_exists": "Permission Name Already Exists",
-        "slug_already_exists": "Permission Slug Already Exists",
-        "http_path_placeholder": "RESTful path, like: /api/v1/users",
-        "http_method_placeholder": "GET, POST, PUT, DELETE, OPTIONS"
+        "slug_already_exists": "Permission Slug Already Exists"
     },
     "admin_menus": "Menus",
     "admin_menu": {

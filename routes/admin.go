@@ -11,7 +11,6 @@ import (
 func Admin() {
 	index := admin.NewIndexController()
 	auth := admin.NewAuthController()
-	// menu := admin.NewMenuController()
 	user := admin.NewUserController()
 	home := admin.NewHomeController()
 
@@ -46,6 +45,7 @@ func Admin() {
 					router.Resource("admin_users", admin.NewUserController())
 					router.Resource("admin_roles", admin.NewRoleController())
 					router.Resource("permissions", admin.NewPermissionController())
+					router.Resource("admin_permission", admin.NewPermissionController())
 					router.Resource("menus", admin.NewMenuController())
 				})
 			})

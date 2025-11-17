@@ -76,6 +76,13 @@ func (r *UserController) list(ctx http.Context) *renderers.Page {
 }
 
 func (r *UserController) Show(ctx http.Context) http.Response {
+	// 使用统一的验证错误处理方法
+	if hasError, response := r.HandleValidationErrors(ctx, map[string]string{
+		"id": "required|number",
+	}); hasError {
+		return response
+	}
+	
 	return nil
 }
 
@@ -86,15 +93,47 @@ func (r *UserController) Store(ctx http.Context) http.Response {
 	if r.ActionOfQuickEditItem(ctx){
 		return r.ControllerImpl.Service.QuickEditItem(ctx)
 	}
+
+	// 使用统一的验证错误处理方法
+	if hasError, response := r.HandleValidationErrors(ctx, map[string]string{
+		"username": "required|string|min:3|max:32",
+		"password": "required|string|min:6|max:32",
+		"name":     "required|string|max:50",
+		"avatar":   "string|max:255",
+		"enabled":  "required|in:0,1",
+		"roles":    "array",
+	}); hasError {
+		return response
+	}
+
 	return r.ControllerImpl.Service.Store(ctx)
 }
 
 func (r *UserController) Update(ctx http.Context) http.Response {
-	return nil
+	// 使用统一的验证错误处理方法
+	if hasError, response := r.HandleValidationErrors(ctx, map[string]string{
+		"id":       "required|number",
+		"username": "required|string|min:3|max:32",
+		"name":     "required|string|max:50",
+		"avatar":   "string|max:255",
+		"enabled":  "required|in:0,1",
+		"roles":    "array",
+		"password": "string|min:6|max:32", // 密码可选，用于修改密码
+	}); hasError {
+		return response
+	}
+
+	return r.ControllerImpl.Service.Update(ctx)
 }
 
 func (r *UserController) Destroy(ctx http.Context) http.Response {
-	return nil
+	hasError, response := r.HandleValidationErrors(ctx, map[string]string{
+		"id": "required|number",
+	})
+	if hasError {
+		return response
+	}
+	return r.ControllerImpl.Service.Destroy(ctx)
 }
 
 func (a *UserController) GetUserSetting(ctx http.Context) http.Response {
@@ -116,12 +155,12 @@ func (a *UserController) GetUserSetting(ctx http.Context) http.Response {
 
 func (a *UserController) form(ctx http.Context) *renderers.Form {
 	return a.BaseForm(ctx, false).Body([]any{
-		gamis.ImageControl().Name("Avatar").Label(tools.AdminLang(ctx, "admin_user.avatar")).Receiver(a.UploadImagePath(ctx)),
-		gamis.TextControl().Name("Username").Label(tools.AdminLang(ctx, "username")).Required(true),
-		gamis.TextControl().Name("Name").Label(tools.AdminLang(ctx, "admin_user.name")).Required(true),
-		gamis.TextControl().Name("Password").Label(tools.AdminLang(ctx, "password")).Type("input-password"),
-		gamis.TextControl().Name("confirmPassword").Label(tools.AdminLang(ctx, "confirm_password")).Type("input-password"),
-		gamis.SelectControl().Name("AdminRoles").Label(tools.AdminLang(ctx, "admin_user.roles")).
+		gamis.ImageControl().Name("avatar").Label(tools.AdminLang(ctx, "admin_user.avatar")).Receiver(a.UploadImagePath(ctx)),
+		gamis.TextControl().Name("username").Label(tools.AdminLang(ctx, "username")).Required(true),
+		gamis.TextControl().Name("name").Label(tools.AdminLang(ctx, "admin_user.name")).Required(true),
+		gamis.TextControl().Name("password").Label(tools.AdminLang(ctx, "password")).Type("input-password").Required(true),
+		gamis.TextControl().Name("confirm_password").Label(tools.AdminLang(ctx, "confirm_password")).Type("input-password").Required(true),
+		gamis.SelectControl().Name("roles").Label(tools.AdminLang(ctx, "admin_user.roles")).
 			Searchable(true).Multiple(true).LabelField("name").
 			ValueField("id").
 			JoinValues(false).

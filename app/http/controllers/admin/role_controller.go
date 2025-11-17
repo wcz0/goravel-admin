@@ -19,6 +19,9 @@ func NewRoleController() *RoleController {
 	return &RoleController{
 		ControllerImpl: NewAdminController[*services.AdminRoleService](services.NewAdminRoleService()),
 	}
+	return &RoleController{
+		ControllerImpl: NewAdminController[*services.AdminRoleService](services.NewAdminRoleService()),
+	}
 }
 
 func (r *RoleController) Index(ctx http.Context) http.Response {
@@ -207,7 +210,7 @@ func (r *RoleController) setPermission(ctx http.Context) *renderers.Drawer {
 	// 使用AdminPermissionService获取权限树结构
 	permissionService := services.NewAdminPermissionService()
 	permissionResponse := permissionService.List(ctx)
-	
+
 	// 提取权限树数据
 	var permissionTree []map[string]any
 	if permissionResponseData, ok := permissionResponse.Data().(map[string]any); ok {
@@ -313,7 +316,7 @@ func (r *RoleController) Detail(ctx http.Context) http.Response {
 			})
 		return r.SuccessData(ctx, page)
 	}
-	
+
 	// 获取角色信息
 	var role admin.AdminRole
 	if err := facades.Orm().Query().Find(&role, roleId); err != nil {
@@ -406,22 +409,22 @@ func buildPermissionTree(permissions []*admin.AdminPermission) []map[string]inte
 // convertPermissionTreeToOptions 将权限树数据转换为TreeControl选项格式
 func convertPermissionTreeToOptions(treeData []map[string]any) []map[string]any {
 	var options []map[string]any
-	
+
 	for _, node := range treeData {
 		option := map[string]any{
 			"label": node["name"],
 			"value": node["id"],
 		}
-		
+
 		// 处理子节点
 		if children, exists := node["children"]; exists {
 			if childrenSlice, ok := children.([]map[string]any); ok && len(childrenSlice) > 0 {
 				option["children"] = convertPermissionTreeToOptions(childrenSlice)
 			}
 		}
-		
+
 		options = append(options, option)
 	}
-	
+
 	return options
 }

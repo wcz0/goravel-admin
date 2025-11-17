@@ -51,6 +51,37 @@ func NewAdminController[T any](service T, extra ...Extra) *ControllerImpl[T] {
 	return a
 }
 
+// HandleValidationErrors 统一处理验证错误
+func (c *ControllerImpl[T]) HandleValidationErrors(ctx http.Context, rules map[string]string) (bool, http.Response) {
+	validator, err := ctx.Request().Validate(rules)
+	if err != nil {
+		return true, c.FailMsg(ctx, "验证器创建失败")
+	}
+	if validator.Fails() {
+		errors := validator.Errors().All()
+		var errorMessages []string
+		for _, errMap := range errors {
+			for _, msg := range errMap {
+				errorMessages = append(errorMessages, msg)
+			}
+		}
+		if len(errorMessages) > 0 {
+			return true, c.FailMsg(ctx, strings.Join(errorMessages, "; "))
+		}
+		return true, c.FailMsg(ctx, "验证失败")
+	}
+	return false, nil
+}
+
+// parseInt 辅助函数
+func parseInt(s string) int {
+	if i, err := fmt.Sscanf(s, "%d", new(int)); err == nil && i == 1 {
+		var result int
+		fmt.Sscanf(s, "%d", &result)
+		return result
+	}
+	return 0
+}
 
 // 获取基础url
 func (e *Extra) QueryPath(ctx http.Context) string {
@@ -75,12 +106,11 @@ func (c *ControllerImpl[T]) ActionOfQuickEditItem(ctx http.Context) bool {
 	return ctx.Request().Input("_action") == "quickEditItem"
 }
 
-
 /**
  * QueryPathTrait
  */
 
- // 获取列表数据
+// 获取列表数据
 func (c *ControllerImpl[T]) GetListGetDataPath(ctx http.Context) string {
 	return tools.Url(c.Extra.QueryPath(ctx) + "?_action=getData")
 }
@@ -110,7 +140,7 @@ func (c *ControllerImpl[T]) GetEditPath(ctx http.Context, primaryKey ...string) 
 	if len(primaryKey) > 0 {
 		key = primaryKey[0]
 	}
-	return "/"+strings.Trim(c.Extra.QueryPath(ctx), "/")+"/${"+key+"}/edit"
+	return "/" + strings.Trim(c.Extra.QueryPath(ctx), "/") + "/${" + key + "}/edit"
 }
 
 // 获取编辑数据 ?
@@ -123,7 +153,7 @@ func (c *ControllerImpl[T]) GetEditGetDataPath(ctx http.Context, primaryKey ...s
 	paths := strings.Split(path, "/")
 	last := paths[len(paths)-1]
 	if last == "edit" {
-		path = "/${"+key+"}/edit"
+		path = "/${" + key + "}/edit"
 	}
 	return tools.Url(path + "?_action=getData")
 }
@@ -134,7 +164,7 @@ func (c *ControllerImpl[T]) GetShowPath(ctx http.Context, primaryKey ...string) 
 	if len(primaryKey) > 0 {
 		key = primaryKey[0]
 	}
-	return "/"+strings.Trim(c.Extra.QueryPath(ctx), "/")+"/${"+key+"}"
+	return "/" + strings.Trim(c.Extra.QueryPath(ctx), "/") + "/${" + key + "}"
 }
 
 // 编辑保存 ?
@@ -147,7 +177,7 @@ func (c *ControllerImpl[T]) GetUpdatePath(ctx http.Context, primaryKey ...string
 	paths := strings.Split(path, "/")
 	last := paths[len(paths)-1]
 	if last == "edit" {
-		path = "/${"+key+"}/edit"
+		path = "/${" + key + "}/edit"
 	}
 	return "put:" + tools.Url(path)
 }
@@ -199,7 +229,7 @@ func (c *ControllerImpl[T]) GetStorePath(ctx http.Context) string {
 /**
  * 获取列表
  */
- func (c *ControllerImpl[T]) GetListPath(ctx http.Context) string {
+func (c *ControllerImpl[T]) GetListPath(ctx http.Context) string {
 	path := c.Extra.QueryPath(ctx)
 	return path
 }
@@ -240,8 +270,8 @@ func (c *ControllerImpl[T]) BulkDeleteButton(ctx http.Context) *renderers.Dialog
 		Dialog(
 			gamis.Dialog().Title(tools.AdminLang(ctx, "delete")).
 				ClassName("py-2").Actions([]any{
-					gamis.Action().ActionType("cancel").Label(tools.AdminLang(ctx, "cancel")),
-					gamis.Action().ActionType("submit").Label(tools.AdminLang(ctx, "delete")).Level("danger"),
+				gamis.Action().ActionType("cancel").Label(tools.AdminLang(ctx, "cancel")),
+				gamis.Action().ActionType("submit").Label(tools.AdminLang(ctx, "delete")).Level("danger"),
 			}).Body([]any{
 				gamis.Form().WrapWithPanel(false).Api(c.GetBulkDeletePath(ctx)).Body([]any{
 					gamis.Tpl().ClassName("py-2").Tpl(tools.AdminLang(ctx, "confirm_delete")),
@@ -249,9 +279,6 @@ func (c *ControllerImpl[T]) BulkDeleteButton(ctx http.Context) *renderers.Dialog
 			}),
 		)
 }
-
-
-
 
 // 创建按钮
 func (c *ControllerImpl[T]) CreateButton(ctx http.Context, form *renderers.Form, dialog bool, size string, title string, _type string) *renderers.LinkAction {
@@ -344,15 +371,15 @@ func (c *ControllerImpl[T]) RowActions(ctx http.Context, form *renderers.Form, d
 	dialogValue := reflect.ValueOf(dialog)
 	if dialogValue.Kind() == reflect.Slice {
 		// 如果是切片，遍历处理
-			return gamis.Operation().Label(tools.AdminLang(ctx, "actions")).Buttons(dialog)
+		return gamis.Operation().Label(tools.AdminLang(ctx, "actions")).Buttons(dialog)
 	} else {
-	// 添加删除按钮
-	return gamis.Operation().Label(tools.AdminLang(ctx, "actions")).Buttons([]any{
-		c.RowShowButton(ctx, form, false, size, "", ""),
-		c.RowEditButton(ctx, form, false, size, "", ""),
-		c.RowDeleteButton(ctx, ""),
-	})
-}
+		// 添加删除按钮
+		return gamis.Operation().Label(tools.AdminLang(ctx, "actions")).Buttons([]any{
+			c.RowShowButton(ctx, form, false, size, "", ""),
+			c.RowEditButton(ctx, form, false, size, "", ""),
+			c.RowDeleteButton(ctx, ""),
+		})
+	}
 
 }
 
@@ -365,7 +392,7 @@ func (c *ControllerImpl[T]) BaseFilter() *renderers.Form {
 }
 
 // 基础筛选 - 条件构造器
-func (c *ControllerImpl[T]) BaseFilterConditionBuilder(ctx http.Context) *renderers.ConditionBuilderControl{
+func (c *ControllerImpl[T]) BaseFilterConditionBuilder(ctx http.Context) *renderers.ConditionBuilderControl {
 	return gamis.ConditionBuilderControl().Name("filter_condition_builder")
 }
 
@@ -397,7 +424,7 @@ func (c *ControllerImpl[T]) BaseHeaderToolBar() []any {
 /**
  * 获取基础表单
  */
- func (c *ControllerImpl[T]) BaseForm(ctx http.Context, back bool) *renderers.Form {
+func (c *ControllerImpl[T]) BaseForm(ctx http.Context, back bool) *renderers.Form {
 	path := ctx.Request().Path()
 	path = strings.TrimPrefix(path, facades.Config().GetString("admin.route.prefix"))
 	form := gamis.Form().PanelClassName("px-48 m:px-0").Title("").PromptPageLeave("")
@@ -443,9 +470,7 @@ func (c *ControllerImpl[T]) ExportAction(ctx http.Context, disableSelectedItem b
 		Set("align", "right").
 		Set("data", map[string]any{
 			"showExportLoading": false,
-		}).Body([]any{
-
-		})
+		}).Body([]any{})
 }
 
 // 图片上传路径
@@ -458,17 +483,15 @@ func (c *ControllerImpl[T]) UploadImage(ctx http.Context) http.Response {
 }
 
 func (c *ControllerImpl[T]) UploadFilePath(ctx http.Context) string {
-	return c.Extra.QueryPath(ctx) +"/upload_file"
+	return c.Extra.QueryPath(ctx) + "/upload_file"
 }
-
 
 func (c *ControllerImpl[T]) UploadFile(ctx http.Context) http.Response {
 	return c.upload(ctx, "file")
 }
 
-
-func (c *ControllerImpl[T]) UploadRichPath(ctx http.Context) string{
-	return c.Extra.QueryPath(ctx) +"/upload_rich"
+func (c *ControllerImpl[T]) UploadRichPath(ctx http.Context) string {
+	return c.Extra.QueryPath(ctx) + "/upload_rich"
 }
 
 func (c *ControllerImpl[T]) UploadRich(ctx http.Context) http.Response {
@@ -486,7 +509,7 @@ func (c *ControllerImpl[T]) UploadRich(ctx http.Context) http.Response {
 					"msg":               tools.AdminLang(ctx, "upload_file_error"),
 					"data":              []any{},
 					"doNotDisplayToast": 0,
-					"errno": 1,
+					"errno":             1,
 				})
 			}
 		}
@@ -499,25 +522,25 @@ func (c *ControllerImpl[T]) UploadRich(ctx http.Context) http.Response {
 	link := facades.Storage().Disk(config.GetString("admin.upload.disk")).Url(path)
 	if fromWangEditor {
 		return ctx.Response().Success().Json(http.Json{
-			"status":            enums.StatusSuccess,
-			"code":              enums.Success,
-			"msg":               tools.AdminLang(ctx, "upload_file_success"),
-			"data":              map[string]string{
+			"status": enums.StatusSuccess,
+			"code":   enums.Success,
+			"msg":    tools.AdminLang(ctx, "upload_file_success"),
+			"data": map[string]string{
 				"url": link,
 			},
 			"doNotDisplayToast": 0,
-			"errno": 0,
+			"errno":             0,
 		})
 	}
 	return ctx.Response().Success().Json(http.Json{
-		"status":            enums.StatusSuccess,
-		"code":              enums.Success,
-		"msg":               tools.AdminLang(ctx, "upload_file_success"),
-		"data":              map[string]string{
+		"status": enums.StatusSuccess,
+		"code":   enums.Success,
+		"msg":    tools.AdminLang(ctx, "upload_file_success"),
+		"data": map[string]string{
 			"link": link,
 		},
 		"doNotDisplayToast": 0,
-		"link": link,
+		"link":              link,
 	})
 }
 

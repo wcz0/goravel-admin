@@ -23,7 +23,6 @@ func (r *M20240418000004CreateAdminPermissionsTable) Up() error {
 		table.Json("http_path").Comment("请求路径(JSON数组)")
 		table.Integer("custom_order").Default(0).Comment("排序")
 		table.Timestamps()
-		table.SoftDeletes()
 	})
 }
 
