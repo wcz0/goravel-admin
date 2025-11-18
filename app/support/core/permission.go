@@ -104,28 +104,28 @@ func (p *Permission) PermissionIntercept(ctx http.Context) bool {
 	if !config.GetBool("admin.permission.enable") {
 		return false
 	}
-	
+
 	// 获取当前路径
 	currentPath := ctx.Request().Path()
-	
+
 	// 如果是根路径，直接放行
 	if currentPath == "/" || currentPath == config.GetString("admin.route.prefix") {
 		return false
 	}
-	
+
 	// 判断是否为白名单
 	configExcept := config.Get("admin.permission.except").([]string)
 	excepted := append(p.permissionExcept, configExcept...)
 	excepted = append(excepted, p.authExcept...)
-	
+
 	if config.GetBool("admin.show_development_tools") {
 		excepted = append(excepted, "/dev_tools*")
 	}
-	
+
 	if len(excepted) == 0 {
 		return false
 	}
-	
+
 	// 白名单处理
 	isExcept := false
 	for _, except := range excepted {
@@ -134,57 +134,27 @@ func (p *Permission) PermissionIntercept(ctx http.Context) bool {
 			break
 		}
 	}
-	
+
 	if isExcept {
 		return false
 	}
-	
+
 	// 判断是否为超级管理员
-<<<<<<< HEAD
-	user := ctx.Value("admin_user").(*admin.AdminUser)
-	if user.IsAdministrator() {
-		return false
-	}
-	
-	// 获取用户所有权限
-	allPermissions := user.AllPermissions()
-	
-	// 如果没有权限，返回拒绝
-	if len(allPermissions) == 0 {
-		return true // 拒绝访问
-	}
-	
-	// 检查权限是否通过
-	hasPermission := false
-	for _, permission := range allPermissions {
-		if permission.ShouldPassThrough(ctx) {
-			hasPermission = true
-			break
-		}
-	}
-	
-	// 如果没有匹配到权限，拒绝访问
-	if !hasPermission {
-		return true // 拒绝访问
-	}
-	
-	return false // 允许访问
-=======
-	userValue := ctx.Value("user")
+    userValue := ctx.Value("admin_user")
 	if userValue == nil {
 		return true // 用户未登录，拒绝访问
 	}
 
-	user, ok := userValue.(admin.AdminUser)
-	if !ok {
-		return true // 类型断言失败，拒绝访问
-	}
+    userPtr, ok := userValue.(*admin.AdminUser)
+    if !ok || userPtr == nil {
+        return true
+    }
 
-	if user.IsAdministrator() {
-		return false // 超级管理员，允许访问
-	}
+    if userPtr.IsAdministrator() {
+        return false // 超级管理员，允许访问
+    }
 
-	allPermissions := user.AllPermissions()
+    allPermissions := userPtr.AllPermissions()
 	if len(allPermissions) == 0 {
 		return true // 没有权限，拒绝访问
 	}
@@ -196,7 +166,6 @@ func (p *Permission) PermissionIntercept(ctx http.Context) bool {
 		}
 	}
 	return true // 没有匹配的权限，拒绝访问
->>>>>>> 08c77dc3ed68fd34ac5aa196c797580ff3c72dcb
 }
 
 

@@ -11,15 +11,15 @@ const (
 )
 
 type AdminUser struct {
-	ID            uint
-	Username      string
-	Password      string
-	Enabled       uint8       `gorm:"type:tinyint unsigned;default:1;comment:启用状态(1:启用,0:禁用)"`
-	Name          string
-	Avatar        string
-	RememberToken string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	ID            uint        `gorm:"primaryKey" json:"id"`
+	Username      string      `gorm:"unique;not null;comment:用户名" json:"username"`
+	Password      string      `gorm:"not null;comment:密码" json:"password"`
+	Enabled       uint8       `gorm:"type:tinyint unsigned;default:1;comment:启用状态(1:启用,0:禁用)" json:"enabled"`
+	Name          string      `gorm:"not null;comment:姓名" json:"name"`
+	Avatar        string      `gorm:"comment:头像" json:"avatar"`
+	RememberToken string      `gorm:"comment:记住登录" json:"remember_token"`
+	CreatedAt     time.Time   `gorm:"autoCreateTime" json:"createdAt"`
+	UpdatedAt     time.Time   `gorm:"autoUpdateTime" json:"updatedAt"`
 	AdminRoles []*AdminRole `gorm:"many2many:admin_role_users;joinForeignKey:user_id;joinReferences:role_id"`
 }
 
@@ -71,7 +71,7 @@ func (a *AdminUser) SyncRoles(roles []*AdminRole) error {
 	if err := facades.Orm().Query().Model(a).Association("AdminRoles").Clear(); err != nil {
 		return err
 	}
-	
+
 	// 重新添加所有角色
 	for _, role := range roles {
 		if err := facades.Orm().Query().Model(a).Association("AdminRoles").Append(role); err != nil {

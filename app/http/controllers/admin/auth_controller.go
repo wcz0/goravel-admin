@@ -1,15 +1,16 @@
 package admin
 
 import (
-	"goravel/app/http/controllers"
-	"goravel/app/models/admin"
-	"goravel/app/services"
-	"goravel/app/tools"
+    "errors"
+    "goravel/app/http/controllers"
+    "goravel/app/models/admin"
+    "goravel/app/services"
+    "goravel/app/tools"
 
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
 
-	"github.com/wcz0/gamis"
+    "github.com/wcz0/gamis"
 )
 
 type AuthController struct {
@@ -29,18 +30,14 @@ func NewAuthController() *AuthController {
 }
 
 func (a *AuthController) Login(ctx http.Context) http.Response {
-	// 使用统一的验证错误处理方法
-	if hasError, response := a.HandleValidationErrors(ctx, map[string]string{
-		"username": "required|min_len:3|max_len:32",
-		"password": "required|min_len:5|max_len:32",
-	})
-	if err != nil {
-		return a.Controller.FailMsg(ctx, err.Error())
-	}
-	if validator.Fails() {
-		return a.Controller.FailMsg(ctx, validator.Errors().All())
-	}
-	return a.AdminUserService.Login(ctx)
+    // 使用统一的验证错误处理方法
+    if hasError, resp := a.HandleValidationErrors(ctx, map[string]string{
+        "username": "required|min_len:3|max_len:32",
+        "password": "required|min_len:5|max_len:32",
+    }, nil); hasError {
+        return resp
+    }
+    return a.AdminUserService.Login(ctx)
 }
 
 func (a *AuthController) Logout(ctx http.Context) http.Response {
@@ -49,10 +46,10 @@ func (a *AuthController) Logout(ctx http.Context) http.Response {
 }
 
 func (a *AuthController) Register(ctx http.Context) http.Response {
-	validator, err := ctx.Request().Validate(map[string]string{
-		"username": "required|string|min_len:max:32",
-		"password": "required|string|min_len:5|max_len:32",
-	})
+    validator, err := ctx.Request().Validate(map[string]string{
+        "username": "required|string|min_len:3|max_len:32",
+        "password": "required|string|min_len:5|max_len:32",
+    })
 	if err != nil {
 		return a.Controller.FailMsg(ctx, err.Error())
 	}
@@ -160,21 +157,27 @@ func (a *AuthController) Get(key string, default_ any, fresh bool) any {
 			return default_
 		}
 	}
-	value, err := facades.Cache().RememberForever(a.cacheKey, func() (any, error) {
-		err := facades.Orm().Query().Where("key", key).Select("values").First(&adminSetting)
-		if err != nil {
-			return nil, err
-		}
-		return adminSetting.Values, nil
-	})
+    var value any
+    var err error
+    func() {
+        defer func() {
+            if r := recover(); r != nil {
+                err = errors.New("cache unavailable")
+            }
+        }()
+        value, err = facades.Cache().RememberForever(a.cacheKey, func() (any, error) {
+            err := facades.Orm().Query().Where("key", key).Select("values").First(&adminSetting)
+            if err != nil {
+                return nil, err
+            }
+            return adminSetting.Values, nil
+        })
+    }()
 	if err != nil {
 		return default_
 	}
-	if value != nil {
-		return value
-	} else {
-		return default_
-	}
+    if value != nil { return value } 
+    return default_
 }
 
 func (a *AuthController) CurrentUser(ctx http.Context) http.Response {

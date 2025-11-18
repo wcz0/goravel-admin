@@ -1,18 +1,21 @@
 package admin
 
 import (
-	"errors"
-	"fmt"
-	"goravel/app/enums"
-	"goravel/app/response"
-	"goravel/app/tools"
-	"reflect"
-	"strings"
+    "errors"
+    "fmt"
+    "goravel/app/enums"
+    "goravel/app/response"
+    "goravel/app/tools"
+    "reflect"
+    "strings"
+    "strconv"
 
-	"github.com/goravel/framework/contracts/http"
-	"github.com/goravel/framework/facades"
-	"github.com/wcz0/gamis"
-	"github.com/wcz0/gamis/renderers"
+    "github.com/goravel/framework/contracts/http"
+    validationPkg "github.com/goravel/framework/validation"
+    contractsValidation "github.com/goravel/framework/contracts/validation"
+    "github.com/goravel/framework/facades"
+    "github.com/wcz0/gamis"
+    "github.com/wcz0/gamis/renderers"
 )
 
 type Controller interface {
@@ -52,11 +55,35 @@ func NewAdminController[T any](service T, extra ...Extra) *ControllerImpl[T] {
 }
 
 // HandleValidationErrors 统一处理验证错误
-func (c *ControllerImpl[T]) HandleValidationErrors(ctx http.Context, rules map[string]string) (bool, http.Response) {
-	validator, err := ctx.Request().Validate(rules)
-	if err != nil {
-		return true, c.FailMsg(ctx, "验证器创建失败")
-	}
+func (c *ControllerImpl[T]) HandleValidationErrors(ctx http.Context, rules map[string]string, messages map[string]string) (bool, http.Response) {
+    input := ctx.Request().All()
+    for field, rule := range rules {
+        if strings.Contains(rule, "int") {
+            if v, ok := input[field]; ok {
+                switch t := v.(type) {
+                case float64:
+                    input[field] = int(t)
+                case bool:
+                    if t { input[field] = 1 } else { input[field] = 0 }
+                case string:
+                    lv := strings.ToLower(t)
+                    if lv == "true" { input[field] = 1 } else if lv == "false" { input[field] = 0 } else {
+                        if iv, err := strconv.Atoi(t); err == nil { input[field] = iv }
+                    }
+                }
+            }
+        }
+    }
+    var validator contractsValidation.Validator
+    var err error
+    if messages != nil {
+        validator, err = facades.Validation().Make(input, rules, validationPkg.Messages(messages))
+    } else {
+        validator, err = facades.Validation().Make(input, rules)
+    }
+    if err != nil {
+        return true, c.FailMsg(ctx, "验证器创建失败")
+    }
 	if validator.Fails() {
 		errors := validator.Errors().All()
 		var errorMessages []string
@@ -85,9 +112,16 @@ func parseInt(s string) int {
 
 // 获取基础url
 func (e *Extra) QueryPath(ctx http.Context) string {
-	path := ctx.Request().Path()
-	path = strings.TrimPrefix(path, e.AdminPrefix)
-	return path
+    path := ctx.Request().Path()
+    if strings.HasPrefix(path, "/"+e.AdminPrefix) {
+        path = strings.TrimPrefix(path, "/"+e.AdminPrefix)
+    } else {
+        path = strings.TrimPrefix(path, e.AdminPrefix)
+    }
+    if !strings.HasPrefix(path, "/") {
+        path = "/" + path
+    }
+    return path
 }
 
 func (c *ControllerImpl[T]) ActionOfGetData(ctx http.Context) bool {
@@ -112,26 +146,26 @@ func (c *ControllerImpl[T]) ActionOfQuickEditItem(ctx http.Context) bool {
 
 // 获取列表数据
 func (c *ControllerImpl[T]) GetListGetDataPath(ctx http.Context) string {
-	return tools.Url(c.Extra.QueryPath(ctx) + "?_action=getData")
+    return c.Extra.QueryPath(ctx) + "?_action=getData"
 }
 
 // 获取导出数据
 func (c *ControllerImpl[T]) GetExportPath(ctx http.Context) string {
-	return tools.Url(c.Extra.QueryPath(ctx) + "?_action=export")
+    return c.Extra.QueryPath(ctx) + "?_action=export"
 }
 
 // 删除路径 ?
 func (c *ControllerImpl[T]) GetDeletePath(ctx http.Context, primaryKey ...string) string {
-	key := "id"
-	if len(primaryKey) > 0 {
-		key = primaryKey[0]
-	}
-	return "delete:" + tools.Url(c.Extra.QueryPath(ctx)+"/${"+key+"}")
+    key := "id"
+    if len(primaryKey) > 0 {
+        key = primaryKey[0]
+    }
+    return "delete:" + c.Extra.QueryPath(ctx)+"/${"+key+"}"
 }
 
 // 批量删除 ?
 func (c *ControllerImpl[T]) GetBulkDeletePath(ctx http.Context) string {
-	return "delete:" + tools.Url(c.Extra.QueryPath(ctx)+"/${ids}")
+    return "delete:" + c.Extra.QueryPath(ctx)+"/${ids}"
 }
 
 // 获取编辑页面路径 ?
@@ -155,7 +189,7 @@ func (c *ControllerImpl[T]) GetEditGetDataPath(ctx http.Context, primaryKey ...s
 	if last == "edit" {
 		path = "/${" + key + "}/edit"
 	}
-	return tools.Url(path + "?_action=getData")
+    return path + "?_action=getData"
 }
 
 // 详情页面 ?
@@ -169,27 +203,23 @@ func (c *ControllerImpl[T]) GetShowPath(ctx http.Context, primaryKey ...string) 
 
 // 编辑保存 ?
 func (c *ControllerImpl[T]) GetUpdatePath(ctx http.Context, primaryKey ...string) string {
-	key := "id"
-	if len(primaryKey) > 0 {
-		key = primaryKey[0]
-	}
-	path := c.Extra.QueryPath(ctx)
-	paths := strings.Split(path, "/")
-	last := paths[len(paths)-1]
-	if last == "edit" {
-		path = "/${" + key + "}/edit"
-	}
-	return "put:" + tools.Url(path)
+    key := "id"
+    if len(primaryKey) > 0 {
+        key = primaryKey[0]
+    }
+    path := c.Extra.QueryPath(ctx)
+    path = strings.TrimSuffix(path, "/edit")
+    return "put:" + path+"/${"+key+"}"
 }
 
 // 获取快速编辑数据
 func (c *ControllerImpl[T]) GetQuickEditPath(ctx http.Context) string {
-	return tools.Url(ctx.Request().FullUrl()) + "?_action=quickEdit"
+    return ctx.Request().FullUrl() + "?_action=quickEdit"
 }
 
 // 获取快速编辑项目数据
 func (c *ControllerImpl[T]) GetQuickEditItemPath(ctx http.Context) string {
-	return tools.Url(ctx.Request().FullUrl()) + "?_action=quickEditItem"
+    return ctx.Request().FullUrl() + "?_action=quickEditItem"
 }
 
 // 获取详情 ?
@@ -213,7 +243,7 @@ func (c *ControllerImpl[T]) GetShowGetDataPath(ctx http.Context) (string, error)
 		return "", errors.New("primary key not found")
 	}
 	path = path + "/{" + values[0].String() + "}"
-	return tools.Url(path + "?_action=getData"), nil
+    return tools.GetAdmin(path + "?_action=getData"), nil
 }
 
 // 新增页面
@@ -223,7 +253,7 @@ func (c *ControllerImpl[T]) GetCreatePath(ctx http.Context) string {
 
 // 获取 新增 保存 的路径
 func (c *ControllerImpl[T]) GetStorePath(ctx http.Context) string {
-	return "post:" + tools.Url(c.Extra.QueryPath(ctx))
+    return "post:" + c.Extra.QueryPath(ctx)
 }
 
 /**
@@ -287,18 +317,30 @@ func (c *ControllerImpl[T]) CreateButton(ctx http.Context, form *renderers.Form,
 	}
 	action := gamis.LinkAction().Link(c.GetCreatePath(ctx))
 
-	if dialog {
-		form = form.Api(c.GetStorePath(ctx)).OnEvent(map[string]any{})
-		if _type == "drawer" {
-			action = (*renderers.LinkAction)(gamis.DrawerAction().Drawer(
-				gamis.Drawer().Title(title).Body(form).Size(size),
-			))
-		} else {
-			action = (*renderers.LinkAction)(gamis.DialogAction().Dialog(
-				gamis.Dialog().Title(title).Body(form).Size(size),
-			))
-		}
-	}
+    if dialog {
+        onEvent := map[string]any{
+            "submitSucc": []any{
+                map[string]any{"actionType": "reload"},
+            },
+        }
+        form = form.Api(c.GetStorePath(ctx)).OnEvent(onEvent)
+        if _type == "drawer" {
+            action = (*renderers.LinkAction)(gamis.DrawerAction().Drawer(
+                gamis.Drawer().Title(title).Body(form).Size(size),
+            ))
+            action.Set("actionType", "drawer").Link("")
+            action.Set("onEvent", map[string]any{"submitSucc": []any{map[string]any{"actionType": "closeDrawer"}}})
+        } else {
+            action = (*renderers.LinkAction)(gamis.DialogAction().Dialog(
+                gamis.Dialog().Title(title).Body(form).Size(size).Actions([]any{
+                    gamis.Action().ActionType("cancel").Label(tools.AdminLang(ctx, "cancel")),
+                    gamis.Action().ActionType("submit").Label(tools.AdminLang(ctx, "create")).Level("primary"),
+                }),
+            ))
+            action.Set("actionType", "dialog").Link("")
+            action.Set("onEvent", map[string]any{"submitSucc": []any{map[string]any{"actionType": "closeDialog"}}})
+        }
+    }
 
 	action.Label(title).Icon("fa fa-add").Level("primary")
 	return action
@@ -310,18 +352,35 @@ func (c *ControllerImpl[T]) RowEditButton(ctx http.Context, form *renderers.Form
 		title = tools.AdminLang(ctx, "edit")
 	}
 	action := gamis.LinkAction().Link(c.GetEditPath(ctx))
-	if dialog {
-		form = form.Api(c.GetUpdatePath(ctx)).Api(c.GetEditGetDataPath(ctx)).InitApi(c.GetEditGetDataPath(ctx)).Redirect("").OnEvent(map[string]any{})
-		if _type == "drawer" {
-			action = (*renderers.LinkAction)(gamis.DrawerAction().Drawer(
-				gamis.Drawer().Title(title).Body(form).Size(size),
-			))
-		} else {
-			action = (*renderers.LinkAction)(gamis.DialogAction().Dialog(
-				gamis.Dialog().Title(title).Body(form).Size(size),
-			))
-		}
-	}
+    if dialog {
+        onEvent := map[string]any{
+            "submitSucc": []any{
+                map[string]any{"actionType": "reload"},
+            },
+        }
+        if _type == "drawer" {
+            onEvent["submitSucc"] = append(onEvent["submitSucc"].([]any), map[string]any{"actionType": "closeDrawer"})
+        } else {
+            onEvent["submitSucc"] = append(onEvent["submitSucc"].([]any), map[string]any{"actionType": "closeDialog"})
+        }
+        form = form.InitApi(c.GetEditGetDataPath(ctx)).Api(c.GetUpdatePath(ctx)).Redirect("").OnEvent(onEvent)
+        if _type == "drawer" {
+            action = (*renderers.LinkAction)(gamis.DrawerAction().Drawer(
+                gamis.Drawer().Title(title).Body(form).Size(size),
+            ))
+            action.Set("actionType", "drawer").Link("")
+            action.Set("onEvent", map[string]any{"submitSucc": []any{map[string]any{"actionType": "closeDrawer"}}})
+        } else {
+            action = (*renderers.LinkAction)(gamis.DialogAction().Dialog(
+                gamis.Dialog().Title(title).Body(form).Size(size).Actions([]any{
+                    gamis.Action().ActionType("cancel").Label(tools.AdminLang(ctx, "cancel")),
+                    gamis.Action().ActionType("submit").Label(tools.AdminLang(ctx, "save")).Level("primary"),
+                }),
+            ))
+            action.Set("actionType", "dialog").Link("")
+            action.Set("onEvent", map[string]any{"submitSucc": []any{map[string]any{"actionType": "closeDialog"}}})
+        }
+    }
 	action = action.Label(title).Level("link")
 	return action
 }
@@ -352,17 +411,18 @@ func (c *ControllerImpl[T]) RowDeleteButton(ctx http.Context, title string) *ren
 	if title == "" {
 		title = tools.AdminLang(ctx, "delete")
 	}
-	action := gamis.DialogAction().Label(title).Level("link").ClassName("text-danger").Dialog(
-		gamis.Dialog().Title(title).ClassName("py-2").Actions([]any{
-			gamis.Action().ActionType("cancel").Label(tools.AdminLang(ctx, "cancel")),
-			gamis.Action().ActionType("submit").Label(tools.AdminLang(ctx, "delete")).Level("danger"),
-		}).Body([]any{
-			gamis.Form().WrapWithPanel(false).Api(c.GetDeletePath(ctx)).Body([]any{
-				gamis.Tpl().ClassName("py-2").Tpl(tools.AdminLang(ctx, "confirm_delete")),
-			}),
-		}),
-	)
-	return action
+    action := gamis.DialogAction().Label(title).Level("link").ClassName("text-danger").Dialog(
+        gamis.Dialog().Title(title).ClassName("py-2").Actions([]any{
+            gamis.Action().ActionType("cancel").Label(tools.AdminLang(ctx, "cancel")),
+            gamis.Action().ActionType("submit").Label(tools.AdminLang(ctx, "delete")).Level("danger"),
+        }).Body([]any{
+            gamis.Form().WrapWithPanel(false).Api(c.GetDeletePath(ctx)).OnEvent(map[string]any{"submitSucc": []any{map[string]any{"actionType": "reload"}, map[string]any{"actionType": "closeDialog"}}}).Body([]any{
+                gamis.Tpl().ClassName("py-2").Tpl(tools.AdminLang(ctx, "confirm_delete")),
+            }),
+        }),
+    )
+    action.Set("onEvent", map[string]any{"submitSucc": []any{map[string]any{"actionType": "reload"}, map[string]any{"actionType": "closeDialog"}}})
+    return action
 }
 
 // 行操作按钮

@@ -34,8 +34,8 @@ func (s *AdminService[T]) Store(ctx http.Context) error {
 	v := reflect.ValueOf(s.Model)
 
 	if t.Kind() == reflect.Ptr {
-		t = t.Elem()  // 获取指针指向的类型
-		v = v.Elem()  // 获取指针指向的值
+		t = t.Elem() // 获取指针指向的类型
+		v = v.Elem() // 获取指针指向的值
 	}
 
 	// 遍历结构体字段
@@ -80,26 +80,42 @@ func (s *AdminService[T]) Store(ctx http.Context) error {
 // Success 成功响应
 func (s *AdminService[T]) Success(ctx http.Context, msg string) http.Response {
 	return ctx.Response().Success().Json(http.Json{
-		"code": 200,
-		"msg":  msg,
-		"data": map[string]any{},
+		"status": 0,
+		"code":   200,
+		"msg":    msg,
+		"data":   map[string]any{},
+		"doNotDisplayToast": 0,
 	})
 }
 
 // SuccessData 成功响应（带数据）
 func (s *AdminService[T]) SuccessData(ctx http.Context, data map[string]any) http.Response {
 	return ctx.Response().Success().Json(http.Json{
-		"code": 200,
-		"msg":  "Success",
-		"data": data,
+		"status": 0,
+		"code":   200,
+		"msg":    "Success",
+		"data":   data,
+		"doNotDisplayToast": 0,
 	})
 }
 
-// FailMsg 失败响应
-func (s *AdminService[T]) FailMsg(ctx http.Context, msg string) http.Response {
+// Fail 失败响应
+func (s *AdminService[T]) Fail(ctx http.Context, msg string) http.Response {
 	return ctx.Response().Status(400).Json(http.Json{
-		"code": 400,
-		"msg":  msg,
-		"data": map[string]any{},
+		"status": 1,
+		"code":   400,
+		"msg":    msg,
+		"data":   map[string]any{},
+		"doNotDisplayToast": 0,
+	})
+}
+
+func (s *AdminService[T]) FailData(ctx http.Context, msg string, data map[string]any) http.Response {
+	return ctx.Response().Status(400).Json(http.Json{
+		"status": 1,
+		"code":   400,
+		"msg":    msg,
+		"data":   data,
+		"doNotDisplayToast": 0,
 	})
 }

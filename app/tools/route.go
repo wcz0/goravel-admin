@@ -8,19 +8,17 @@ import (
 
 // RequestIs 判断请求是否是指定的路径
 func RequestIs(ctx http.Context, path string) bool {
-	requestPath := strings.TrimSuffix(ctx.Request().Path(), "/")
-	path = strings.TrimSuffix(path, "/")
-	if requestPath == path {
-		return true
-	}
-	if strings.HasSuffix(requestPath, "*") {
-		requestPath = strings.TrimSuffix(requestPath, "*")
-		requestPath = strings.TrimSuffix(requestPath, "/")
-		if strings.HasPrefix(path, requestPath) {
-			return true
-		}
-	}
-	return false
+    req := strings.TrimSuffix(ctx.Request().Path(), "/")
+    pat := strings.TrimSuffix(path, "/")
+    if pat == "" { pat = "/" }
+    if req == pat { return true }
+    // 支持模式通配符，如 "/system/*"
+    if strings.HasSuffix(pat, "*") {
+        base := strings.TrimSuffix(pat, "*")
+        base = strings.TrimSuffix(base, "/")
+        if strings.HasPrefix(req, base) { return true }
+    }
+    return false
 }
 
 /**

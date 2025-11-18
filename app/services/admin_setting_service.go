@@ -41,27 +41,39 @@ func (a *AdminSettingService) Get(key string, default_ any, fresh bool) any {
 		return result
 	}
 
-	value, err := facades.Cache().RememberForever(a.cacheKey+key, func() (any, error) {
-		err := facades.Orm().Query().Where("key", key).Select("values").First(&adminSetting)
-		if err != nil {
-			return nil, err
-		}
-		return adminSetting.Values, nil
-	})
+    var value any
+    var err error
+    func() {
+        defer func() {
+            if r := recover(); r != nil {
+                err = errors.New("cache unavailable")
+            }
+        }()
+        value, err = facades.Cache().RememberForever(a.cacheKey+key, func() (any, error) {
+            queryErr := facades.Orm().Query().Where("key", key).Select("values").First(&adminSetting)
+            if queryErr != nil {
+                return nil, queryErr
+            }
+            if err != nil {
+                return nil, err
+            }
+            return adminSetting.Values, nil
+        })
+    }()
 
 	if err != nil {
 		return default_
 	}
 
-	if value != nil {
-		var result any
-		if err := json.Unmarshal([]byte(value.(string)), &result); err != nil {
-			return default_
-		}
-		return result
-	} else {
-		return default_
-	}
+    if value != nil {
+        var result any
+        if err := json.Unmarshal([]byte(value.(string)), &result); err != nil {
+            return default_
+        }
+        return result
+    } else {
+        return default_
+    }
 }
 
 func (a *AdminSettingService) SetMany(array map[string]any) error {
@@ -80,10 +92,10 @@ func (a *AdminSettingService) SetMany(array map[string]any) error {
 			return err
 		}
 		// 更新缓存
-		_bool := facades.Cache().Forever(a.cacheKey+key, string(jsonBytes))
-		if !_bool {
-			return errors.New("更新缓存失败")
-		}
+    func() {
+        defer func() { _ = recover() }()
+        _ = facades.Cache().Forever(a.cacheKey+key, string(jsonBytes))
+    }()
 	}
 	return nil
 }
@@ -101,7 +113,7 @@ func (a *AdminSettingService) Set(key string, value string) error {
 }
 
 func (a *AdminSettingService) clearCache(key string) {
-	facades.Cache().Forget(a.getCacheKey(key))
+    func() { defer func() { _ = recover() }(); facades.Cache().Forget(a.getCacheKey(key)) }()
 }
 
 func (a *AdminSettingService) getCacheKey(key string) string {

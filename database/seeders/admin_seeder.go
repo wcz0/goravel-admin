@@ -1,13 +1,14 @@
 package seeders
 
 import (
-	"fmt"
-	"time"
+    "fmt"
+    "time"
 
-	"goravel/app/models"
-	"goravel/app/models/admin"
+    "goravel/app/models"
+    "goravel/app/models/admin"
 
-	"github.com/goravel/framework/facades"
+    "github.com/goravel/framework/facades"
+    "github.com/goravel/framework/database/orm"
 )
 
 const SEED_COMMENT = "2025-11-12 00:10:29"
@@ -46,15 +47,13 @@ CreatedAt: time.Time{},
 	}
 
 	// 3. 插入角色数据
-	roles := []*admin.AdminRole{
-{
-ID: 1,
-Name: "Administrator",
-Slug: "administrator",
-CreatedAt: time.Time{},
-	UpdatedAt: time.Time{},
-},
-}
+    roles := []*admin.AdminRole{
+    {
+        Name: "Administrator",
+        Slug: "administrator",
+        Model: orm.Model{ID: 1},
+    },
+    }
 	for _, role := range roles {
 		if err := facades.Orm().Query().Create(role); err != nil {
 			return fmt.Errorf("创建角色失败: %w", err)
@@ -62,78 +61,64 @@ CreatedAt: time.Time{},
 	}
 
 	// 4. 插入权限数据
-	permissions := []*admin.AdminPermission{
-{
-ID: 1,
-Name: "首页",
-Slug: "home",
-HttpMethod: models.StringSlice{},
-	HttpPath: models.StringSlice{"/home*"},
-CustomOrder: 0,
-CreatedAt: time.Time{},
-	UpdatedAt: time.Time{},
-},
-{
-ID: 2,
-Name: "系统",
-Slug: "system",
-HttpMethod: models.StringSlice{},
-	HttpPath: models.StringSlice{},
-CustomOrder: 0,
-CreatedAt: time.Time{},
-	UpdatedAt: time.Time{},
-},
-{
-ID: 3,
-Name: "管理员",
-Slug: "admin_users",
-HttpMethod: models.StringSlice{},
-	HttpPath: models.StringSlice{"/admin_users*"},
-CustomOrder: 0,
-CreatedAt: time.Time{},
-UpdatedAt: time.Time{},
-},
-{
-ID: 4,
-Name: "角色",
-Slug: "roles",
-HttpMethod: models.StringSlice{},
-	HttpPath: models.StringSlice{"/roles*"},
-	CustomOrder: 0,
-	CreatedAt: time.Time{},
-	UpdatedAt: time.Time{},
-},
-{
-	ID: 5,
-	Name: "权限",
-	Slug: "permissions",
-	HttpMethod: models.StringSlice{},
-	HttpPath: models.StringSlice{"/permissions*"},
-	CustomOrder: 0,
-	CreatedAt: time.Time{},
-	UpdatedAt: time.Time{},
-},
-{
-	ID: 6,
-	Name: "菜单",
-	Slug: "menus",
-	HttpMethod: models.StringSlice{},
-	HttpPath: models.StringSlice{"/menus*"},
-	CustomOrder: 0,
-	CreatedAt: time.Time{},
-	UpdatedAt: time.Time{},
-},
-{
-	ID: 7,
-	Name: "设置",
-	Slug: "settings",
-	HttpMethod: models.StringSlice{},
-	HttpPath: models.StringSlice{"/settings*"},
-	CustomOrder: 0,
-	CreatedAt: time.Time{},
-	UpdatedAt: time.Time{},
-},
-}
+    permissions := []*admin.AdminPermission{
+    {
+        Name: "首页",
+        Slug: "home",
+        HttpMethod: models.StringSlice{},
+        HttpPath: models.StringSlice{"/home*"},
+        CustomOrder: 0,
+        Model: orm.Model{ID: 1},
+    },
+    {
+        Name: "系统",
+        Slug: "system",
+        HttpMethod: models.StringSlice{},
+        HttpPath: models.StringSlice{},
+        CustomOrder: 0,
+        Model: orm.Model{ID: 2},
+    },
+    {
+        Name: "管理员",
+        Slug: "admin_users",
+        HttpMethod: models.StringSlice{},
+        HttpPath: models.StringSlice{"/admin_users*"},
+        CustomOrder: 0,
+        Model: orm.Model{ID: 3},
+    },
+    {
+        Name: "角色",
+        Slug: "roles",
+        HttpMethod: models.StringSlice{},
+        HttpPath: models.StringSlice{"/roles*"},
+        CustomOrder: 0,
+        Model: orm.Model{ID: 4},
+    },
+    {
+        Name: "权限",
+        Slug: "permissions",
+        HttpMethod: models.StringSlice{},
+        HttpPath: models.StringSlice{"/permissions*"},
+        CustomOrder: 0,
+        Model: orm.Model{ID: 5},
+    },
+    {
+        Name: "菜单",
+        Slug: "menus",
+        HttpMethod: models.StringSlice{},
+        HttpPath: models.StringSlice{"/menus*"},
+        CustomOrder: 0,
+        Model: orm.Model{ID: 6},
+    },
+    {
+        Name: "设置",
+        Slug: "settings",
+        HttpMethod: models.StringSlice{},
+        HttpPath: models.StringSlice{"/settings*"},
+        CustomOrder: 0,
+        Model: orm.Model{ID: 7},
+    },
+    }
 	for _, permission := range permissions {
 		if err := facades.Orm().Query().Create(permission); err != nil {
 			return fmt.Errorf("创建权限失败: %w", err)

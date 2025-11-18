@@ -2,26 +2,18 @@ package admin
 
 import (
 	"github.com/goravel/framework/facades"
-	"time"
+	"github.com/goravel/framework/database/orm"
+
 )
 
 // AdminRole 角色模型
 type AdminRole struct {
-<<<<<<< HEAD
-	ID   uint
-	Name string `gorm:"unique"`
-	Slug string `gorm:"unique"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	AdminUsers []*AdminUser `gorm:"many2many:admin_role_users;joinForeignKey:role_id;joinReferences:user_id"`
-=======
 	Name string `gorm:"size:50;not null;unique"`
 	Slug string `gorm:"size:50;not null;unique"`
 	orm.Model
 
 	// 关联关系
 	AdminUsers       []*AdminUser       `gorm:"many2many:admin_role_users;joinForeignKey:role_id;joinReferences:user_id"`
->>>>>>> 08c77dc3ed68fd34ac5aa196c797580ff3c72dcb
 	AdminPermissions []*AdminPermission `gorm:"many2many:admin_role_permissions;joinForeignKey:role_id;joinReferences:permission_id"`
 }
 
@@ -59,7 +51,7 @@ func (r *AdminRole) SyncPermissions(permissions []*AdminPermission) error {
 	if err := facades.Orm().Query().Model(r).Association("AdminPermissions").Clear(); err != nil {
 		return err
 	}
-	
+
 	// 重新添加所有权限
 	for _, permission := range permissions {
 		if err := facades.Orm().Query().Model(r).Association("AdminPermissions").Append(permission); err != nil {
