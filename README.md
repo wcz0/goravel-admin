@@ -17,7 +17,15 @@
 
 ## Getting started
 
+复制.env.example 为 .env
+修改 .env 中的配置
 创建数据库, 导入SQL文件
+或者
+```shell
+go run . artisan migrate
+go run . artisan db:seed
+```
+
 
 ```
 // Generate APP_KEY
@@ -30,7 +38,7 @@ go run .
 
 登录
 账号:admin
-密码:admin  
+密码:admin
 
 
 ## Roadmap
