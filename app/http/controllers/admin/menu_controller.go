@@ -40,13 +40,13 @@ func (m *MenuController) Store(ctx http.Context) http.Response {
         return m.ControllerImpl.Service.QuickEditItem(ctx)
     }
     hasError, resp := m.HandleValidationErrors(ctx, map[string]string{
-        "title":       "required|string|max:50",
-        "icon":        "string|max:50",
-        "url":         "required|string|max:255",
+        "title":       "required|string|max_len:50",
+        "icon":        "string|max_len:50",
+        "url":         "required|string|max_len:255",
         "parent_id":   "number",
         "custom_order": "number",
-        "visible":     "in:0,1",
-        "is_home":     "in:0,1",
+        "visible":     "number",
+        "is_home":     "number",
         "component":   "string",
         "keep_alive":  "number",
         "iframe_url":  "string",
@@ -61,13 +61,13 @@ func (m *MenuController) Store(ctx http.Context) http.Response {
 func (m *MenuController) Update(ctx http.Context) http.Response {
     hasError, resp := m.HandleValidationErrors(ctx, map[string]string{
         "id":          "required|number",
-        "title":       "required|string|max:50",
-        "icon":        "string|max:50",
-        "url":         "required|string|max:255",
+        "title":       "required|string|max_len:50",
+        "icon":        "string|max_len:50",
+        "url":         "required|string|max_len:255",
         "parent_id":   "number",
         "custom_order": "number",
-        "visible":     "in:0,1",
-        "is_home":     "in:0,1",
+        "visible":     "number",
+        "is_home":     "number",
         "component":   "string",
         "keep_alive":  "number",
         "iframe_url":  "string",
@@ -120,7 +120,7 @@ func (m *MenuController) list(ctx http.Context) *renderers.Page {
             gamis.TableColumn().Name("is_home").Label(tools.AdminLang(ctx, "admin_menu.is_home")).QuickEdit(map[string]any{"type": "checkbox", "mode": "inline", "saveImmediately": true}),
             m.RowActions(ctx, m.form(ctx), []any{
                 m.RowEditButton(ctx, m.form(ctx), true, "md", "", ""),
-                gamis.AjaxAction().Label(tools.AdminLang(ctx, "delete")).Level("link").ClassName("text-danger").Api(map[string]any{"url": m.Extra.QueryPath(ctx) + "/${id}", "method": "delete"}).Set("confirmText", tools.AdminLang(ctx, "confirm_delete")).Set("reload", "menu-crud"),
+                m.RowDeleteButton(ctx, "").Set("reload", "menu-crud"),
             }, "md"),
         }).
         OnEvent(map[string]any{"quickSaveItemSucc": refreshEvent, "saveOrderSucc": refreshEvent})
