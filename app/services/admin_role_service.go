@@ -219,61 +219,106 @@ func (a *AdminRoleService) Update(ctx http.Context) http.Response {
 
 // Destroy 删除角色
 func (a *AdminRoleService) Destroy(ctx http.Context) http.Response {
-	// 获取角色ID
-	id := ctx.Request().InputInt("id")
-	if id == 0 {
-		return a.Fail(ctx, "角色ID不能为空")
-	}
+    // 获取角色ID（支持 body 或 route）
+    id := ctx.Request().InputInt("id")
+    ridStr := ctx.Request().Route("id")
+    if id == 0 && ridStr == "" {
+        return a.Fail(ctx, "角色ID不能为空")
+    }
 
-	// 查找角色
-	var role admin.AdminRole
-	if err := facades.Orm().Query().Where("id", id).First(&role); err != nil {
-		return a.Fail(ctx, "角色不存在")
-	}
+    // 批量删除（逗号分隔）
+    if ridStr != "" && strings.Contains(ridStr, ",") {
+        parts := strings.Split(ridStr, ",")
+        ids := make([]interface{}, 0, len(parts))
+        blockIDs := make([]interface{}, 0)
+        for _, p := range parts {
+            p = strings.TrimSpace(p)
+            if p == "" { continue }
+            ids = append(ids, p)
+        }
+        if len(ids) == 0 {
+            return a.Fail(ctx, "没有可删除的角色")
+        }
+        // 过滤不可删除角色（administrator 或被使用）
+        var roles []admin.AdminRole
+        if err := facades.Orm().Query().WhereIn("id", ids).Find(&roles); err != nil {
+            return a.Fail(ctx, err.Error())
+        }
+        deletable := make([]interface{}, 0)
+        for _, r := range roles {
+            if r.Slug == "administrator" { blockIDs = append(blockIDs, r.ID); continue }
+            cnt, _ := facades.Orm().Query().Model(&admin.AdminRoleUser{}).Where("role_id", r.ID).Count()
+            if cnt > 0 { blockIDs = append(blockIDs, r.ID); continue }
+            deletable = append(deletable, r.ID)
+        }
+        if len(deletable) == 0 {
+            return a.Fail(ctx, "选中角色不可删除")
+        }
+        if _, err := facades.Orm().Query().WhereIn("role_id", deletable).Delete(&admin.AdminRolePermission{}); err != nil {
+            return a.Fail(ctx, "删除角色权限关联失败: "+err.Error())
+        }
+        if _, err := facades.Orm().Query().WhereIn("id", deletable).Delete(&admin.AdminRole{}); err != nil {
+            return a.Fail(ctx, "删除角色失败: "+err.Error())
+        }
+        return a.Success(ctx, "角色删除成功")
+    }
 
-	// 检查是否为超级管理员角色
-	if role.Slug == "administrator" {
-		return a.Fail(ctx, "超级管理员角色不能删除")
-	}
+    if id == 0 {
+        id = ctx.Request().RouteInt("id")
+    }
+    if id == 0 {
+        return a.Fail(ctx, "角色ID不能为空")
+    }
 
-	// 检查是否有用户使用该角色
-	userCount, err := facades.Orm().Query().Model(&admin.AdminRoleUser{}).Where("role_id", id).Count()
-	if err != nil {
-		return a.Fail(ctx, "检查角色使用情况失败: "+err.Error())
-	}
-	if userCount > 0 {
-		return a.Fail(ctx, "该角色正在被用户使用，无法删除")
-	}
+    // 查找角色
+    var role admin.AdminRole
+    if err := facades.Orm().Query().Where("id", id).First(&role); err != nil {
+        return a.Fail(ctx, "角色不存在")
+    }
 
-	// 开始事务
-	tx, err := facades.Orm().Query().Begin()
-	if err != nil {
-		return a.Fail(ctx, "开始事务失败: "+err.Error())
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
+    // 检查是否为超级管理员角色
+    if role.Slug == "administrator" {
+        return a.Fail(ctx, "超级管理员角色不能删除")
+    }
 
-	// 删除角色权限关联
-	if _, err := tx.Where("role_id", id).Delete(&admin.AdminRolePermission{}); err != nil {
-		tx.Rollback()
-		return a.Fail(ctx, "删除角色权限关联失败: "+err.Error())
-	}
+    // 检查是否有用户使用该角色
+    userCount, err := facades.Orm().Query().Model(&admin.AdminRoleUser{}).Where("role_id", id).Count()
+    if err != nil {
+        return a.Fail(ctx, "检查角色使用情况失败: "+err.Error())
+    }
+    if userCount > 0 {
+        return a.Fail(ctx, "该角色正在被用户使用，无法删除")
+    }
 
-	// 删除角色
-	if _, err := tx.Delete(&role); err != nil {
-		tx.Rollback()
-		return a.Fail(ctx, "删除角色失败: "+err.Error())
-	}
+    // 开始事务
+    tx, err := facades.Orm().Query().Begin()
+    if err != nil {
+        return a.Fail(ctx, "开始事务失败: "+err.Error())
+    }
+    defer func() {
+        if r := recover(); r != nil {
+            tx.Rollback()
+        }
+    }()
 
-	// 提交事务
-	if err := tx.Commit(); err != nil {
-		return a.Fail(ctx, "提交事务失败: "+err.Error())
-	}
+    // 删除角色权限关联
+    if _, err := tx.Where("role_id", id).Delete(&admin.AdminRolePermission{}); err != nil {
+        tx.Rollback()
+        return a.Fail(ctx, "删除角色权限关联失败: "+err.Error())
+    }
 
-	return a.Success(ctx, "角色删除成功")
+    // 删除角色
+    if _, err := tx.Delete(&role); err != nil {
+        tx.Rollback()
+        return a.Fail(ctx, "删除角色失败: "+err.Error())
+    }
+
+    // 提交事务
+    if err := tx.Commit(); err != nil {
+        return a.Fail(ctx, "提交事务失败: "+err.Error())
+    }
+
+    return a.Success(ctx, "角色删除成功")
 }
 
 // List 获取角色列表

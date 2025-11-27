@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"goravel/app/models"
 	"goravel/app/models/admin"
 	"strings"
@@ -20,74 +21,227 @@ func NewAdminPermissionService() *AdminPermissionService {
 	}
 }
 
+// AutoGenerate 根据菜单自动生成权限及权限-菜单关联
+func (s *AdminPermissionService) AutoGenerate(ctx http.Context) http.Response {
+	// 读取所有菜单
+	var menus []admin.AdminMenu
+	if err := facades.Orm().Query().Order("id asc").Get(&menus); err != nil {
+		return s.Fail(ctx, "获取菜单失败: "+err.Error())
+	}
+
+	// 现有权限的 slug 映射（按菜单 id）
+	var exists []admin.AdminPermission
+	_ = facades.Orm().Query().Get(&exists)
+	slugMap := make(map[uint]string, len(exists))
+	for _, p := range exists {
+		slugMap[p.ID] = p.Slug
+	}
+
+	// 构建名称集合与菜单索引
+	nameSet := make(map[string]struct{})
+	menuByID := make(map[uint]admin.AdminMenu, len(menus))
+	for _, m := range menus {
+		menuByID[m.ID] = m
+	}
+
+	// 生成权限列表（内存）
+	slugCache := make(map[string]struct{})
+	permissions := make([]*admin.AdminPermission, 0, len(menus))
+	for _, m := range menus {
+		httpPath := s.menuToHttpPath(m)
+		menuTitle := m.Title
+		if _, ok := nameSet[menuTitle]; ok {
+			menuTitle = fmt.Sprintf("%s(%d)", menuTitle, m.ID)
+		}
+		nameSet[menuTitle] = struct{}{}
+
+		slug := slugMap[m.ID]
+		if slug == "" {
+			if httpPath != "" {
+				// 依据 path 生成稳定 slug
+				base := strings.Trim(strings.SplitN(httpPath, "?", 2)[0], "/")
+				base = strings.ReplaceAll(base, "/", ".")
+				base = strings.ReplaceAll(base, "*", "")
+				slug = base
+			} else {
+				slug = fmt.Sprintf("menu.%d", m.ID)
+			}
+		}
+		if _, dup := slugCache[slug]; dup {
+			slug = slug + fmt.Sprintf(".%d", m.ID)
+		}
+		slugCache[slug] = struct{}{}
+
+		perm := &admin.AdminPermission{
+			Name:        menuTitle,
+			Slug:        slug,
+			HttpMethod:  models.StringSlice{},
+			HttpPath:    models.StringSlice{},
+			CustomOrder: m.CustomOrder,
+			ParentId:    uint(m.ParentId),
+		}
+		if httpPath != "" {
+			perm.HttpPath = models.StringSlice{httpPath}
+		}
+		// 保持与菜单 ID 一致
+		perm.ID = m.ID
+
+		permissions = append(permissions, perm)
+	}
+
+	// 事务性重建数据
+	tx, err := facades.Orm().Query().Begin()
+	if err != nil {
+		return s.Fail(ctx, "开启事务失败: "+err.Error())
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// 清空表
+	if _, err := tx.Where("id > 0").Delete(&admin.AdminPermission{}); err != nil {
+		tx.Rollback()
+		return s.Fail(ctx, "清空权限失败: "+err.Error())
+	}
+
+	// 写入新权限
+	for _, p := range permissions {
+		if err := tx.Create(p); err != nil {
+			tx.Rollback()
+			return s.Fail(ctx, "创建权限失败: "+err.Error())
+		}
+	}
+
+	// 重建权限-菜单关联
+	if _, err := tx.Where("permission_id > 0").Delete(&admin.AdminPermissionMenu{}); err != nil {
+		tx.Rollback()
+		return s.Fail(ctx, "清空权限菜单关联失败: "+err.Error())
+	}
+
+	for _, p := range permissions {
+		// 自身关联
+		if err := tx.Create(&admin.AdminPermissionMenu{PermissionID: p.ID, MenuID: p.ID}); err != nil {
+			tx.Rollback()
+			return s.Fail(ctx, "关联自身菜单失败: "+err.Error())
+		}
+		// 父级链关联
+		cur := menuByID[p.ID]
+		parent := uint(cur.ParentId)
+		for parent != 0 {
+			if err := tx.Create(&admin.AdminPermissionMenu{PermissionID: p.ID, MenuID: parent}); err != nil {
+				tx.Rollback()
+				return s.Fail(ctx, "关联父级菜单失败: "+err.Error())
+			}
+			next, ok := menuByID[parent]
+			if !ok {
+				break
+			}
+			parent = uint(next.ParentId)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return s.Fail(ctx, "提交事务失败: "+err.Error())
+	}
+	return s.Success(ctx, "自动生成成功")
+}
+
+// 将菜单 URL 转为权限 http_path（REST 风格，带 * 通配）
+func (s *AdminPermissionService) menuToHttpPath(m admin.AdminMenu) string {
+	if m.UrlType != admin.TYPE_ROUTE {
+		return ""
+	}
+	url := strings.TrimSpace(m.Url)
+	if url == "" {
+		return ""
+	}
+	path := strings.SplitN(url, "?", 2)[0]
+	path = "/" + strings.Trim(path, "/") + "*"
+	return path
+}
+
 // Store 创建权限
 func (s *AdminPermissionService) Store(ctx http.Context) http.Response {
-    // 获取HTTP方法/路径（优先使用数组）
-    methodsArr := ctx.Request().InputArray("http_method")
-    pathsArr := ctx.Request().InputArray("http_path")
+	// 获取HTTP方法/路径（优先使用数组）
+	methodsArr := ctx.Request().InputArray("http_method")
+	pathsArr := ctx.Request().InputArray("http_path")
 
 	permission := &admin.AdminPermission{
 		ParentId:    uint(ctx.Request().InputInt("parent_id", 0)),
 		Name:        ctx.Request().Input("name"),
-		Slug:        ctx.Request().Input("value"),
+		Slug:        ctx.Request().Input("slug"),
 		CustomOrder: ctx.Request().InputInt("custom_order", 0),
 	}
 
-    // 处理HTTP方法：数组优先，其次尝试JSON字符串，最后默认
-    if len(methodsArr) > 0 {
-        var httpMethodSlice []string
-        for _, m := range methodsArr {
-            if m != "" {
-                httpMethodSlice = append(httpMethodSlice, strings.TrimSpace(m))
-            }
-        }
-        if len(httpMethodSlice) > 0 {
-            permission.HttpMethod = models.StringSlice(httpMethodSlice)
-        }
-    }
-    if len(permission.HttpMethod) == 0 {
-        httpMethodStr := ctx.Request().Input("http_method", "")
-        if httpMethodStr != "" {
-            var httpMethodSlice []string
-            if err := json.Unmarshal([]byte(httpMethodStr), &httpMethodSlice); err == nil {
-                permission.HttpMethod = models.StringSlice(httpMethodSlice)
-            } else {
-                permission.HttpMethod = models.StringSlice([]string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"})
-            }
-        } else {
-            permission.HttpMethod = models.StringSlice([]string{"GET"})
-        }
-    }
+	// 处理HTTP方法：数组优先，其次尝试JSON字符串，最后默认
+	if len(methodsArr) > 0 {
+		var httpMethodSlice []string
+		for _, m := range methodsArr {
+			if m != "" {
+				httpMethodSlice = append(httpMethodSlice, strings.TrimSpace(m))
+			}
+		}
+		if len(httpMethodSlice) > 0 {
+			permission.HttpMethod = models.StringSlice(httpMethodSlice)
+		}
+	}
+	if len(permission.HttpMethod) == 0 {
+		httpMethodStr := ctx.Request().Input("http_method", "")
+		if httpMethodStr != "" {
+			var httpMethodSlice []string
+			if err := json.Unmarshal([]byte(httpMethodStr), &httpMethodSlice); err == nil {
+				permission.HttpMethod = models.StringSlice(httpMethodSlice)
+			} else {
+				permission.HttpMethod = models.StringSlice([]string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"})
+			}
+		} else {
+			permission.HttpMethod = models.StringSlice([]string{"GET"})
+		}
+	}
 
-    // 处理HTTP路径：数组优先，其次尝试JSON字符串，最后默认
-    if len(pathsArr) > 0 {
-        var httpPathSlice []string
-        for _, p := range pathsArr {
-            if p != "" {
-                httpPathSlice = append(httpPathSlice, strings.TrimSpace(p))
-            }
-        }
-        if len(httpPathSlice) > 0 {
-            permission.HttpPath = models.StringSlice(httpPathSlice)
-        }
-    }
-    if len(permission.HttpPath) == 0 {
-        httpPathStr := ctx.Request().Input("http_path", "")
-        if httpPathStr != "" {
-            var httpPathSlice []string
-            if err := json.Unmarshal([]byte(httpPathStr), &httpPathSlice); err == nil {
-                permission.HttpPath = models.StringSlice(httpPathSlice)
-            } else {
-                permission.HttpPath = models.StringSlice([]string{"/*"})
-            }
-        } else {
-            permission.HttpPath = models.StringSlice([]string{"/*"})
-        }
-    }
+	// 处理HTTP路径：数组优先，其次尝试JSON字符串，最后默认
+	if len(pathsArr) > 0 {
+		var httpPathSlice []string
+		for _, p := range pathsArr {
+			if p != "" {
+				httpPathSlice = append(httpPathSlice, strings.TrimSpace(p))
+			}
+		}
+		if len(httpPathSlice) > 0 {
+			permission.HttpPath = models.StringSlice(httpPathSlice)
+		}
+	}
+	if len(permission.HttpPath) == 0 {
+		httpPathStr := ctx.Request().Input("http_path", "")
+		if httpPathStr != "" {
+			var httpPathSlice []string
+			if err := json.Unmarshal([]byte(httpPathStr), &httpPathSlice); err == nil {
+				permission.HttpPath = models.StringSlice(httpPathSlice)
+			} else {
+				permission.HttpPath = models.StringSlice([]string{"/*"})
+			}
+		} else {
+			permission.HttpPath = models.StringSlice([]string{"/*"})
+		}
+	}
 
-	// 检查权限名和值是否已存在
-	var existingPermission admin.AdminPermission
-	if err := facades.Orm().Query().Where("name = ? OR slug = ?", permission.Name, permission.Slug).First(&existingPermission); err == nil {
+	// 检查权限名/值是否重复（使用 Count 更稳妥）
+	total, err := facades.Orm().Query().Model(&admin.AdminPermission{}).
+		Where("name = ? OR slug = ?", permission.Name, permission.Slug).Count()
+	if err != nil {
+		return s.Fail(ctx, "校验失败: "+err.Error())
+	}
+	if total > 0 {
+		cName, _ := facades.Orm().Query().Model(&admin.AdminPermission{}).Where("name = ?", permission.Name).Count()
+		cSlug, _ := facades.Orm().Query().Model(&admin.AdminPermission{}).Where("slug = ?", permission.Slug).Count()
+		if cName > 0 {
+			return s.Fail(ctx, "权限名已存在")
+		}
+		if cSlug > 0 {
+			return s.Fail(ctx, "权限值已存在")
+		}
 		return s.Fail(ctx, "权限名或值已存在")
 	}
 
@@ -99,74 +253,86 @@ func (s *AdminPermissionService) Store(ctx http.Context) http.Response {
 
 // Update 更新权限
 func (s *AdminPermissionService) Update(ctx http.Context) http.Response {
-    id := ctx.Request().InputInt("id")
-    var permission admin.AdminPermission
-    if err := facades.Orm().Query().Find(&permission, id); err != nil {
-        return s.Fail(ctx, "权限不存在")
-    }
+	id := ctx.Request().InputInt("id")
+	var permission admin.AdminPermission
+	if err := facades.Orm().Query().Find(&permission, id); err != nil {
+		return s.Fail(ctx, "权限不存在")
+	}
 
-    permission.ParentId = uint(ctx.Request().InputInt("parent_id", 0))
-    permission.Name = ctx.Request().Input("name")
-    permission.Slug = ctx.Request().Input("value")
-    permission.CustomOrder = ctx.Request().InputInt("custom_order", 0)
+	permission.ParentId = uint(ctx.Request().InputInt("parent_id", 0))
+	permission.Name = ctx.Request().Input("name")
+	permission.Slug = ctx.Request().Input("slug")
+	permission.CustomOrder = ctx.Request().InputInt("custom_order", 0)
 
-    // 处理HTTP方法：数组优先，其次尝试JSON字符串，最后默认
-    methodsArr := ctx.Request().InputArray("http_method")
-    if len(methodsArr) > 0 {
-        var httpMethodSlice []string
-        for _, m := range methodsArr {
-            if m != "" {
-                httpMethodSlice = append(httpMethodSlice, strings.TrimSpace(m))
-            }
-        }
-        if len(httpMethodSlice) > 0 {
-            permission.HttpMethod = models.StringSlice(httpMethodSlice)
-        }
-    }
-    if len(permission.HttpMethod) == 0 {
-        httpMethodStr := ctx.Request().Input("http_method", "")
-        if httpMethodStr != "" {
-            var httpMethodSlice []string
-            if err := json.Unmarshal([]byte(httpMethodStr), &httpMethodSlice); err == nil {
-                permission.HttpMethod = models.StringSlice(httpMethodSlice)
-            } else {
-                permission.HttpMethod = models.StringSlice([]string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"})
-            }
-        } else {
-            permission.HttpMethod = models.StringSlice([]string{"GET"})
-        }
-    }
+	// 处理HTTP方法：数组优先，其次尝试JSON字符串，最后默认
+	methodsArr := ctx.Request().InputArray("http_method")
+	if len(methodsArr) > 0 {
+		var httpMethodSlice []string
+		for _, m := range methodsArr {
+			if m != "" {
+				httpMethodSlice = append(httpMethodSlice, strings.TrimSpace(m))
+			}
+		}
+		if len(httpMethodSlice) > 0 {
+			permission.HttpMethod = models.StringSlice(httpMethodSlice)
+		}
+	}
+	if len(permission.HttpMethod) == 0 {
+		httpMethodStr := ctx.Request().Input("http_method", "")
+		if httpMethodStr != "" {
+			var httpMethodSlice []string
+			if err := json.Unmarshal([]byte(httpMethodStr), &httpMethodSlice); err == nil {
+				permission.HttpMethod = models.StringSlice(httpMethodSlice)
+			} else {
+				permission.HttpMethod = models.StringSlice([]string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"})
+			}
+		} else {
+			permission.HttpMethod = models.StringSlice([]string{"GET"})
+		}
+	}
 
-    // 处理HTTP路径：数组优先，其次尝试JSON字符串，最后默认
-    pathsArr := ctx.Request().InputArray("http_path")
-    if len(pathsArr) > 0 {
-        var httpPathSlice []string
-        for _, p := range pathsArr {
-            if p != "" {
-                httpPathSlice = append(httpPathSlice, strings.TrimSpace(p))
-            }
-        }
-        if len(httpPathSlice) > 0 {
-            permission.HttpPath = models.StringSlice(httpPathSlice)
-        }
-    }
-    if len(permission.HttpPath) == 0 {
-        httpPathStr := ctx.Request().Input("http_path", "")
-        if httpPathStr != "" {
-            var httpPathSlice []string
-            if err := json.Unmarshal([]byte(httpPathStr), &httpPathSlice); err == nil {
-                permission.HttpPath = models.StringSlice(httpPathSlice)
-            } else {
-                permission.HttpPath = models.StringSlice([]string{"/*"})
-            }
-        } else {
-            permission.HttpPath = models.StringSlice([]string{"/*"})
-        }
-    }
+	// 处理HTTP路径：数组优先，其次尝试JSON字符串，最后默认
+	pathsArr := ctx.Request().InputArray("http_path")
+	if len(pathsArr) > 0 {
+		var httpPathSlice []string
+		for _, p := range pathsArr {
+			if p != "" {
+				httpPathSlice = append(httpPathSlice, strings.TrimSpace(p))
+			}
+		}
+		if len(httpPathSlice) > 0 {
+			permission.HttpPath = models.StringSlice(httpPathSlice)
+		}
+	}
+	if len(permission.HttpPath) == 0 {
+		httpPathStr := ctx.Request().Input("http_path", "")
+		if httpPathStr != "" {
+			var httpPathSlice []string
+			if err := json.Unmarshal([]byte(httpPathStr), &httpPathSlice); err == nil {
+				permission.HttpPath = models.StringSlice(httpPathSlice)
+			} else {
+				permission.HttpPath = models.StringSlice([]string{"/*"})
+			}
+		} else {
+			permission.HttpPath = models.StringSlice([]string{"/*"})
+		}
+	}
 
-	// 检查权限名和值是否已存在（排除当前权限）
-	var existingPermission admin.AdminPermission
-	if err := facades.Orm().Query().Where("id != ? AND (name = ? OR slug = ?)", id, permission.Name, permission.Slug).First(&existingPermission); err == nil {
+	// 检查权限名/值是否重复（排除当前权限，使用 Count 更稳妥）
+	total, err := facades.Orm().Query().Model(&admin.AdminPermission{}).
+		Where("id != ? AND (name = ? OR slug = ?)", id, permission.Name, permission.Slug).Count()
+	if err != nil {
+		return s.Fail(ctx, "校验失败: "+err.Error())
+	}
+	if total > 0 {
+		cName, _ := facades.Orm().Query().Model(&admin.AdminPermission{}).Where("id != ? AND name = ?", id, permission.Name).Count()
+		cSlug, _ := facades.Orm().Query().Model(&admin.AdminPermission{}).Where("id != ? AND slug = ?", id, permission.Slug).Count()
+		if cName > 0 {
+			return s.Fail(ctx, "权限名已存在")
+		}
+		if cSlug > 0 {
+			return s.Fail(ctx, "权限值已存在")
+		}
 		return s.Fail(ctx, "权限名或值已存在")
 	}
 
@@ -277,14 +443,14 @@ func (s *AdminPermissionService) Show(ctx http.Context) http.Response {
 		return s.Fail(ctx, "权限不存在")
 	}
 
-	// 获取权限的HTTP方法和路径
-	httpMethods := permission.GetHttpMethodOptions()
-	httpPaths := permission.GetHttpPaths()
-
 	return s.SuccessData(ctx, map[string]any{
-		"permission":   permission,
-		"http_methods": httpMethods,
-		"http_paths":   httpPaths,
+		"id":           permission.ID,
+		"name":         permission.Name,
+		"slug":         permission.Slug,
+		"http_method":  permission.HttpMethod,
+		"http_path":    permission.HttpPath,
+		"custom_order": permission.CustomOrder,
+		"parent_id":    permission.ParentId,
 	})
 }
 

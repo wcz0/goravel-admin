@@ -49,6 +49,7 @@ func Admin() {
                     router.Get("permissions/options", admin.NewPermissionController().Options)
                     router.Get("permissions/tree_options", admin.NewPermissionController().TreeOptions)
                     router.Resource("admin_permissions", admin.NewPermissionController())
+                    router.Post("_admin_permissions_auto_generate", admin.NewPermissionController().AutoGenerate)
                     router.Resource("menus", admin.NewMenuController())
                     router.Resource("admin_menus", admin.NewMenuController())
                     router.Post("admin_menus/save_order", admin.NewMenuController().SaveOrder)

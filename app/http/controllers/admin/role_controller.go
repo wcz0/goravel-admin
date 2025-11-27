@@ -16,9 +16,9 @@ type RoleController struct {
 }
 
 func NewRoleController() *RoleController {
-    return &RoleController{
-        ControllerImpl: NewAdminController[*services.AdminRoleService](services.NewAdminRoleService()),
-    }
+	return &RoleController{
+		ControllerImpl: NewAdminController[*services.AdminRoleService](services.NewAdminRoleService()),
+	}
 }
 
 func (r *RoleController) Index(ctx http.Context) http.Response {
@@ -34,10 +34,10 @@ func (r *RoleController) list(ctx http.Context) *renderers.Page {
 	}
 	HeaderToolbar = append(HeaderToolbar, r.BaseHeaderToolBar()...)
 
-    crud := r.BaseCRUD(ctx).
-        Set("id", "role-crud").
-        HeaderToolbar(HeaderToolbar).
-        FilterTogglable(true).
+	crud := r.BaseCRUD(ctx).
+		Set("id", "role-crud").
+		HeaderToolbar(HeaderToolbar).
+		FilterTogglable(true).
 		Filter(
 			r.BaseFilter().Body([]any{
 				gamis.TextControl().
@@ -74,21 +74,13 @@ func (r *RoleController) list(ctx http.Context) *renderers.Page {
 				Type("datetime").
 				Sortable(true),
 			r.RowActions(ctx, r.Form(ctx), []any{
-            r.setPermissionButton(ctx, r.setPermission(ctx)),
-            r.RowEditButton(ctx, r.Form(ctx), true, "md", "", "").HiddenOn("${slug == 'administrator'}"),
-            gamis.AjaxAction().
-                Label(tools.AdminLang(ctx, "delete")).
-                Level("link").
-                ClassName("text-danger").
-                Api(map[string]any{
-                    "url":  r.Extra.QueryPath(ctx) + "/${id}",
-                    "method": "delete",
-                }).
-                Set("reload", "role-crud").
-                Set("confirmText", tools.AdminLang(ctx, "confirm_delete")).
-                HiddenOn("${slug == 'administrator'}"),
-        }, "md"),
-    })
+				r.setPermissionButton(ctx, r.setPermission(ctx)),
+				r.RowEditButton(ctx, r.Form(ctx), true, "md", "", "").HiddenOn("${slug == 'administrator'}"),
+				r.RowDeleteButton(ctx, "").
+					HiddenOn("${slug == 'administrator'}").
+					Set("reload", "role-crud"),
+			}, "md"),
+		})
 
 	return r.BaseList(crud).Css(map[string]any{
 		".tree-full": map[string]any{
@@ -106,19 +98,19 @@ func (r *RoleController) Show(ctx http.Context) http.Response {
 }
 
 func (r *RoleController) Store(ctx http.Context) http.Response {
-    hasError, response := r.HandleValidationErrors(ctx, map[string]string{
-        "name": "required|string|max_len:255",
-        "slug": "required|string|max_len:255",
-    }, map[string]string{
-        "name.required": "角色名称不能为空",
-        "name.max_len": "角色名称最多 255 位",
-        "slug.required": "角色标识不能为空",
-        "slug.max_len": "角色标识最多 255 位",
-    })
-    if hasError {
-        return response
-    }
-    return r.ControllerImpl.Service.Store(ctx)
+	hasError, response := r.HandleValidationErrors(ctx, map[string]string{
+		"name": "required|string|max_len:255",
+		"slug": "required|string|max_len:255",
+	}, map[string]string{
+		"name.required": "角色名称不能为空",
+		"name.max_len":  "角色名称最多 255 位",
+		"slug.required": "角色标识不能为空",
+		"slug.max_len":  "角色标识最多 255 位",
+	})
+	if hasError {
+		return response
+	}
+	return r.ControllerImpl.Service.Store(ctx)
 }
 
 func (r *RoleController) Update(ctx http.Context) http.Response {
@@ -164,7 +156,7 @@ func (r *RoleController) Destroy(ctx http.Context) http.Response {
 func (r *RoleController) AssignPermissions(ctx http.Context) http.Response {
 	// 验证输入
 	validation, err := ctx.Request().Validate(map[string]string{
-		"role_id":      "required|number",
+		"role_id":        "required|number",
 		"permission_ids": "required|array",
 	})
 	if err != nil {
@@ -215,16 +207,16 @@ func (r *RoleController) GetPermissions(ctx http.Context) http.Response {
 
 // SetPermission 权限设置页面
 func (r *RoleController) setPermission(ctx http.Context) *renderers.Drawer {
-    var permissions []admin.AdminPermission
-    _ = facades.Orm().Query().Order("parent_id asc, custom_order asc, id asc").Get(&permissions)
-    // 构建树并转换为 TreeControl 选项
-    // 转为指针切片以复用构建函数
-    permPtrs := make([]*admin.AdminPermission, 0, len(permissions))
-    for i := range permissions {
-        permPtrs = append(permPtrs, &permissions[i])
-    }
-    permissionTree := buildPermissionTree(permPtrs)
-    treeOptions := convertPermissionTreeToOptions(permissionTree)
+	var permissions []admin.AdminPermission
+	_ = facades.Orm().Query().Order("parent_id asc, custom_order asc, id asc").Get(&permissions)
+	// 构建树并转换为 TreeControl 选项
+	// 转为指针切片以复用构建函数
+	permPtrs := make([]*admin.AdminPermission, 0, len(permissions))
+	for i := range permissions {
+		permPtrs = append(permPtrs, &permissions[i])
+	}
+	permissionTree := buildPermissionTree(permPtrs)
+	treeOptions := convertPermissionTreeToOptions(permissionTree)
 
 	return gamis.Drawer().
 		Title(tools.AdminLang(ctx, "admin_role.set_permissions")).
@@ -260,29 +252,29 @@ func (r *RoleController) setPermission(ctx http.Context) *renderers.Drawer {
 
 // setPermissionButton 设置权限按钮
 func (r *RoleController) setPermissionButton(ctx http.Context, drawer *renderers.Drawer) *renderers.LinkAction {
-    action := (*renderers.LinkAction)(gamis.DrawerAction().
-        Label(tools.AdminLang(ctx, "admin_role.set_permissions")).
-        Level("link").
-        Drawer(drawer))
-    action.Set("actionType", "drawer").Link("")
-    return action
+	action := (*renderers.LinkAction)(gamis.DrawerAction().
+		Label(tools.AdminLang(ctx, "admin_role.set_permissions")).
+		Level("link").
+		Drawer(drawer))
+	action.Set("actionType", "drawer").Link("")
+	return action
 }
 
 // Form 表单页面
 func (r *RoleController) Form(ctx http.Context) *renderers.Form {
-    return r.BaseForm(ctx, false).Body([]any{
-        gamis.GroupControl().Body([]any{
-            gamis.TextControl().
-                Name("name").
-                Label(tools.AdminLang(ctx, "admin_role.name")).
-                Required(true),
-            gamis.TextControl().
-                Name("slug").
-                Label(tools.AdminLang(ctx, "admin_role.slug")).
-                Required(true).
-                Description(tools.AdminLang(ctx, "admin_role.slug_tip")),
-        }),
-    })
+	return r.BaseForm(ctx, false).Body([]any{
+		gamis.GroupControl().Body([]any{
+			gamis.TextControl().
+				Name("name").
+				Label(tools.AdminLang(ctx, "admin_role.name")).
+				Required(true),
+			gamis.TextControl().
+				Name("slug").
+				Label(tools.AdminLang(ctx, "admin_role.slug")).
+				Required(true).
+				Description(tools.AdminLang(ctx, "admin_role.slug_tip")),
+		}),
+	})
 }
 
 // Detail 详情页面
@@ -344,25 +336,25 @@ func (r *RoleController) Detail(ctx http.Context) http.Response {
 }
 
 func (r *RoleController) Options(ctx http.Context) http.Response {
-    var roles []admin.AdminRole
-    if err := facades.Orm().Query().Get(&roles); err != nil {
-        return r.FailMsg(ctx, err.Error())
-    }
-    items := make([]map[string]any, 0, len(roles))
-    for _, role := range roles {
-        items = append(items, map[string]any{"id": role.ID, "name": role.Name})
-    }
-    return r.SuccessData(ctx, map[string]any{"items": items})
+	var roles []admin.AdminRole
+	if err := facades.Orm().Query().Get(&roles); err != nil {
+		return r.FailMsg(ctx, err.Error())
+	}
+	items := make([]map[string]any, 0, len(roles))
+	for _, role := range roles {
+		items = append(items, map[string]any{"id": role.ID, "name": role.Name})
+	}
+	return r.SuccessData(ctx, map[string]any{"items": items})
 }
 
 // SavePermissions 保存权限设置
 func (r *RoleController) SavePermissions(ctx http.Context) http.Response {
-    return r.ControllerImpl.Service.AssignPermissions(ctx)
+	return r.ControllerImpl.Service.AssignPermissions(ctx)
 }
 
 // buildPermissionTree 构建权限树形结构
 func buildPermissionTree(permissions []*admin.AdminPermission) []map[string]any {
-    parentMap := make(map[uint][]*admin.AdminPermission)
+	parentMap := make(map[uint][]*admin.AdminPermission)
 
 	// 按父级ID分组
 	for _, permission := range permissions {
@@ -370,44 +362,44 @@ func buildPermissionTree(permissions []*admin.AdminPermission) []map[string]any 
 	}
 
 	// 递归构建树
-    var buildTree func(parentId uint) []map[string]any
-    buildTree = func(parentId uint) []map[string]any {
-        items := make([]map[string]any, 0)
+	var buildTree func(parentId uint) []map[string]any
+	buildTree = func(parentId uint) []map[string]any {
+		items := make([]map[string]any, 0)
 		children := parentMap[parentId]
 
 		for _, permission := range children {
-            item := map[string]any{
-                "label": permission.Name,
-                "value": permission.ID,
-                "children": buildTree(permission.ID),
-            }
-            items = append(items, item)
-        }
+			item := map[string]any{
+				"label":    permission.Name,
+				"value":    permission.ID,
+				"children": buildTree(permission.ID),
+			}
+			items = append(items, item)
+		}
 
 		return items
 	}
 
-    return buildTree(0)
+	return buildTree(0)
 }
 
 // convertPermissionTreeToOptions 将权限树数据转换为TreeControl选项格式
 func convertPermissionTreeToOptions(treeData []map[string]any) []map[string]any {
-    var options []map[string]any
+	var options []map[string]any
 
-    for _, node := range treeData {
-        option := map[string]any{
-            "name": node["label"],
-            "id":   node["value"],
-        }
+	for _, node := range treeData {
+		option := map[string]any{
+			"name": node["label"],
+			"id":   node["value"],
+		}
 
-        if children, exists := node["children"]; exists {
-            if childrenSlice, ok := children.([]map[string]any); ok && len(childrenSlice) > 0 {
-                option["children"] = convertPermissionTreeToOptions(childrenSlice)
-            }
-        }
+		if children, exists := node["children"]; exists {
+			if childrenSlice, ok := children.([]map[string]any); ok && len(childrenSlice) > 0 {
+				option["children"] = convertPermissionTreeToOptions(childrenSlice)
+			}
+		}
 
-        options = append(options, option)
-    }
+		options = append(options, option)
+	}
 
-    return options
+	return options
 }

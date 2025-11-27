@@ -1,5 +1,10 @@
 package seeders
 
+import (
+	"github.com/goravel/framework/contracts/database/seeder"
+	"github.com/goravel/framework/facades"
+)
+
 type DatabaseSeeder struct {
 }
 
@@ -10,5 +15,7 @@ func (s *DatabaseSeeder) Signature() string {
 
 // Run executes the seeder logic.
 func (s *DatabaseSeeder) Run() error {
-	return nil
+	return facades.Seeder().CallOnce([]seeder.Seeder{
+		&AdminSeeder{},
+	})
 }
