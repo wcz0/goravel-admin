@@ -18,7 +18,7 @@ func (r *M20240418000004CreateAdminPermissionsTable) Up() error {
 		table.BigIncrements("id")
 		table.UnsignedBigInteger("parent_id").Default(0).Comment("父级权限ID")
 		table.String("name", 255).Comment("权限名称")
-		table.String("value", 255).Comment("权限值")
+		table.String("slug", 255).Comment("权限值")
 		table.Json("http_method").Comment("请求方法(JSON数组)")
 		table.Json("http_path").Comment("请求路径(JSON数组)")
 		table.Integer("custom_order").Default(0).Comment("排序")

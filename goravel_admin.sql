@@ -3,15 +3,15 @@
 
  Source Server         : localhost
  Source Server Type    : MySQL
- Source Server Version : 80040 (8.0.40)
+ Source Server Version : 80043 (8.0.43)
  Source Host           : localhost:3306
  Source Schema         : goravel_admin
 
  Target Server Type    : MySQL
- Target Server Version : 80040 (8.0.40)
+ Target Server Version : 80043 (8.0.43)
  File Encoding         : 65001
 
- Date: 03/12/2024 00:11:46
+ Date: 12/12/2025 14:25:43
 */
 
 SET NAMES utf8mb4;
@@ -183,10 +183,8 @@ CREATE TABLE `admin_permissions` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `slug` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `http_method_bak` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `http_path_bak` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `http_method` json DEFAULT NULL,
-  `http_path` json DEFAULT NULL,
+  `http_method` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `http_path` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `custom_order` int NOT NULL DEFAULT '0',
   `parent_id` int NOT NULL DEFAULT '0',
   `created_at` timestamp NULL DEFAULT NULL,
@@ -200,13 +198,13 @@ CREATE TABLE `admin_permissions` (
 -- Records of admin_permissions
 -- ----------------------------
 BEGIN;
-INSERT INTO `admin_permissions` (`id`, `name`, `slug`, `http_method_bak`, `http_path_bak`, `http_method`, `http_path`, `custom_order`, `parent_id`, `created_at`, `updated_at`) VALUES (1, '首页', 'home', NULL, '[\'/home*\']', NULL, '[\"/home*\"]', 0, 0, '2024-08-10 07:04:53', '2024-08-10 07:04:53');
-INSERT INTO `admin_permissions` (`id`, `name`, `slug`, `http_method_bak`, `http_path_bak`, `http_method`, `http_path`, `custom_order`, `parent_id`, `created_at`, `updated_at`) VALUES (2, '系统', 'system', NULL, '', NULL, NULL, 0, 0, '2024-08-10 07:04:53', '2024-08-10 07:04:53');
-INSERT INTO `admin_permissions` (`id`, `name`, `slug`, `http_method_bak`, `http_path_bak`, `http_method`, `http_path`, `custom_order`, `parent_id`, `created_at`, `updated_at`) VALUES (3, '管理员', 'admin_users', NULL, '[\'/admin_users*\']', NULL, '[\"/admin_users*\"]', 0, 2, '2024-08-10 07:04:53', '2024-08-10 07:04:53');
-INSERT INTO `admin_permissions` (`id`, `name`, `slug`, `http_method_bak`, `http_path_bak`, `http_method`, `http_path`, `custom_order`, `parent_id`, `created_at`, `updated_at`) VALUES (4, '角色', 'roles', NULL, '[\'/roles*\']', NULL, '[\"/roles*\"]', 0, 2, '2024-08-10 07:04:53', '2024-08-10 07:04:53');
-INSERT INTO `admin_permissions` (`id`, `name`, `slug`, `http_method_bak`, `http_path_bak`, `http_method`, `http_path`, `custom_order`, `parent_id`, `created_at`, `updated_at`) VALUES (5, '权限', 'permissions', NULL, '[\'/permissions*\']', NULL, '[\"/permissions*\"]', 0, 2, '2024-08-10 07:04:53', '2024-08-10 07:04:53');
-INSERT INTO `admin_permissions` (`id`, `name`, `slug`, `http_method_bak`, `http_path_bak`, `http_method`, `http_path`, `custom_order`, `parent_id`, `created_at`, `updated_at`) VALUES (6, '菜单', 'menus', NULL, '[\'/menus*\']', NULL, '[\"/menus*\"]', 0, 2, '2024-08-10 07:04:53', '2024-08-10 07:04:53');
-INSERT INTO `admin_permissions` (`id`, `name`, `slug`, `http_method_bak`, `http_path_bak`, `http_method`, `http_path`, `custom_order`, `parent_id`, `created_at`, `updated_at`) VALUES (7, '设置', 'settings', NULL, '[\'/settings*\']', NULL, '[\"/settings*\"]', 0, 2, '2024-08-10 07:04:53', '2024-08-10 07:04:53');
+INSERT INTO `admin_permissions` (`id`, `name`, `slug`, `http_method`, `http_path`, `custom_order`, `parent_id`, `created_at`, `updated_at`) VALUES (1, '首页', 'home', NULL, '[\'/home*\']', 0, 0, '2024-08-10 07:04:53', '2024-08-10 07:04:53');
+INSERT INTO `admin_permissions` (`id`, `name`, `slug`, `http_method`, `http_path`, `custom_order`, `parent_id`, `created_at`, `updated_at`) VALUES (2, '系统', 'system', NULL, '', 0, 0, '2024-08-10 07:04:53', '2024-08-10 07:04:53');
+INSERT INTO `admin_permissions` (`id`, `name`, `slug`, `http_method`, `http_path`, `custom_order`, `parent_id`, `created_at`, `updated_at`) VALUES (3, '管理员', 'admin_users', NULL, '[\'/admin_users*\']', 0, 2, '2024-08-10 07:04:53', '2024-08-10 07:04:53');
+INSERT INTO `admin_permissions` (`id`, `name`, `slug`, `http_method`, `http_path`, `custom_order`, `parent_id`, `created_at`, `updated_at`) VALUES (4, '角色', 'roles', NULL, '[\'/roles*\']', 0, 2, '2024-08-10 07:04:53', '2024-08-10 07:04:53');
+INSERT INTO `admin_permissions` (`id`, `name`, `slug`, `http_method`, `http_path`, `custom_order`, `parent_id`, `created_at`, `updated_at`) VALUES (5, '权限', 'permissions', NULL, '[\'/permissions*\']', 0, 2, '2024-08-10 07:04:53', '2024-08-10 07:04:53');
+INSERT INTO `admin_permissions` (`id`, `name`, `slug`, `http_method`, `http_path`, `custom_order`, `parent_id`, `created_at`, `updated_at`) VALUES (6, '菜单', 'menus', NULL, '[\'/menus*\']', 0, 2, '2024-08-10 07:04:53', '2024-08-10 07:04:53');
+INSERT INTO `admin_permissions` (`id`, `name`, `slug`, `http_method`, `http_path`, `custom_order`, `parent_id`, `created_at`, `updated_at`) VALUES (7, '设置', 'settings', NULL, '[\'/settings*\']', 0, 2, '2024-08-10 07:04:53', '2024-08-10 07:04:53');
 COMMIT;
 
 -- ----------------------------
@@ -313,8 +311,8 @@ CREATE TABLE `admin_settings` (
 -- Records of admin_settings
 -- ----------------------------
 BEGIN;
-INSERT INTO `admin_settings` (`key`, `values`, `created_at`, `updated_at`) VALUES ('admin_locale', '\"zh_CN\"', NULL, '2024-12-03 00:00:22');
-INSERT INTO `admin_settings` (`key`, `values`, `created_at`, `updated_at`) VALUES ('system_theme_setting', '{\"accordionMenu\":false,\"animateInDuration\":600,\"animateInType\":\"alpha\",\"animateOutDuration\":600,\"animateOutType\":\"alpha\",\"breadcrumb\":true,\"darkTheme\":false,\"enableTab\":true,\"footer\":false,\"keepAlive\":false,\"layoutMode\":\"default\",\"loginTemplate\":\"default\",\"siderTheme\":\"light\",\"tabIcon\":true,\"themeColor\":\"#1677ff\",\"topTheme\":\"light\"}', '2024-12-02 23:54:15', '2024-12-02 23:58:50');
+INSERT INTO `admin_settings` (`key`, `values`, `created_at`, `updated_at`) VALUES ('admin_locale', '\"zh_CN\"', '2024-08-10 07:04:53', '2025-11-12 00:59:19');
+INSERT INTO `admin_settings` (`key`, `values`, `created_at`, `updated_at`) VALUES ('system_theme_setting', '{\"darkTheme\":false,\"footer\":false,\"breadcrumb\":true,\"themeColor\":\"#1677ff\",\"layoutMode\":\"default\",\"siderTheme\":\"light\",\"topTheme\":\"light\",\"animateInType\":\"alpha\",\"animateInDuration\":600,\"animateOutType\":\"alpha\",\"animateOutDuration\":600,\"loginTemplate\":\"default\",\"keepAlive\":false,\"enableTab\":false,\"tabIcon\":true,\"accordionMenu\":false}', '2024-09-27 10:07:04', '2024-09-27 10:07:04');
 COMMIT;
 
 -- ----------------------------
@@ -339,7 +337,7 @@ CREATE TABLE `admin_users` (
 -- Records of admin_users
 -- ----------------------------
 BEGIN;
-INSERT INTO `admin_users` (`id`, `username`, `password`, `enabled`, `name`, `avatar`, `remember_token`, `created_at`, `updated_at`) VALUES (1, 'admin', '$2a$12$qbXT0QDJh5PYU1WrpeT3.ufPNkSc.YaoIAuTrSPUee/mvSvgquIZm', 1, 'Administrator', NULL, NULL, '2024-07-24 16:51:57', '2024-07-24 16:51:57');
+INSERT INTO `admin_users` (`id`, `username`, `password`, `enabled`, `name`, `avatar`, `remember_token`, `created_at`, `updated_at`) VALUES (1, 'admin', '$2a$10$xHRH5sa52t1MC79h8Ml4p.jyCObM2SNOfXgrHtd1YbGxk1e05HIk.', 1, 'Administrator', NULL, NULL, '2024-08-10 07:04:53', '2025-11-13 00:45:39');
 COMMIT;
 
 -- ----------------------------
@@ -347,17 +345,17 @@ COMMIT;
 -- ----------------------------
 DROP TABLE IF EXISTS `casbin_rules`;
 CREATE TABLE `casbin_rules` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `ptype` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `v0` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `v1` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `v2` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `v3` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `v4` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `v5` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `ptype` (`ptype`,`v0`,`v1`,`v2`,`v3`,`v4`,`v5`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `ptype` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `v0` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `v1` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `v2` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `v3` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `v4` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `v5` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `casbin_rules_ptype_v0_v1_v2_v3_v4_v5_unique` (`ptype`,`v0`,`v1`,`v2`,`v3`,`v4`,`v5`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of casbin_rules
@@ -370,20 +368,64 @@ COMMIT;
 -- ----------------------------
 DROP TABLE IF EXISTS `casbin_rules_second`;
 CREATE TABLE `casbin_rules_second` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `ptype` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `v0` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `v1` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `v2` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `v3` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `v4` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `v5` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `ptype` (`ptype`,`v0`,`v1`,`v2`,`v3`,`v4`,`v5`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `ptype` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `v0` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `v1` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `v2` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `v3` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `v4` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `v5` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `casbin_rules_second_ptype_v0_v1_v2_v3_v4_v5_unique` (`ptype`,`v0`,`v1`,`v2`,`v3`,`v4`,`v5`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of casbin_rules_second
+-- ----------------------------
+BEGIN;
+COMMIT;
+
+-- ----------------------------
+-- Table structure for failed_jobs
+-- ----------------------------
+DROP TABLE IF EXISTS `failed_jobs`;
+CREATE TABLE `failed_jobs` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `connection` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `queue` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `payload` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `exception` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `failed_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------
+-- Records of failed_jobs
+-- ----------------------------
+BEGIN;
+COMMIT;
+
+-- ----------------------------
+-- Table structure for jobs
+-- ----------------------------
+DROP TABLE IF EXISTS `jobs`;
+CREATE TABLE `jobs` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `queue` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `payload` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `attempts` tinyint unsigned NOT NULL DEFAULT '0',
+  `reserved_at` datetime DEFAULT NULL,
+  `available_at` datetime NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `jobs_queue_index` (`queue`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------
+-- Records of jobs
 -- ----------------------------
 BEGIN;
 COMMIT;
@@ -393,59 +435,61 @@ COMMIT;
 -- ----------------------------
 DROP TABLE IF EXISTS `migrations`;
 CREATE TABLE `migrations` (
-  `version` bigint NOT NULL,
-  `dirty` tinyint(1) NOT NULL,
-  PRIMARY KEY (`version`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `batch` int NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of migrations
 -- ----------------------------
 BEGIN;
-INSERT INTO `migrations` (`version`, `dirty`) VALUES (20240423045835, 0);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (1, '20210101000002_create_casbin_rules_table', 1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (2, '20210101000002_create_jobs_table', 1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (3, '20240417000001_create_admin_users_table', 1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (4, '20240417000002_create_users_table', 1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (5, '20240418000001_create_admin_settings_table', 1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (6, '20240418000002_create_admin_menus_table', 1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (7, '20240418000003_create_admin_permission_menu_table', 2);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (8, '20240418000004_create_admin_permissions_table', 3);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (9, '20240418000005_create_admin_extensions_table', 3);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (10, '20240419000001_create_admin_roles_table', 3);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (11, '20240423000001_create_casbin_rules_second_table', 4);
 COMMIT;
 
 -- ----------------------------
--- Table structure for password_reset_tokens
+-- Table structure for service_agreements
 -- ----------------------------
-DROP TABLE IF EXISTS `password_reset_tokens`;
-CREATE TABLE `password_reset_tokens` (
-  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`email`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+DROP TABLE IF EXISTS `service_agreements`;
+CREATE TABLE `service_agreements` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `version` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `locale` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT 'zh-CN',
+  `type` tinyint NOT NULL COMMENT '协议类型：1=用户协议, 2=隐私政策, 3=未成年人保护及家长监护指南, 4=广告与营销内容披露政策, 5=直播与音频内容管理规则, 6=创作者合作协议',
+  `is_published` tinyint(1) DEFAULT '0' COMMENT '是否已发布',
+  `published_at` timestamp NULL DEFAULT NULL COMMENT '发布时间',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_version_type` (`version`,`type`),
+  KEY `idx_type` (`type`),
+  KEY `idx_published` (`is_published`),
+  KEY `idx_version_type` (`version`,`type`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------
--- Records of password_reset_tokens
+-- Records of service_agreements
 -- ----------------------------
 BEGIN;
-COMMIT;
-
--- ----------------------------
--- Table structure for personal_access_tokens
--- ----------------------------
-DROP TABLE IF EXISTS `personal_access_tokens`;
-CREATE TABLE `personal_access_tokens` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `tokenable_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tokenable_id` bigint unsigned NOT NULL,
-  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `token` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `abilities` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `last_used_at` timestamp NULL DEFAULT NULL,
-  `expires_at` timestamp NULL DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `personal_access_tokens_token_unique` (`token`) USING BTREE,
-  KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------
--- Records of personal_access_tokens
--- ----------------------------
-BEGIN;
+INSERT INTO `service_agreements` (`id`, `version`, `title`, `content`, `locale`, `type`, `is_published`, `published_at`, `created_at`, `updated_at`) VALUES (1, '1.0.0', '用户协议', '<h1>用户协议</h1><p>欢迎使用Enchat平台服务。本协议是您与Enchat平台之间关于使用平台服务的法律协议。</p><h2>一、服务内容</h2><p>Enchat平台为用户提供即时通讯、社交互动等功能。</p><h2>二、用户义务</h2><p>用户应遵守相关法律法规，不得发布违法违规内容。</p><h2>三、免责声明</h2><p>平台不对用户发布的内容承担责任。</p>', 'zh-CN', 1, 1, '2025-11-12 00:57:40', '2025-11-12 00:57:40', '2025-11-12 00:57:40');
+INSERT INTO `service_agreements` (`id`, `version`, `title`, `content`, `locale`, `type`, `is_published`, `published_at`, `created_at`, `updated_at`) VALUES (2, '1.0.0', '隐私政策', '<h1>隐私政策</h1><p>本隐私政策说明了我们如何收集、使用、保护您的个人信息。</p><h2>一、信息收集</h2><p>我们会收集您提供的个人信息，包括但不限于：昵称、头像、联系方式等。</p><h2>二、信息使用</h2><p>您的个人信息将用于提供和改进我们的服务。</p><h2>三、信息保护</h2><p>我们采取合理的安全措施保护您的个人信息。</p>', 'zh-CN', 2, 1, '2025-11-12 00:57:40', '2025-11-12 00:57:40', '2025-11-12 00:57:40');
+INSERT INTO `service_agreements` (`id`, `version`, `title`, `content`, `locale`, `type`, `is_published`, `published_at`, `created_at`, `updated_at`) VALUES (3, '1.0.0', '未成年人保护及家长监护指南', '<h1>未成年人保护及家长监护指南</h1><p>为了保护未成年人使用平台的安全和身心健康，我们制定了以下保护措施。</p><h2>一、年龄限制</h2><p>未满14周岁的用户需要在监护人同意下使用本服务。</p><h2>二、监护人责任</h2><p>监护人应当教育和引导未成年人正确使用网络服务。</p><h2>三、内容过滤</h2><p>平台将对未成年人可能接触的内容进行适当过滤。</p>', 'zh-CN', 3, 1, '2025-11-12 00:57:40', '2025-11-12 00:57:40', '2025-11-12 00:57:40');
+INSERT INTO `service_agreements` (`id`, `version`, `title`, `content`, `locale`, `type`, `is_published`, `published_at`, `created_at`, `updated_at`) VALUES (4, '1.0.0', '广告与营销内容披露政策', '<h1>广告与营销内容披露政策</h1><p>为了保护用户权益，规范平台广告和营销内容的管理。</p><h2>一、广告标识</h2><p>所有广告内容必须明确标识为广告。</p><h2>二、内容标准</h2><p>广告内容应当真实、合法，不得误导用户。</p><h2>三、投诉处理</h2><p>用户可对不当广告内容进行投诉举报。</p>', 'zh-CN', 4, 1, '2025-11-12 00:57:40', '2025-11-12 00:57:40', '2025-11-12 00:57:40');
+INSERT INTO `service_agreements` (`id`, `version`, `title`, `content`, `locale`, `type`, `is_published`, `published_at`, `created_at`, `updated_at`) VALUES (5, '1.0.0', '直播与音频内容管理规则', '<h1>直播与音频内容管理规则</h1><p>为了营造健康向上的网络环境，规范直播和音频内容的管理。</p><h2>一、内容规范</h2><p>直播和音频内容应积极健康，符合社会道德规范。</p><h2>二、禁止内容</h2><p>严禁传播暴力、色情、欺诈等违法违规内容。</p><h2>三、审核机制</h2><p>平台对直播和音频内容进行实时监控和事后审核。</p>', 'zh-CN', 5, 1, '2025-11-12 00:57:40', '2025-11-12 00:57:40', '2025-11-12 00:57:40');
+INSERT INTO `service_agreements` (`id`, `version`, `title`, `content`, `locale`, `type`, `is_published`, `published_at`, `created_at`, `updated_at`) VALUES (6, '1.0.0', '创作者合作协议', '<h1>创作者合作协议</h1><p>本协议规范了内容创作者与平台之间的权利义务关系。</p><h2>一、合作内容</h2><p>创作者在平台发布原创内容，平台提供展示和推广服务。</p><h2>二、权利归属</h2><p>创作者保留内容著作权，平台获得内容使用许可。</p><h2>三、收益分配</h2><p>平台将按照约定比例向创作者分配收益。</p>', 'zh-CN', 6, 1, '2025-11-12 00:57:40', '2025-11-12 00:57:40', '2025-11-12 00:57:40');
 COMMIT;
 
 -- ----------------------------
@@ -454,15 +498,61 @@ COMMIT;
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email_verified_at` timestamp NULL DEFAULT NULL,
-  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `remember_token` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `username` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `password` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `real_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `card_id` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `mark` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `parther_id` int unsigned DEFAULT '0',
+  `group_id` int unsigned DEFAULT '0',
+  `nickname` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `avatar` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `phone` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `add_ip` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `last_time` datetime DEFAULT NULL,
+  `last_ip` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `money` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '0',
+  `brokerage_price` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '0',
+  `integral` int unsigned DEFAULT '0',
+  `exp` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '0',
+  `sign_num` int unsigned DEFAULT '0',
+  `state` tinyint unsigned DEFAULT '1',
+  `level` tinyint unsigned DEFAULT '0',
+  `agent_level` int unsigned DEFAULT '0',
+  `is_spread` tinyint unsigned DEFAULT '0',
+  `spread_uid` bigint unsigned DEFAULT NULL,
+  `spread_time` datetime DEFAULT NULL,
+  `user_type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `is_promoter` tinyint unsigned DEFAULT '0',
+  `pay_count` int unsigned DEFAULT '0',
+  `spread_count` int unsigned DEFAULT '0',
+  `clean_time` datetime DEFAULT NULL,
+  `address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `admin_id` int unsigned DEFAULT '0',
+  `login_type` tinyint unsigned DEFAULT '0',
+  `record_phone` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `member_level` tinyint unsigned DEFAULT '0',
+  `member_ever` tinyint unsigned DEFAULT '0',
+  `overdue_time` datetime DEFAULT NULL,
+  `division_type` tinyint unsigned DEFAULT '0',
+  `division_status` tinyint unsigned DEFAULT '0',
+  `is_division` tinyint unsigned DEFAULT '0',
+  `is_agent` tinyint unsigned DEFAULT '0',
+  `is_staff` tinyint unsigned DEFAULT '0',
+  `division_id` int unsigned DEFAULT '0',
+  `agent_id` int DEFAULT '0',
+  `staff_id` int DEFAULT '0',
+  `division_percent` tinyint unsigned DEFAULT '0',
+  `division_end_time` datetime DEFAULT NULL,
+  `division_last_time` datetime DEFAULT NULL,
+  `division_invite` int unsigned DEFAULT '0',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `users_email_unique` (`email`) USING BTREE
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `users_username_unique` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------
