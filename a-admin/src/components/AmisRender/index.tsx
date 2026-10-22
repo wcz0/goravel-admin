@@ -1,68 +1,83 @@
-import React from 'react'
+import React, {useCallback, useMemo} from 'react'
 import './style/index.less'
 import {render as renderAmis, RenderOptions} from 'amis'
-import {AlertComponent} from 'amis-ui'
-import {message} from 'antd'
-import {amisRequest} from '@/service/api'
+import {toast} from 'amis-ui'
+import {amisRequest, isBinaryAmisRequest} from '@/service/api'
 import {useHistory} from 'react-router'
 import clipboard from '@/utils/clipboard'
 import useSetting from '@/hooks/useSetting'
-import {msgHandler} from '@/utils/common'
+import { toAxiosLike, wrapAxiosLikeIfAmbiguous } from '@/utils/amisAdaptor'
+import {useLang} from '@/hooks/useLang'
 
 const AmisRender = ({schema, className = ''}) => {
     const history = useHistory()
     const {getSetting} = useSetting()
+    const {t} = useLang()
 
     const localeMap = {
         'zh_CN': 'zh-CN',
         'en': 'en-US'
     }
 
-    const localeValue = localeMap[getSetting('locale') || 'zh_CN'] || 'zh-CN'
+    const localeValue = useMemo(
+        () => localeMap[getSetting('locale') || 'zh_CN'] || 'zh-CN',
+        [getSetting]
+    )
 
-    const props = {locale: localeValue, location: history.location}
+    const props = useMemo(() => ({locale: localeValue, location: history.location}), [localeValue, history.location])
 
-    const options: RenderOptions = {
-        enableAMISDebug: getSetting('show_development_tools'),
-        fetcher: ({url, method, data}) => amisRequest(url, method, data),
-        updateLocation: (location, replace) => {
+    const fetcher = useCallback(async (api) => {
+        const res = await amisRequest(api)
+
+        // 二进制数据不参与 JSON 歧义字段判断，避免读取 ArrayBuffer 或 Blob 的业务字段。
+        if (isBinaryAmisRequest(api)) {
+            return toAxiosLike(res)
+        }
+
+        return wrapAxiosLikeIfAmbiguous(toAxiosLike(res))
+    }, [])
+
+    const updateLocation = useCallback(
+        (location, replace) => {
             replace || history.push(location)
         },
-        jumpTo: (location: string) => {
+        [history]
+    )
+
+    const jumpTo = useCallback(
+        (location: string) => {
             if (location.startsWith('http') || location.startsWith('https')) {
                 window.open(location)
             } else {
                 history.push(location.startsWith('/') ? location : `/${location}`)
             }
         },
-        copy: async (content) => {
-            await clipboard(content)
+        [history]
+    )
 
-            message.success(props.locale === 'zh-CN' ? '复制成功' : 'Copy success')
-        },
-        notify: (type: string, msg: any, conf: any) => {
-            if (typeof msg !== 'string') {
-                msg = conf?.body
-            }
+    const copy = useCallback(async (content) => {
+        await clipboard(content)
+        toast.success(t('common.copy_success'))
+    }, [t])
 
-            if (!msg?.length) {
-                return
-            }
+    const isCurrentUrl = useCallback(
+        (url: string) => history.location.pathname + history.location.search === url,
+        [history.location.pathname, history.location.search]
+    )
 
-            let handle = () => message.open({
-                content: msg,
-                type: (['info', 'success', 'error', 'warning', 'loading'].includes(type) ? type : 'info') as any,
-                duration: (conf?.timeout || 3000) / 1000,
-            })
+    const options: RenderOptions = useMemo(() => ({
+        enableAMISDebug: getSetting('show_development_tools'),
+        fetcher,
+        updateLocation,
+        jumpTo,
+        copy,
+        isCurrentUrl,
+    }), [getSetting, fetcher, updateLocation, jumpTo, copy, isCurrentUrl])
 
-            msgHandler(msg, handle)
-        },
-        isCurrentUrl: (url: string) => history.location.pathname + history.location.search === url,
-    }
+    if (!schema) return null
 
     return (
         <div className={className}>
-            <AlertComponent key="alert" locale={localeValue}/>
             {renderAmis(schema, props, options)}
         </div>
     )

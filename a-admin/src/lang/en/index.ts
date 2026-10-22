@@ -1,4 +1,7 @@
 export default {
+    common: {
+        copy_success: 'Copy success',
+    },
     login: {
         title: 'Login',
         username: 'Username',
@@ -12,6 +15,11 @@ export default {
     not_found: {
         title: 'Sorry, the page you visited does not exist.',
         back_home: 'Back Home',
+    },
+    iframe: {
+        empty_url: 'Iframe URL is not configured',
+        load_failed: 'Iframe page failed to load',
+        reload: 'Reload',
     },
     theme_setting: {
         title: 'Theme Setting',
@@ -60,6 +68,7 @@ export default {
         keep_alive: 'Global Keep Alive',
         dark_theme: 'Dark Theme',
         accordion_menu: 'Accordion Menu',
+        time_zone: 'Time Zone',
         locale: 'Language',
         locale_en: 'English',
         locale_zh_CN: '简体中文'

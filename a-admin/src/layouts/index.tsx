@@ -1,6 +1,5 @@
-import React, {useEffect, useState} from 'react'
+import React from 'react'
 import useRoute from '@/routes'
-import {useHistory} from 'react-router'
 import DefaultLayout from '@/layouts/DefaultLayout'
 import LayoutContent from '@/layouts/components/LayoutContent'
 import SmLayout from '@/layouts/SmLayout'
@@ -10,16 +9,15 @@ import TopMixLayout from '@/layouts/TopMixLayout'
 import {DoubleLayout} from '@/layouts/DoubleLayout'
 import SettingPanel from '@/layouts/components/SettingPanel'
 import useSetting from '@/hooks/useSetting'
-import {appLoaded, goToLoginPage, Token} from '@/utils/common'
+import {goToLoginPage, Token} from '@/utils/common'
+import {AnimatePresence, motion} from 'framer-motion'
 
 // 应用整体布局
 const Layout = () => {
     const {getCurrentRoute} = useRoute()
-    const history = useHistory()
-    const pathname = history.location.pathname
     const isSmallScreen = useSmallScreen()
-    const [isSm, setIsSm] = useState<boolean>(isSmallScreen)
     const {getSetting} = useSetting()
+    const layoutMode = getSetting('system_theme_setting.layoutMode', 'default')
 
     const currentRoute = getCurrentRoute()
 
@@ -39,22 +37,6 @@ const Layout = () => {
         }
     }
 
-    // 监听屏幕大小
-    useEffect(() => {
-        if (isSm !== isSmallScreen) {
-            // 解决刷新后页面不显示的问题
-            window.$owl.appLoader()
-            setIsSm(isSmallScreen)
-            history.push('/')
-            setTimeout(() => {
-                history.push(pathname)
-                setTimeout(() => {
-                    appLoaded()
-                }, 600)
-            }, 300)
-        }
-    }, [isSmallScreen])
-
     // 判断是否登录
     if (!Token().value) {
         goToLoginPage()
@@ -71,7 +53,18 @@ const Layout = () => {
 
     return (
         <>
-            {isSmallScreen ? <SmLayout/> : RenderLayout(getSetting('system_theme_setting.layoutMode', 'default'))}
+            <AnimatePresence exitBeforeEnter initial={false}>
+                <motion.div
+                    key={isSmallScreen ? 'sm' : layoutMode}
+                    initial={{opacity: 0}}
+                    animate={{opacity: 1}}
+                    exit={{opacity: 0}}
+                    transition={{duration: 0.15}}
+                    className="h-full w-full"
+                >
+                    {isSmallScreen ? <SmLayout/> : RenderLayout(layoutMode)}
+                </motion.div>
+            </AnimatePresence>
             <SettingPanel/>
         </>
     )

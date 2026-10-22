@@ -1,4 +1,7 @@
 export default {
+    common: {
+        copy_success: '复制成功',
+    },
     login: {
         title: '登录',
         username: '用户名',
@@ -12,6 +15,11 @@ export default {
     not_found: {
         title: '抱歉，您访问的页面不存在。',
         back_home: '返回首页',
+    },
+    iframe: {
+        empty_url: 'Iframe 地址未配置',
+        load_failed: 'Iframe 页面加载失败',
+        reload: '重新加载',
     },
     theme_setting: {
         title: '主题配置',
@@ -60,6 +68,7 @@ export default {
         keep_alive: '全局页面缓存',
         dark_theme: '深色主题',
         accordion_menu: '手风琴菜单',
+        time_zone: '时区',
         locale: '语言',
         locale_en: 'English',
         locale_zh_CN: '简体中文'

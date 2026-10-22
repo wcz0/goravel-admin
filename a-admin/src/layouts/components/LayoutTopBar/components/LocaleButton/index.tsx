@@ -35,7 +35,8 @@ const LocaleButton = () => {
     }
 
     return (
-        <Dropdown placement="bottom"
+        <Dropdown getPopupContainer={() => document.getElementById('root')}
+                  placement="bottom"
                   arrow={{pointAtCenter: true}}
                   menu={{
                       items: items.map((i) => {
@@ -47,7 +48,7 @@ const LocaleButton = () => {
                       defaultSelectedKeys: [currentLocale],
                   }}>
             <div>
-                <IconButton icon="lucide:languages" onClick={(e) => e.preventDefault()}/>
+                <IconButton icon="ant-design:translation-outlined" onClick={(e) => e.preventDefault()}/>
             </div>
         </Dropdown>
     )

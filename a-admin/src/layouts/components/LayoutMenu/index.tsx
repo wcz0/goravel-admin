@@ -1,11 +1,11 @@
-import React, {useEffect, useMemo, useState} from 'react'
+import React, {useEffect, useMemo, useRef, useState} from 'react'
 import {useHistory} from 'react-router-dom'
 import {Menu} from 'antd'
 import qs from 'query-string'
 import useRoute from '@/routes'
 import {getFlattenRoutes} from '@/routes/helpers'
 import {Icon} from '@iconify/react'
-import {Scrollbars} from 'react-custom-scrollbars'
+import SimpleBar from 'simplebar-react'
 import useSetting from '@/hooks/useSetting'
 
 // 菜单
@@ -26,6 +26,8 @@ const LayoutMenu = (
     const history = useHistory()
     const pathname = history.location.pathname
     const currentComponent = qs.parseUrl(pathname).url.slice(1)
+
+    const lastClickIdRef = useRef(0)
 
     const {routes, defaultRoute, getCurrentRoute} = useRoute()
     const defaultSelectedKeys = [currentComponent || defaultRoute]
@@ -53,30 +55,33 @@ const LayoutMenu = (
         setSelectedKeys([current.path.split('?')[0], getListPath(current.path), ..._parents])
 
         if (mode == 'inline') {
-            setOpenKeys([...openKeys, ..._parents])
+            setOpenKeys((prev) => Array.from(new Set([...(prev || []), ..._parents])))
         }
     }
 
     useEffect(() => updateMenuStatus(), [pathname, customRoutes, collapsed])
 
-    // 获取菜单
-    const getMenus = (routes = []) => {
-        let menus = []
-        for (let route of routes) {
-            if (route.meta?.hide) {
-                continue
+    const menuItems = useMemo(() => {
+        const getMenus = (routes = []) => {
+            let menus = []
+            for (let route of routes) {
+                if (route.meta?.hide) {
+                    continue
+                }
+
+                menus.push({
+                    key: route.path.split('?')[0],
+                    label: route.meta.title,
+                    icon: <div className="!ml-[-2px]"><Icon icon={route.meta.icon} fontSize={18}/></div>,
+                    children: route.children ? getMenus(route.children) : null,
+                })
             }
 
-            menus.push({
-                key: route.path.split('?')[0],
-                label: route.meta.title,
-                icon: <div className="!ml-[-2px]"><Icon icon={route.meta.icon}/></div>,
-                children: route.children ? getMenus(route.children) : null,
-            })
+            return menus
         }
 
-        return menus
-    }
+        return getMenus(customRoutes)
+    }, [customRoutes])
 
     // 菜单点击事件
     const clickMenu = (e) => {
@@ -87,37 +92,69 @@ const LayoutMenu = (
             return
         }
 
-        currentRoute.component.preload().then(() => history.push(currentRoute.path))
+        const clickId = ++lastClickIdRef.current
+        currentRoute.component.preload().then(() => {
+            if (clickId !== lastClickIdRef.current) return
+            history.push(currentRoute.path)
+        })
     }
 
-    const splitPath = (path: string) => {
-        if(!path){
-            return ''
+    const pathMap = useMemo(() => {
+        const getMenuPaths = (pages) => {
+            const result = []
+
+            const traverse = (page, pathAccumulator) => {
+                const currentPath = [...pathAccumulator, page.path]
+                result.push(currentPath)
+
+                if (page.children && page.children.length > 0) {
+                    page.children.forEach(child => traverse(child, currentPath))
+                }
+            }
+
+            pages.forEach(page => traverse(page, []))
+            return result
         }
 
-        let arr = path.split('/')
-        let res = []
-        do {
-            res.push(arr.join('/'))
-            arr.pop()
-        } while (arr.length)
+        const list = getMenuPaths(customRoutes)
+        const result = new Map()
 
-        return res.filter(i => i)
+        list.forEach(items => {
+            const lastItem = items[items.length - 1] as string
+
+            if (lastItem.includes(':')) return
+
+            result.set(lastItem, items)
+        })
+
+        return result
+    }, [customRoutes])
+
+    const openChange = (keys: Array<any>) => {
+        const isOpen = keys.length > openKeys.length
+
+        // 没有开启 "手风琴" 或者 正在关闭菜单, 则直接返回
+        if (!isOpen || !getSetting('system_theme_setting.accordionMenu')) {
+            setOpenKeys(keys)
+            return
+        }
+
+        setOpenKeys(pathMap.get(keys[keys.length - 1]) || [])
     }
 
     return (
-        <Scrollbars autoHide>
+        <SimpleBar className="h-full" autoHide forceVisible="y">
             <Menu
                 className="!border-e-0 flex-1"
                 mode={mode}
                 theme={theme}
                 openKeys={openKeys}
                 selectedKeys={selectedKeys}
-                onOpenChange={(keys: Array<any>) => setOpenKeys(getSetting('system_theme_setting.accordionMenu') ? splitPath(keys[keys.length - 1]) : keys)}
+                onOpenChange={(keys: Array<any>) => openChange(keys)}
                 onClick={clickMenu}
-                items={getMenus(customRoutes)}
+                items={menuItems}
             />
-        </Scrollbars>
+        </SimpleBar>
     )
 }
 

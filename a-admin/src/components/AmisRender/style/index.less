@@ -30,12 +30,17 @@ body {
     --button-size-default-paddingLeft: 15px;
     --dialog-header-fontWeight: 600;
     --dialog-header-fontSize: 16px;
-    --dialog-default-border-radius: 6px;
+    --dialog-default-border-radius: 8px;
     --drawer-header-fontSize: 16px;
     --drawer-header-fontWeight: 600;
     --Switch-slider-transition: all .2s ease;
     --select-base-default-paddingTop: 1px;
     --select-base-default-paddingBottom: 1px;
+
+    --Pick-status-hover-top-border-color: var(--colors-brand-5);
+    --Pick-status-hover-bottom-border-color: var(--colors-brand-5);
+    --Pick-status-hover-right-border-color: var(--colors-brand-5);
+    --Pick-status-hover-left-border-color: var(--colors-brand-5);
 }
 
 .cxd-Picker-valueWrap {
@@ -45,6 +50,14 @@ body {
 }
 
 .cxd-Button {
+    border-radius: var(--borderRadius);
+}
+
+.cxd-Button--primary, .cxd-Button--success, .cxd-Button--warning, .cxd-Button--danger, .cxd-Button--info {
+    color: #fff;
+}
+
+.cxd-TreeSelect-popover > .cxd-Tree {
     border-radius: var(--borderRadius);
 }
 
@@ -131,6 +144,12 @@ body {
 
 .cxd-Table-contentWrap {
     padding-bottom: 15px;
+}
+
+/* 修复 CRUD 表格内部出现多余滚动条：让表格内容区域不再创建独立滚动容器，交由外层页面统一滚动 */
+.cxd-Table:not(.cxd-Table--autoFillHeight) .cxd-Table-content,
+.cxd-Table:not(.cxd-Table--autoFillHeight) .cxd-Table-contentWrap {
+    overflow-y: hidden !important;
 }
 
 .cxd-Card {
@@ -282,4 +301,14 @@ body {
     margin: 0 5px;
     padding: 0 5px;
     border-radius: var(--borderRadius);
+}
+
+.cxd-Toast {
+    padding: .3rem .8rem;
+    box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+    width: fit-content;
+}
+
+.cxd-Switch .text {
+    color: #fff !important;
 }

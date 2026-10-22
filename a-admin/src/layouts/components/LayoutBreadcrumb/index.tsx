@@ -1,14 +1,14 @@
-import React, {useEffect, useState} from 'react'
+import React, {useMemo} from 'react'
 import useRoute from '@/routes'
 import {Breadcrumb} from 'antd'
 import {useHistory} from 'react-router'
 import useSetting from '@/hooks/useSetting'
+import {AnimatePresence, motion} from 'framer-motion'
 
 // 面包屑
 const LayoutBreadcrumb = () => {
     const {routes, getCurrentRoute} = useRoute()
     const {getSetting} = useSetting()
-    const [breadcrumb, setBreadcrumb] = useState<any[]>([])
     const history = useHistory()
 
     // 当前路由
@@ -66,17 +66,29 @@ const LayoutBreadcrumb = () => {
         return list
     }
 
-    // 监听路由变化
-    useEffect(() => {
-        if (currentRoute) {
-            setBreadcrumb(getBreadcrumb() as any || [])
-        }
+    const breadcrumb = useMemo(() => {
+        if (!currentRoute) return []
+        return (getBreadcrumb() as any) || []
     }, [currentRoute, routes])
 
-    // 面包屑开关
-    if (getSetting('system_theme_setting.breadcrumb') === false) return (<div></div>)
+    const enabled = getSetting('system_theme_setting.breadcrumb') !== false
 
-    return (<Breadcrumb className="px-3" items={breadcrumb}/>)
+    return (
+        <AnimatePresence initial={false}>
+            {enabled && (
+                <motion.div
+                    key="layout-breadcrumb"
+                    className="origin-top-left overflow-hidden"
+                    initial={{opacity: 0, y: -4}}
+                    animate={{opacity: 1, y: 0}}
+                    exit={{opacity: 0, y: -4}}
+                    transition={{duration: 0.15, ease: 'easeInOut'}}
+                >
+                    <Breadcrumb className="px-3" items={breadcrumb}/>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    )
 }
 
 export default LayoutBreadcrumb
