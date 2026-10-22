@@ -13,7 +13,6 @@ type Kernel struct {
 
 func (kernel Kernel) Migrations() []schema.Migration {
 	return []schema.Migration{
-		&migrations.M20210101000002CreateCasbinRulesTable{},
 		&migrations.M20210101000002CreateJobsTable{},
 		&migrations.M20240417000001CreateAdminUsersTable{},
 		&migrations.M20240417000002CreateUsersTable{},
@@ -23,7 +22,6 @@ func (kernel Kernel) Migrations() []schema.Migration {
 		&migrations.M20240418000004CreateAdminPermissionsTable{},
 		&migrations.M20240418000005CreateAdminExtensionsTable{},
 		&migrations.M20240419000001CreateAdminRolesTable{},
-		&migrations.M20240423000001CreateCasbinRulesSecondTable{},
 		&migrations.M20240424000001CreateAdminRoleUsersTable{},
 		&migrations.M20240424000002CreateAdminRolePermissionsTable{},
 		&migrations.M20240424000003CreateAdminApisTable{},

@@ -21,8 +21,7 @@
 
 复制.env.example 为 .env
 修改 .env 中的配置
-创建数据库, 导入SQL文件
-或者
+创建数据库, 然后执行迁移和初始化数据
 ```shell
 go run . artisan migrate
 go run . artisan db:seed
@@ -46,4 +45,4 @@ go run .
 ## Roadmap
 
 [For Detail](https://github.com/goravel/goravel/issues?q=is%3Aissue+is%3Aopen)
-使用 goravel-authz 来编写权限相关
+权限相关由内置 RBAC（角色/权限/菜单）实现，不依赖外部授权包

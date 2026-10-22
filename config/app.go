@@ -27,7 +27,6 @@ import (
 	"github.com/goravel/redis"
 
 	"goravel/app/providers"
-	// authz "github.com/wcz0/goravel-authz"
 )
 
 // Boot Start all init methods of the current folder to bootstrap all config.
@@ -106,7 +105,6 @@ func init() {
 			&session.ServiceProvider{},
 			&redis.ServiceProvider{},
 			&cache.ServiceProvider{},
-			// &authz.ServiceProvider{},
 			&providers.AdminServiceProvider{},
 			&mysql.ServiceProvider{},
 		},

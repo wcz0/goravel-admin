@@ -12,7 +12,6 @@ require (
 	github.com/goravel/redis v1.4.0
 	github.com/stretchr/testify v1.10.0
 	github.com/wcz0/gamis/v6 v6.13.0
-	github.com/wcz0/goravel-authz v0.2.0
 	github.com/yitter/idgenerator-go v1.3.3
 	golang.org/x/text v0.27.0
 	google.golang.org/grpc v1.73.0
