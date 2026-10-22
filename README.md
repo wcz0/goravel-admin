@@ -15,6 +15,8 @@
 
 无须你编写任何前端代码, 就能创建一个好看的后台页面
 
+变更记录见 [CHANGELOG.md](./CHANGELOG.md)。
+
 ## Getting started
 
 复制.env.example 为 .env
