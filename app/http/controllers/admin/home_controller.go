@@ -5,8 +5,8 @@ import (
 
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
-	"github.com/wcz0/gamis"
-	"github.com/wcz0/gamis/renderers"
+	"github.com/wcz0/gamis/v6"
+	"github.com/wcz0/gamis/v6/renderers"
 )
 
 type HomeController struct {
