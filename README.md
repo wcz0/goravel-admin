@@ -1,101 +1,139 @@
 <div align="center">
-<img src="https://www.goravel.dev/logo.png" width="300" alt="Logo">
+<img src="https://www.goravel.dev/logo.png" width="300" alt="Goravel Admin">
 
-[![Doc](https://pkg.go.dev/badge/github.com/goravel/framework)](https://pkg.go.dev/github.com/goravel/framework)
-[![Go](https://img.shields.io/github/go-mod/go-version/goravel/framework)](https://go.dev/)
-[![Release](https://img.shields.io/github/release/goravel/framework.svg)](https://github.com/goravel/framework/releases)
-[![Test](https://github.com/goravel/framework/actions/workflows/test.yml/badge.svg)](https://github.com/goravel/framework/actions)
-[![Report Card](https://goreportcard.com/badge/github.com/goravel/framework)](https://goreportcard.com/report/github.com/goravel/framework)
-[![Codecov](https://codecov.io/gh/goravel/framework/branch/master/graph/badge.svg)](https://codecov.io/gh/goravel/framework)
-![License](https://img.shields.io/github/license/goravel/framework)</div>
+[![Go](https://img.shields.io/github/go-mod/go-version/wcz0/goravel-admin)](https://go.dev/)
+[![Release](https://img.shields.io/github/v/release/wcz0/goravel-admin)](https://github.com/wcz0/goravel-admin/releases)
+[![Go Report Card](https://goreportcard.com/badge/github.com/wcz0/goravel-admin)](https://goreportcard.com/report/github.com/wcz0/goravel-admin)
+[![License](https://img.shields.io/github/license/wcz0/goravel-admin)](./LICENSE)
 
-## About Goravel-Admin
+</div>
 
-使用百度amis 低代码平台, 来快速创建后台
+# Goravel Admin
 
-无须你编写任何前端代码, 就能创建一个好看的后台页面
+**English** | [简体中文](./README.zh-CN.md)
 
-变更记录见 [CHANGELOG.md](./CHANGELOG.md)。
+An installable admin panel for the [Goravel](https://github.com/goravel/goravel) framework, built on the
+[amis](https://aisuda.bce.baidu.com/amis/) low-code renderer.
 
-## 版本对应
+The backend speaks the exact same HTTP contract as [owl-admin](https://github.com/slowlyo/owl-admin) v4.7.5, so the
+shipped owl-admin frontend build runs unchanged — no frontend code to write, no separate build pipeline.
 
-goravel-admin 以**可安装扩展包**的形式提供，版本号与它适配的 Goravel 框架对齐（与 `goravel/gin`、`goravel/redis` 的做法一致）。
+- **Installable package** — register one service provider, migrations self-register, nothing else to wire up.
+- **amis schema everywhere** — every list, form and detail page is generated on the server with
+  [gamis](https://github.com/wcz0/gamis), so screens are pure Go.
+- **Built-in RBAC** — users, roles, permissions and menus, no external authorization package.
+- **Owl-admin parity** — captcha, chunked upload, xlsx export, custom pages, dynamic APIs, relationships and an
+  extension registry are all implemented (see [Feature parity](#feature-parity)).
 
-| goravel-admin | goravel/framework | gamis | amis | owl-admin 前端 |
+See [CHANGELOG.md](./CHANGELOG.md) for changes, and [docs/releases](./docs/releases) for per-version release notes.
+
+## Version matrix
+
+`goravel-admin` follows the Goravel framework version it targets (the same convention as `goravel/gin` and
+`goravel/redis`).
+
+| goravel-admin | goravel/framework | gamis | amis | owl-admin frontend |
 | --- | --- | --- | --- | --- |
-| v1.18.x（main） | v1.18.x | v6.13.x | 6.13.0 | v4.7.5 |
-| v1.17.x（branch `goravel-1.17`） | v1.17.x | v6.13.x | 6.13.0 | v4.7.5 |
+| v1.18.x (`main`) | v1.18.x | v6.13.x | 6.13.0 | v4.7.5 |
+| v1.17.x (branch `goravel-1.17`) | v1.17.x | v6.13.x | 6.13.0 | v4.7.5 |
 
-Goravel 每个 minor 版本都会调整契约接口，因此**不同 goravel 版本由不同分支维护**，而不是用一套代码兼容全部：
+Each Goravel minor release changes its contract interfaces, so **every Goravel minor gets its own branch** instead of
+one codebase trying to satisfy all of them:
 
-- `main`：跟随最新的 goravel/framework（当前 v1.18），发布 tag 形如 `v1.18.x`
-- `goravel-1.17`：适配 v1.17 契约，发布 `v1.17.x`（已跑通安装流程，与 goravel-authz 的分支约定一致）
+- `main` tracks the latest `goravel/framework` (currently v1.18) and releases tags like `v1.18.x`.
+- `goravel-1.17` targets the v1.17 contracts and releases `v1.17.x`.
 
-> 已实测：v1.18 的代码直接降到 v1.17 无法编译（`http.Middleware` 由接口改回 `func(Context)`，`Request().Validate` 与 `Validation().Make` 的入参由 `map[string]any` 变回 `map[string]string`），所以低版本必须走对应分支。
+> Verified: the v1.18 code base does not compile against v1.17 (`http.Middleware` flips back from an interface to
+> `func(Context)`, and `Request().Validate` / `Validation().Make` take `map[string]string` again instead of
+> `map[string]any`). Older minors must use their own branch.
 
-### 为什么没有 goravel-1.16
+### Why there is no `goravel-1.16` branch
 
-Goravel 1.16 缺少支撑"扩展包"机制的前置能力，无法用同一套安装方式支持：
+Goravel 1.16 lacks the primitives the package-install mechanism depends on:
 
-- `foundation.Setup()` 不存在（1.17 才引入），宿主无法用 `WithProviders / WithMigrations` 组装应用
-- `packages.Setup` 没有 `Paths()`，`modify` 包也没有 `RegisterProvider / RegisterMigration`，只有底层的 `GoFile + match.Providers`
-- 1.16 的宿主在 `config/app.go` 里以 `config.Add("app", {"providers": [...]})` 注册 Provider，安装器要改的文件位置也不同
+- `foundation.Setup()` does not exist (introduced in 1.17), so a host app cannot be assembled with
+  `WithProviders` / `WithMigrations`.
+- `packages.Setup` has no `Paths()`, and the `modify` package has no `RegisterProvider` / `RegisterMigration` — only
+  the low-level `GoFile + match.Providers`.
+- A 1.16 host registers providers in `config/app.go` via `config.Add("app", {"providers": [...]})`, so the installer
+  would have to patch a different file.
 
-因此 1.16 需要独立的应用骨架与安装器实现，属于另一套工程，当前不支持。
+Supporting 1.16 would therefore mean a separate application skeleton and a separate installer — a different project.
+It is not supported.
+
+## Requirements
+
+- Go 1.25 or newer
+- `goravel/framework` v1.18.x on `main`, v1.17.x on `goravel-1.17`
+- Any database supported by Goravel (SQLite, MySQL, PostgreSQL, SQL Server)
 
 ## Getting started
 
-### 1. 引入扩展包
+### 1. Require the package
 
 ```shell
 go get github.com/wcz0/goravel-admin@latest
 ```
 
-### 2. 安装（注册 ServiceProvider + 可选配置骨架）
+### 2. Install (register the service provider, optionally publish config)
 
 ```shell
 go run github.com/wcz0/goravel-admin/setup install
 ```
 
-安装做了什么：
+The installer:
 
-- 在 `bootstrap/providers.go` 里注册 `&admin.ServiceProvider{}`
-- 若 `config/admin.go` 不存在，生成一份带说明的覆盖骨架（已存在则不覆盖）
-- **不会改动** `bootstrap/migrations.go`：迁移由 Provider 在 Boot 阶段通过 `facades.Schema().Register` 自动挂载
+- registers `&admin.ServiceProvider{}` in `bootstrap/providers.go`
+- writes an annotated `config/admin.go` override skeleton **if** the file does not exist yet (never overwrites)
+- **does not touch** `bootstrap/migrations.go` — migrations are mounted by the provider during `Boot` through
+  `facades.Schema().Register`
 
-卸载：
+To uninstall:
 
 ```shell
 go run github.com/wcz0/goravel-admin/setup uninstall
 ```
 
-### 3. 跑迁移并初始化后台数据
+### 3. Migrate and seed
 
 ```shell
 go run . artisan key:generate
 go run . artisan migrate
 go run . artisan admin:init
-go run . 
+go run .
 ```
 
-打开 `http://host:port/admin`，登录账号 `admin`，密码 `admin`（`admin:init` 创建，请及时修改）。
+Open `http://host:port/admin` and sign in with `admin` / `admin` (created by `admin:init` — change it immediately).
 
-### 4. 可选：发布资源以便自定义
+### 4. Optional: publish assets for customization
 
 ```shell
 go run . artisan vendor:publish --package=github.com/wcz0/goravel-admin --tag=goravel-admin-lang
 go run . artisan vendor:publish --package=github.com/wcz0/goravel-admin --tag=goravel-admin-assets
 ```
 
-## 配置
+### Console commands
 
-默认配置由扩展包提供（见 `config/admin.go`），宿主无需复制。所有键都可以用 `ADMIN_*` 环境变量覆盖，例如 `ADMIN_ROUTE_PREFIX`、`ADMIN_ROUTE_PATH`、`ADMIN_ASSETS_PATH`、`ADMIN_AUTH_GUARD`、`ADMIN_LOGIN_CAPTCHA`。
+| Command | Purpose |
+| --- | --- |
+| `admin:init` | Create the administrator/operator roles, home menu and the default `admin` account |
+| `admin:create-user` | Create an administrator (`--username`, `--password`, `--name`, `--roles`) |
+| `admin:reset-password` | Reset a password (`--username`, `--password`; a random 12-char password is generated when omitted) |
+| `admin:doctor` | Sanity-check `APP_KEY`, database connectivity, the 13 core tables, admin accounts, home menu uniqueness and broken menu parents |
 
-`admin.auth.guard` 默认是 `admin`，登录签发的 token 与中间件校验都读取这个值，宿主不要只改 `config/auth.go` 而漏改这里。
+## Configuration
 
-## 示例项目
+Defaults ship with the package (`config/admin.go`), so hosts do not need to copy anything. Every key can be overridden
+with an `ADMIN_*` environment variable, for example `ADMIN_ROUTE_PREFIX`, `ADMIN_ROUTE_PATH`, `ADMIN_ASSETS_PATH`,
+`ADMIN_AUTH_GUARD`, `ADMIN_LOGIN_CAPTCHA`, `ADMIN_SHOW_DEVELOPMENT_TOOLS`.
 
-`example/` 是一个最小宿主应用，通过 `replace` 指向本地包，用来验证 `package:install` 全流程：
+`admin.auth.guard` defaults to `admin`. Login token issuing and middleware verification both read it, so do not change
+`config/auth.go` alone and leave this behind.
+
+## Example application
+
+`example/` is a minimal host app that points at the local package through `replace`; it is how the whole
+`setup install` flow is verified:
 
 ```shell
 cd example
@@ -104,42 +142,74 @@ go run . artisan migrate && go run . artisan admin:init
 go run .
 ```
 
-## 可用功能
+## Feature parity
 
-前端资源直接来自 owl-admin v4.7.5，因此后端接口与 owl-admin 保持同一套契约：
+The frontend is the owl-admin v4.7.5 build, so the backend implements the same contract:
 
-| 能力 | 接口 | 说明 |
+| Capability | Endpoint | Notes |
 | --- | --- | --- |
-| 登录 / 登出 | `POST /login`、`GET /logout` | 验证码开启时强制校验 |
-| 验证码 | `GET /captcha` | 返回 data URI 图片 + 一次性会话 id，答案存 Cache |
-| 当前用户 | `GET /current-user` | 返回姓名、头像与顶部下拉菜单 schema |
-| 个人资料 | `GET/PUT /user_setting` | 改头像、姓名、密码（需旧密码） |
-| 菜单 | `GET /menus` | 按权限过滤，支持路由/外链/iframe/自定义页面四种类型 |
-| 系统设置 | `GET/POST /_settings` | 主题、语言等，含 `enabled_extensions` 与 `show_development_tools` |
-| 自定义页面 | `GET /page_schema?sign=` | 页面结构存 `admin_pages`，菜单 `url_type=4` 时使用 |
-| 图标搜索 | `GET /_iconify_search` | 内嵌 22 万条 iconify 图标名 |
-| 上传 | `upload_image`、`upload_file`、`upload_rich` | 走 `admin.upload.disk` 与按类型分目录 |
-| 分块上传 | `upload_chunk_start`、`upload_chunk`、`upload_chunk_finish` | md5 校验 + 目标目录白名单 + 脚本后缀拦截 |
-| 导出 | 列表 `_action=export` → `_download_export` | xlsx 生成 + HMAC 签名 + 有效期，防路径穿越 |
-| 后台管理 | `system/admin_users`、`admin_roles`、`admin_permissions`、`admin_menus` | 内置 RBAC |
-| 开发者工具 | `dev_tools/pages`、`apis`、`relationships`、`extensions` | 需 `ADMIN_SHOW_DEVELOPMENT_TOOLS=true` |
+| Login / logout | `POST /login`, `GET /logout` | Captcha enforced when enabled |
+| Captcha | `GET /captcha` | Data-URI image plus a single-use session id; the answer lives in the cache |
+| Current user | `GET /current-user` | Name, avatar and the top-bar dropdown schema |
+| Profile | `GET/PUT /user_setting` | Avatar, name, password (old password required) |
+| Menus | `GET /menus` | Permission filtered; route, external link, iframe and custom page types |
+| Settings | `GET/POST /_settings` | Theme, locale, `enabled_extensions`, `show_development_tools` |
+| Custom pages | `GET /page_schema?sign=` | Schema stored in `admin_pages`, used by menus with `url_type=4` |
+| Icon search | `GET /_iconify_search` | 220k iconify names embedded in the binary |
+| Upload | `upload_image`, `upload_file`, `upload_rich` | Uses `admin.upload.disk` with per-type directories |
+| Chunked upload | `upload_chunk_start`, `upload_chunk`, `upload_chunk_finish` | md5 per part, target directory allow-list, script extensions rejected |
+| Export | list `_action=export` → `_download_export` | xlsx generation, HMAC-signed expiring URL, traversal-safe |
+| Admin management | `system/admin_users`, `admin_roles`, `admin_permissions`, `admin_menus` | RBAC built in |
+| Dev tools | `dev_tools/pages`, `apis`, `relationships`, `extensions` | Requires `ADMIN_SHOW_DEVELOPMENT_TOOLS=true` |
 
-### 与 owl-admin 的差异
+### Differences from owl-admin
 
-owl-admin 是 PHP 运行时，部分能力在 Go 的静态编译模型下没有等价实现，下面是明确的差异：
+owl-admin runs on PHP; some of its features have no equivalent under Go's static compilation model. The honest list:
 
-| owl-admin 能力 | 本包的处理 |
+| owl-admin capability | This package |
 | --- | --- |
-| 扩展动态安装（zip 投放 + 运行时注册 PSR-4） | **不可行**。`dev_tools/extensions` 只维护「扩展名单 + 启停状态」，扩展代码需在宿主编译期注册；`enabled_extensions` 会照常下发给前端 |
-| 代码生成器（读表 → 生成 PHP Model/Controller/Service/Migration） | **未实现**。产物是 PHP + Eloquent 专属，Go 侧需重写为 struct/控制器/迁移生成器，属独立工程 |
-| 可视化编辑器（amis JSON → `amis()->Xxx()` PHP 链式代码） | **不可行**。Go 没有等价的 amis DSL，只保留了 `/dev_tools/editor` 的前端入口 |
-| 动态 API 模板（运行时写 PHP 类并即时生效） | **部分实现**。接口记录（路径/模板/参数）可维护，10 个内置模板只作为元信息，运行时分发尚未接入 |
-| 动态关联（Eloquent `resolveRelationUsing` 运行时挂载） | **部分实现**。可登记关联配置并给出 `preview_code`，Goravel 的关联需写进 struct，不会即时生效 |
-| 多模块 / 多子后台 | **未实现**。单后台场景建议用租户字段或独立部署，复制整套 7 张表成本过高 |
-| `admin:ide-helper`（PHPStorm 元数据） | **不适用**。Go 由 gopls 提供补全，无需生成桩文件 |
+| Runtime extension install (drop a zip, register PSR-4 on the fly) | **Not possible.** `dev_tools/extensions` only keeps a registry with enable/disable state; extension code must be registered at host compile time. `enabled_extensions` is still reported to the frontend. |
+| Code generator (read tables → generate PHP model/controller/service/migration) | **Not implemented.** The output is PHP + Eloquent specific; a Go version would need struct/controller/migration generators — a project of its own. |
+| Visual editor (amis JSON → `amis()->Xxx()` PHP chains) | **Not possible.** Go has no equivalent amis DSL; only the `/dev_tools/editor` frontend entry point is kept. |
+| Dynamic API templates (write PHP classes at runtime and take effect instantly) | **Partial.** API records (path/template/args) are manageable, and the 10 built-in templates are metadata only; runtime dispatch is not wired yet. |
+| Dynamic relationships (`resolveRelationUsing` at runtime) | **Partial.** Relationship configs are stored and `preview_code` is generated, but Goravel relationships live on the struct and do not take effect at runtime. |
+| Multi-module / multiple sub-admins | **Not implemented.** For multi-tenant cases prefer a tenant column or separate deployments; duplicating all 7 tables per module is too costly. |
+| `admin:ide-helper` (PHPStorm metadata) | **Not applicable.** gopls provides completion in Go; no stub files needed. |
 
-## Roadmap
+## Testing
 
-[For Detail](https://github.com/goravel/goravel/issues?q=is%3Aissue+is%3Aopen)
+Unit tests plus an end-to-end contract smoke test live in the repo:
 
-权限相关由内置 RBAC（角色/权限/菜单）实现，不依赖外部授权包（已移除 goravel-authz）。
+```shell
+go test ./...
+```
+
+The smoke test drives every endpoint the owl-admin frontend relies on against a running instance:
+
+```shell
+cd example
+go run . artisan migrate && go run . artisan admin:init
+go run . artisan admin:create-user --username smoke --password 'Smoke@12345'
+# in another shell
+BASE=http://127.0.0.1:3000 python example/smoke_admin.py
+```
+
+## Releasing
+
+Release notes are written in English and stored per version under [`docs/releases`](./docs/releases):
+
+```shell
+git tag -a v1.18.0 -m "v1.18.0"
+git push origin v1.18.0
+gh release create v1.18.0 --title "v1.18.0" --notes-file docs/releases/v1.18.0.md
+```
+
+## Credits
+
+- [owl-admin](https://github.com/slowlyo/owl-admin) — the original PHP implementation and the frontend build
+- [gamis](https://github.com/wcz0/gamis) — amis renderers for Go
+- [amis](https://aisuda.bce.baidu.com/amis/) — the low-code renderer itself
+
+## License
+
+MIT. See [LICENSE](./LICENSE).

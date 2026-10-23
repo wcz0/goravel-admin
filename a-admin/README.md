@@ -1,31 +1,47 @@
-# amis 后台前端实现
+# amis admin frontend
 
-**Owl-admin 后台思路**
+**English** | [简体中文](./README.zh-CN.md)
 
-使用amis低代码框架 实现 后台快速开发
+This directory holds the [owl-admin](https://github.com/slowlyo/owl-admin) v4.7.5 frontend sources (amis 6.13.0), kept
+in-repo so the build can be reproduced.
 
-可以使用各种语言实现后台api
+`goravel-admin` does **not** require a frontend build for normal use: the compiled output is committed under
+[`../assets/dist`](../assets/dist) and embedded into the Go binary through `//go:embed` in [`../resources.go`](../resources.go).
+Rebuild only when you change frontend code:
 
-### 后端库使用
-Go amis实现 [https://github.com/wcz0/gamis](https://github.com/wcz0/gamis)
-PHP amis 实现 [https://github.com/slowlyo/amis-renderer](https://github.com/slowlyo/amis-renderer)
-    php 推荐使用完整项目 [https://github.com/slowlyo/owl-admin](https://github.com/slowlyo/owl-admin)
+```shell
+# install dependencies
+pnpm install
 
-### 后端需要实现的api接口文档
-Apifox地址 [https://owl-admin.apifox.cn](https://owl-admin.apifox.cn)
+# dev server
+pnpm run dev
 
-具体使用如何使用, 文档地址 [https://doc.owladmin.com/#/examples/custom-login](https://doc.owladmin.com/#/examples/custom-login)
+# production build, then copy the result into the embedded directory
+pnpm run build
+rm -rf ../assets/dist && cp -r dist ../assets/dist
+```
 
-demo地址 [http://demo.owladmin.com/admin](http://demo.owladmin.com/admin)
+## Owl-admin in a nutshell
 
-amis 组件文档地址 [https://aisuda.bce.baidu.com/amis/zh-CN/components/page](https://aisuda.bce.baidu.com/amis/zh-CN/components/page)
+A backend built with amis is a set of JSON schemas served by an API; the frontend renders them, so the same admin UI can
+be produced by any backend language.
 
+### Backend libraries
 
-### 其他定义
-可以修改前端代码
+- Go: [gamis](https://github.com/wcz0/gamis) — used by this package
+- PHP: [amis-renderer](https://github.com/slowlyo/amis-renderer), or the full project
+  [owl-admin](https://github.com/slowlyo/owl-admin)
 
+### API reference
 
-返回格式
+- Apifox: <https://owl-admin.apifox.cn>
+- Usage docs: <https://doc.owladmin.com/#/examples/custom-login>
+- Demo: <http://demo.owladmin.com/admin>
+- amis component docs: <https://aisuda.bce.baidu.com/amis/zh-CN/components/page>
+
+### Response envelope
+
+Every JSON endpoint answers with this shape:
 
 ```json
 {
@@ -36,15 +52,5 @@ amis 组件文档地址 [https://aisuda.bce.baidu.com/amis/zh-CN/components/page
 }
 ```
 
-```
-
-
-// 初始化项目
-pnpm install
-
-// 开发模式
-pnpm run dev
-
-// 构建
-pnpm run build
-```
+`status = 0` means success; anything else is treated as an error and `msg` is shown as a toast. `doNotDisplayToast = 1`
+suppresses that toast — used by endpoints such as `page_schema`, where a missing page is expected.
