@@ -115,7 +115,7 @@ func (r *RoleController) Store(ctx http.Context) http.Response {
 
 func (r *RoleController) Update(ctx http.Context) http.Response {
 	// 验证输入
-	validation, err := ctx.Request().Validate(map[string]any{
+	validation, err := ctx.Request().Validate(map[string]string{
 		"id":   "required|number",
 		"name": "required|string|max:255",
 		"slug": "required|string|max:255",
@@ -139,7 +139,7 @@ func (r *RoleController) Update(ctx http.Context) http.Response {
 
 func (r *RoleController) Destroy(ctx http.Context) http.Response {
 	// 验证输入
-	validation, err := ctx.Request().Validate(map[string]any{
+	validation, err := ctx.Request().Validate(map[string]string{
 		"id": "required|number",
 	})
 	if err != nil {
@@ -155,7 +155,7 @@ func (r *RoleController) Destroy(ctx http.Context) http.Response {
 // AssignPermissions 为角色分配权限
 func (r *RoleController) AssignPermissions(ctx http.Context) http.Response {
 	// 验证输入
-	validation, err := ctx.Request().Validate(map[string]any{
+	validation, err := ctx.Request().Validate(map[string]string{
 		"role_id":        "required|number",
 		"permission_ids": "required|array",
 	})

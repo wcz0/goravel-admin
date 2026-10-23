@@ -7,25 +7,19 @@ import (
 	"github.com/wcz0/goravel-admin/services"
 )
 
-// adminLang 根据后台设置切换当前请求的语言环境。
-type adminLang struct{}
-
 // AdminLang 返回后台多语言中间件。
+//
+// Goravel 1.17 的 http.Middleware 是 func(Context) 类型（1.18 起改为带
+// Signature/Handle 的接口），因此这里以闭包形式实现。
 func AdminLang() http.Middleware {
-	return &adminLang{}
-}
-
-func (m *adminLang) Signature() string {
-	return "admin.lang"
-}
-
-func (m *adminLang) Handle(ctx http.Context) {
-	config := facades.Config()
-	setting := services.NewAdminSettingService()
-	locale, ok := setting.Get("admin_locale", config.GetString("app.locale"), false).(string)
-	if !ok || locale == "" {
-		locale = config.GetString("app.locale")
+	return func(ctx http.Context) {
+		config := facades.Config()
+		setting := services.NewAdminSettingService()
+		locale, ok := setting.Get("admin_locale", config.GetString("app.locale"), false).(string)
+		if !ok || locale == "" {
+			locale = config.GetString("app.locale")
+		}
+		facades.App().SetLocale(ctx, locale)
+		ctx.Request().Next()
 	}
-	facades.App().SetLocale(ctx, locale)
-	ctx.Request().Next()
 }

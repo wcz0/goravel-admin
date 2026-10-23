@@ -3,10 +3,10 @@ module goravel
 go 1.25.0
 
 require (
-	github.com/goravel/framework v1.18.0
-	github.com/goravel/gin v1.18.0
-	github.com/goravel/redis v1.18.0
-	github.com/goravel/sqlite v1.18.0
+	github.com/goravel/framework v1.17.3
+	github.com/goravel/gin v1.17.1
+	github.com/goravel/redis v1.17.1
+	github.com/goravel/sqlite v1.17.0
 	github.com/stretchr/testify v1.11.1
 	github.com/wcz0/goravel-admin v0.0.0-00010101000000-000000000000
 )
@@ -45,11 +45,9 @@ require (
 	github.com/duke-git/lancet/v2 v2.3.2 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
-	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.13 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
-	github.com/gin-contrib/timeout v1.2.1 // indirect
 	github.com/gin-gonic/gin v1.12.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -63,6 +61,10 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gookit/color v1.6.0 // indirect
+	github.com/gookit/filter v1.2.3 // indirect
+	github.com/gookit/goutil v0.7.1 // indirect
+	github.com/gookit/validate v1.5.6 // indirect
+	github.com/goravel/file-rotatelogs/v2 v2.4.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
@@ -86,6 +88,7 @@ require (
 	github.com/ncruces/go-sqlite3 v0.25.0 // indirect
 	github.com/ncruces/go-sqlite3/gormlite v0.24.0 // indirect
 	github.com/ncruces/julianday v1.0.0 // indirect
+	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/pterm/pterm v0.12.83 // indirect
@@ -115,7 +118,6 @@ require (
 	github.com/xrash/smetrics v0.0.0-20250705151800-55b8f293f342 // indirect
 	go.mongodb.org/mongo-driver/v2 v2.5.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.69.0 // indirect
 	go.opentelemetry.io/contrib/propagators/b3 v1.44.0 // indirect
 	go.opentelemetry.io/otel v1.44.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.20.0 // indirect
@@ -128,6 +130,7 @@ require (
 	go.opentelemetry.io/otel/exporters/stdout/stdoutlog v0.20.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.44.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.44.0 // indirect
+	go.opentelemetry.io/otel/exporters/zipkin v1.39.0 // indirect
 	go.opentelemetry.io/otel/log v0.20.0 // indirect
 	go.opentelemetry.io/otel/metric v1.44.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.44.0 // indirect

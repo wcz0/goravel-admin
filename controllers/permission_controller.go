@@ -47,7 +47,7 @@ func (p *PermissionController) Store(ctx http.Context) http.Response {
 		return p.ControllerImpl.Service.QuickEditItem(ctx)
 	}
 	// 验证输入
-	validation, err := ctx.Request().Validate(map[string]any{
+	validation, err := ctx.Request().Validate(map[string]string{
 		"parent_id":   "number",
 		"name":        "required|string|max_len:255",
 		"slug":        "required|string|max_len:255",

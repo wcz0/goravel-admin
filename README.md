@@ -23,16 +23,26 @@ goravel-admin 以**可安装扩展包**的形式提供，版本号与它适配�
 
 | goravel-admin | goravel/framework | gamis | amis | owl-admin 前端 |
 | --- | --- | --- | --- | --- |
-| v1.18.x（main） | v1.18.x | v6.13.x | 6.13.0 | v4.7.5 |
-| v1.17.x（branch `goravel-1.17`） | v1.17.x | 待移植 | 6.13.0 | v4.7.5 |
+| v1.18.x（branch `main`） | v1.18.x | v6.13.x | 6.13.0 | v4.7.5 |
+| v1.17.x（branch `goravel-1.17`，**本分支**） | v1.17.x | v6.13.x | 6.13.0 | v4.7.5 |
 | v1.16.x（branch `goravel-1.16`） | v1.16.x | 待移植 | 6.13.0 | v4.7.5 |
 
 Goravel 每个 minor 版本都会调整契约接口，因此**不同 goravel 版本由不同分支维护**，而不是用一套代码兼容全部：
 
 - `main`：跟随最新的 goravel/framework（当前 v1.18），发布 tag 形如 `v1.18.x`
-- `goravel-1.17` / `goravel-1.16`：在对应分支上适配框架接口差异后发布 `v1.17.x` / `v1.16.x`（与 goravel-authz 的分支约定一致）
+- `goravel-1.17`：适配 v1.17 契约，发布 `v1.17.x`（本分支，已跑通安装流程）
+- `goravel-1.16`：适配 v1.16 契约，发布 `v1.16.x`
 
-> 已实测：v1.18 的代码直接降到 v1.17 无法编译（`Request().Validate` 的入参类型由 `map[string]any` 变为 `map[string]string`，`http.Middleware` 契约也发生了变化），所以低版本必须走对应分支。
+> 已实测：v1.18 的代码直接降到 v1.17 无法编译（`http.Middleware` 由接口改回 `func(Context)`，`Request().Validate` 与 `Validation().Make` 的入参由 `map[string]any` 变回 `map[string]string`），所以低版本必须走对应分支。
+
+### 本分支（goravel-1.17）与 main 的差异
+
+只改了框架契约相关的地方，业务逻辑与 `main` 保持一致：
+
+- `middleware/*.go`：三个中间件由实现 `http.Middleware` 接口改为返回闭包 `func(ctx http.Context)`
+- `controllers/*`：`ctx.Request().Validate(...)` 的规则字面量由 `map[string]any` 改为 `map[string]string`
+- `controllers/base_controller.go`：删除 `anyRules()` 转换层，直接把 `map[string]string` 交给 `facades.Validation().Make`
+- `go.mod`：`goravel/framework v1.17.3`；`example/go.mod` 同步 `gin v1.17.1`、`redis v1.17.1`、`sqlite v1.17.0`
 
 ## Getting started
 

@@ -45,7 +45,7 @@ func (a *AuthController) Logout(ctx http.Context) http.Response {
 }
 
 func (a *AuthController) Register(ctx http.Context) http.Response {
-    validator, err := ctx.Request().Validate(map[string]any{
+    validator, err := ctx.Request().Validate(map[string]string{
         "username": "required|string|min_len:3|max_len:32",
         "password": "required|string|min_len:5|max_len:32",
     })

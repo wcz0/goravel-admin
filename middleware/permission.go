@@ -7,22 +7,16 @@ import (
 	"github.com/wcz0/goravel-admin/response"
 )
 
-// permission 校验当前用户是否拥有访问该路由的权限。
-type permission struct{}
-
 // Permission 返回后台权限中间件。
+//
+// Goravel 1.17 的 http.Middleware 是 func(Context) 类型（1.18 起改为带
+// Signature/Handle 的接口），因此这里以闭包形式实现。
 func Permission() http.Middleware {
-	return &permission{}
-}
-
-func (m *permission) Signature() string {
-	return "admin.permission"
-}
-
-func (m *permission) Handle(ctx http.Context) {
-	if core.NewPermission().PermissionIntercept(ctx) {
-		_ = ctx.Response().Json(http.StatusOK, response.PermissionError).Abort()
-		return
+	return func(ctx http.Context) {
+		if core.NewPermission().PermissionIntercept(ctx) {
+			_ = ctx.Response().Json(http.StatusOK, response.PermissionError).Abort()
+			return
+		}
+		ctx.Request().Next()
 	}
-	ctx.Request().Next()
 }

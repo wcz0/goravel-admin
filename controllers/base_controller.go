@@ -25,15 +25,6 @@ func NewController() *Controller {
 	}
 }
 
-// anyRules 将字符串规则表转换为框架校验器需要的 map[string]any。
-func anyRules(rules map[string]string) map[string]any {
-	out := make(map[string]any, len(rules))
-	for field, rule := range rules {
-		out[field] = rule
-	}
-	return out
-}
-
 // normalizeIntInput 将声明为 int 规则的字段值统一转换为整型，避免字符串导致的校验失败。
 func normalizeIntInput(input map[string]any, rules map[string]string) {
 	for field, rule := range rules {
@@ -83,9 +74,9 @@ func handleValidationErrors(ctx http.Context, handler *response.ErrorHandler, ru
 		err       error
 	)
 	if messages != nil {
-		validator, err = facades.Validation().Make(ctx, input, anyRules(rules), validationPkg.Messages(messages))
+		validator, err = facades.Validation().Make(ctx, input, rules, validationPkg.Messages(messages))
 	} else {
-		validator, err = facades.Validation().Make(ctx, input, anyRules(rules))
+		validator, err = facades.Validation().Make(ctx, input, rules)
 	}
 	if err != nil {
 		return true, handler.FailMsg(ctx, err.Error())

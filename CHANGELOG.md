@@ -6,6 +6,7 @@
 
 ### Added
 
+- **新增 `goravel-1.17` 支持线（本分支）**，适配 goravel/framework v1.17.3；`example/go.mod` 同步 `gin v1.17.1`、`redis v1.17.1`、`sqlite v1.17.0`。
 - 新增 `example/` 最小宿主应用，用于验证 `package:install` 全流程（注册 Provider、迁移、`admin:init`、登录与列表接口）。
 - 新增 `setup install` / `setup uninstall`：安装器只注册 ServiceProvider 并生成可选配置骨架，不再改动宿主 `bootstrap/migrations.go`。
 - 新增 `migrations.All()` 与 `tools.AuthGuard()`。
@@ -28,9 +29,12 @@
 
 - 移除 `goravel-authz` 依赖，以及遗留的 Casbin 配置、`admin_rule` 模型、`casbin_rules` 相关迁移和数据库导出文件；权限完全由内置 RBAC 实现。
 
-### Known issues
+### Compatibility
 
-- 已实测 v1.18 代码无法直接降级编译到 goravel/framework v1.17（`Request().Validate` 入参类型与 `http.Middleware` 契约变更），1.17 / 1.16 支持需要独立分支适配，尚未提供。
+- 本分支对应 goravel/framework v1.17.x。与 `main`（v1.18）的差异仅在框架契约层：
+  - `middleware/*.go` 改为返回 `func(ctx http.Context)`（1.17 的 `http.Middleware` 是函数类型）
+  - 校验规则字面量改为 `map[string]string`，并移除 `anyRules()` 转换层
+- v1.16 尚未提供对应分支。
 
 ## [1.0.0] - 2025-11-27
 
