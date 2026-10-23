@@ -85,6 +85,5 @@ export default {
         preview: 'Preview',
         edit: 'Edit',
         editor: 'Visual Editor',
-        get_php_code: 'Get PHP Code',
     }
 }
