@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -79,9 +80,45 @@ func (a *AdminUserService) List(ctx http.Context) http.Response {
 	})
 }
 
+// Export 导出用户列表为 xlsx。
+//
+// 按当前筛选条件取全量数据（不分页），返回签名后的下载信息。
 func (a *AdminUserService) Export(ctx http.Context) http.Response {
+	query := facades.Orm().Query().Select("id", "username", "name", "enabled", "created_at").Order("id asc")
+
+	if ids := ctx.Request().Input("_ids"); ids != "" {
+		query.WhereIn("id", parseIDList(ids))
+	}
+	if keyword := ctx.Request().Input("keyword"); keyword != "" {
+		query.Where("username", "like", "%"+keyword+"%").
+			OrWhere("name", "like", "%"+keyword+"%")
+	}
+
+	var users []admin.AdminUser
+	if err := query.Get(&users); err != nil {
+		return a.Fail(ctx, err.Error())
+	}
+
+	headers := []string{"ID", "用户名", "姓名", "状态", "创建时间"}
+	rows := make([][]any, 0, len(users))
+	for _, u := range users {
+		status := "禁用"
+		if u.Enabled == admin.Enabled_ON {
+			status = "启用"
+		}
+		rows = append(rows, []any{u.ID, u.Username, u.Name, status, u.CreatedAt.Format("2006-01-02 15:04:05")})
+	}
+
+	disk := facades.Config().GetString("admin.upload.disk")
+	result, err := tools.BuildExport(disk, "users", headers, rows)
+	if err != nil {
+		return a.Fail(ctx, err.Error())
+	}
+
 	return a.SuccessData(ctx, map[string]any{
-		"items": []any{},
+		"path":      result.Path,
+		"expires":   result.Expires,
+		"signature": result.Signature,
 	})
 }
 
@@ -149,6 +186,46 @@ func (a *AdminUserService) QuickEdit(ctx http.Context) http.Response {
 
 func (a *AdminUserService) QuickEditItem(ctx http.Context) http.Response {
 	return a.QuickEdit(ctx)
+}
+
+// UpdateUserSetting 更新当前登录用户的个人资料。
+//
+// 与后台用户管理不同，这里只允许改头像、姓名和密码，且改密码必须校验旧密码，
+// 避免拿到 token 后可直接改密。
+func (a *AdminUserService) UpdateUserSetting(id uint, data map[string]any) error {
+	var user admin.AdminUser
+	if err := facades.Orm().Query().Find(&user, id); err != nil {
+		return errors.New("用户不存在")
+	}
+
+	if name, ok := data["name"].(string); ok && strings.TrimSpace(name) != "" {
+		user.Name = name
+	}
+	if avatar, ok := data["avatar"].(string); ok {
+		user.Avatar = avatar
+	}
+
+	password, _ := data["password"].(string)
+	if password != "" {
+		confirm, _ := data["confirm_password"].(string)
+		if password != confirm {
+			return errors.New("两次输入的密码不一致")
+		}
+		oldPassword, _ := data["old_password"].(string)
+		if oldPassword == "" {
+			return errors.New("请输入原密码")
+		}
+		if !facades.Hash().Check(oldPassword, user.Password) {
+			return errors.New("原密码错误")
+		}
+		hashed, err := facades.Hash().Make(password)
+		if err != nil {
+			return err
+		}
+		user.Password = hashed
+	}
+
+	return facades.Orm().Query().Save(&user)
 }
 
 func (a *AdminUserService) Update(ctx http.Context) http.Response {

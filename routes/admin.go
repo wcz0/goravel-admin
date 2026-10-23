@@ -18,6 +18,10 @@ func Admin() {
 	role := admin.NewRoleController()
 	permission := admin.NewPermissionController()
 	menu := admin.NewMenuController()
+	pages := admin.NewPagesController()
+	apis := admin.NewApisController()
+	relationships := admin.NewRelationshipsController()
+	extensions := admin.NewExtensionsController()
 
 	config := facades.Config()
 
@@ -26,11 +30,16 @@ func Admin() {
 		router.Post("upload_image", index.ImageUpload)
 		router.Post("upload_file", index.FileUpload)
 		router.Post("upload_rich", index.RichFileUpload)
+		router.Any("upload_chunk_start", index.ChunkUploadStart)
+		router.Any("upload_chunk", index.ChunkUpload)
+		router.Any("upload_chunk_finish", index.ChunkUploadFinish)
 		router.Get("menus", index.GetMenus)
 		router.Get("current-user", auth.CurrentUser)
 		router.Get("user_setting", user.GetUserSetting)
 		router.Put("user_setting", user.PutUserSetting)
 		router.Get("dashboard", home.Index)
+		router.Get("page_schema", index.PageSchema)
+		router.Get("_iconify_search", index.IconifySearch)
 
 		// 需要在拥有权限后访问的路由
 		authorized := func(router route.Router) {
@@ -49,6 +58,22 @@ func Admin() {
 				router.Resource("admin_menus", menu)
 				router.Post("admin_menus/save_order", menu.SaveOrder)
 			})
+
+			// 开发者工具，仅在配置开启时注册，避免多暴露接口
+			if config.GetBool("admin.show_development_tools") {
+				router.Prefix("dev_tools").Group(func(router route.Router) {
+					router.Resource("pages", pages)
+					router.Get("pages/options", pages.Options)
+					router.Resource("apis", apis)
+					router.Get("api/templates", apis.Templates)
+					router.Get("api/args_schema", apis.ArgsSchema)
+					router.Resource("relationships", relationships)
+					router.Get("relation/types", relationships.Types)
+					router.Resource("extensions", extensions)
+					router.Post("extensions/enable", extensions.Enable)
+					router.Post("extensions/disable", extensions.Disable)
+				})
+			}
 		}
 
 		if config.GetBool("admin.permission.enable", true) {
@@ -64,6 +89,7 @@ func Admin() {
 		router.Get("login", auth.LoginPage)
 		router.Post("login", auth.Login)
 		router.Get("logout", auth.Logout)
+		router.Get("captcha", auth.Captcha)
 		router.Post("register", auth.Register)
 		router.Post("_settings", index.SaveSetting)
 		router.Get("_settings", index.GetSetting)

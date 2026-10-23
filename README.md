@@ -104,6 +104,40 @@ go run . artisan migrate && go run . artisan admin:init
 go run .
 ```
 
+## 可用功能
+
+前端资源直接来自 owl-admin v4.7.5，因此后端接口与 owl-admin 保持同一套契约：
+
+| 能力 | 接口 | 说明 |
+| --- | --- | --- |
+| 登录 / 登出 | `POST /login`、`GET /logout` | 验证码开启时强制校验 |
+| 验证码 | `GET /captcha` | 返回 data URI 图片 + 一次性会话 id，答案存 Cache |
+| 当前用户 | `GET /current-user` | 返回姓名、头像与顶部下拉菜单 schema |
+| 个人资料 | `GET/PUT /user_setting` | 改头像、姓名、密码（需旧密码） |
+| 菜单 | `GET /menus` | 按权限过滤，支持路由/外链/iframe/自定义页面四种类型 |
+| 系统设置 | `GET/POST /_settings` | 主题、语言等，含 `enabled_extensions` 与 `show_development_tools` |
+| 自定义页面 | `GET /page_schema?sign=` | 页面结构存 `admin_pages`，菜单 `url_type=4` 时使用 |
+| 图标搜索 | `GET /_iconify_search` | 内嵌 22 万条 iconify 图标名 |
+| 上传 | `upload_image`、`upload_file`、`upload_rich` | 走 `admin.upload.disk` 与按类型分目录 |
+| 分块上传 | `upload_chunk_start`、`upload_chunk`、`upload_chunk_finish` | md5 校验 + 目标目录白名单 + 脚本后缀拦截 |
+| 导出 | 列表 `_action=export` → `_download_export` | xlsx 生成 + HMAC 签名 + 有效期，防路径穿越 |
+| 后台管理 | `system/admin_users`、`admin_roles`、`admin_permissions`、`admin_menus` | 内置 RBAC |
+| 开发者工具 | `dev_tools/pages`、`apis`、`relationships`、`extensions` | 需 `ADMIN_SHOW_DEVELOPMENT_TOOLS=true` |
+
+### 与 owl-admin 的差异
+
+owl-admin 是 PHP 运行时，部分能力在 Go 的静态编译模型下没有等价实现，下面是明确的差异：
+
+| owl-admin 能力 | 本包的处理 |
+| --- | --- |
+| 扩展动态安装（zip 投放 + 运行时注册 PSR-4） | **不可行**。`dev_tools/extensions` 只维护「扩展名单 + 启停状态」，扩展代码需在宿主编译期注册；`enabled_extensions` 会照常下发给前端 |
+| 代码生成器（读表 → 生成 PHP Model/Controller/Service/Migration） | **未实现**。产物是 PHP + Eloquent 专属，Go 侧需重写为 struct/控制器/迁移生成器，属独立工程 |
+| 可视化编辑器（amis JSON → `amis()->Xxx()` PHP 链式代码） | **不可行**。Go 没有等价的 amis DSL，只保留了 `/dev_tools/editor` 的前端入口 |
+| 动态 API 模板（运行时写 PHP 类并即时生效） | **部分实现**。接口记录（路径/模板/参数）可维护，10 个内置模板只作为元信息，运行时分发尚未接入 |
+| 动态关联（Eloquent `resolveRelationUsing` 运行时挂载） | **部分实现**。可登记关联配置并给出 `preview_code`，Goravel 的关联需写进 struct，不会即时生效 |
+| 多模块 / 多子后台 | **未实现**。单后台场景建议用租户字段或独立部署，复制整套 7 张表成本过高 |
+| `admin:ide-helper`（PHPStorm 元数据） | **不适用**。Go 由 gopls 提供补全，无需生成桩文件 |
+
 ## Roadmap
 
 [For Detail](https://github.com/goravel/goravel/issues?q=is%3Aissue+is%3Aopen)

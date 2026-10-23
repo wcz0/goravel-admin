@@ -80,6 +80,9 @@ func (r *ServiceProvider) Boot(app foundation.Application) {
 	app.MakeArtisan().Register([]console.Command{
 		&commands.Admin{},
 		&commands.DumpAdminData{},
+		&commands.CreateUser{},
+		&commands.ResetPassword{},
+		&commands.Doctor{},
 	})
 }
 

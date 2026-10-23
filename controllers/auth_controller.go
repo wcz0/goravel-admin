@@ -2,6 +2,7 @@ package controllers
 
 import (
     "errors"
+    "github.com/wcz0/goravel-admin/core"
     "github.com/wcz0/goravel-admin/models/admin"
     "github.com/wcz0/goravel-admin/services"
     "github.com/wcz0/goravel-admin/tools"
@@ -36,7 +37,29 @@ func (a *AuthController) Login(ctx http.Context) http.Response {
     }, nil); hasError {
         return resp
     }
+    // 验证码开启时必须在密码校验前拦下，避免错误口令探测。
+    if facades.Config().GetBool("admin.auth.login_captcha") {
+        if !core.VerifyCaptcha(ctx.Request().Input("sys_captcha"), ctx.Request().Input("captcha")) {
+            return a.Controller.FailMsg(ctx, tools.AdminLang(ctx, "captcha_error"))
+        }
+    }
     return a.AdminUserService.Login(ctx)
+}
+
+// Captcha 生成登录验证码。
+//
+// 返回结构对齐 owl-admin：captcha_img 为可直接渲染的 data URI，
+// sys_captcha 是答案在缓存中的键，登录时需要原样回传。
+func (a *AuthController) Captcha(ctx http.Context) http.Response {
+	id, image, err := core.GenerateCaptcha()
+	if err != nil {
+		return a.Controller.FailMsg(ctx, tools.AdminLang(ctx, "captcha_error"))
+	}
+
+	return a.Controller.SuccessData(ctx, map[string]string{
+		"captcha_img": image,
+		"sys_captcha": id,
+	})
 }
 
 func (a *AuthController) Logout(ctx http.Context) http.Response {
@@ -64,19 +87,37 @@ func (a *AuthController) Register(ctx http.Context) http.Response {
 
 // LoginPage 登录页面 需要写入设置 开启amis页面登录
 func (a *AuthController) LoginPage(ctx http.Context) http.Response {
+	body := []any{
+		gamis.TextControl().Name("username").Placeholder(tools.AdminLang(ctx, "username")).Required(true),
+		gamis.TextControl().Type("input-password").Name("password").Placeholder(tools.AdminLang(ctx, "password")).Required(true),
+	}
+	// 验证码开关由后端配置决定，直接决定是否渲染，避免前端拿不到数据域时判断失效。
+	if facades.Config().GetBool("admin.auth.login_captcha") {
+		body = append(body, gamis.InputGroupControl().Name("captcha_group").Body([]any{
+			gamis.TextControl().Name("captcha").Label(tools.AdminLang(ctx, "captcha")).Placeholder(tools.AdminLang(ctx, "captcha")).Required(true),
+			gamis.HiddenControl().Name("sys_captcha"),
+			gamis.Service().Id("captcha-service").Api("get:" + tools.GetAdmin("/captcha")).Body(
+				gamis.Image().
+					Src("${captcha_img}").
+					Height("1.917rem").
+					ClassName("p-0 captcha-box").
+					Set("imageClassName", "rounded-r").
+					Set("clickAction", map[string]any{"actionType": "reload", "target": "captcha-service"}),
+			),
+		}))
+	}
+	body = append(body,
+		gamis.CheckboxControl().Name("remember_me").Option(tools.AdminLang(ctx, "remember_me")).Value(true),
+		gamis.Button().ActionType("submit").Label(tools.AdminLang(ctx, "login")).Level("primary").ClassName("w-full"),
+	)
+
 	form := gamis.Form().
 		PanelClassName("border-none").
 		Id("login-form").
 		Title("").
 		Api(tools.GetAdmin("/login")).
 		InitApi("/no-content").
-		Body([]any{
-			gamis.TextControl().Name("username").Placeholder(tools.AdminLang(ctx, "username")).Required(true),
-			gamis.TextControl().Type("input-password").Name("password").Placeholder(tools.AdminLang(ctx, "password")).Required(true),
-			// captcha
-			gamis.CheckboxControl().Name("remember_me").Option(tools.AdminLang(ctx, "remember_me")).Value(true),
-			gamis.Button().ActionType("submit").Label(tools.AdminLang(ctx, "login")).Level("primary").ClassName("w-full"),
-		}).
+		Body(body).
 		Actions([]any{}).
 		OnEvent(map[string]any{
 			"inited": map[string]any{

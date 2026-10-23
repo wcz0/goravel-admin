@@ -6,9 +6,24 @@
 
 ### Added
 
+- 新增登录验证码：`GET /captcha` 返回 `captcha_img`（data URI）与 `sys_captcha`，答案存 Cache 并一次性消费；`admin.auth.login_captcha` 开启时登录接口强制校验，amis 登录页同步渲染验证码组件。
+- 新增个人资料保存 `PUT /user_setting`：支持改头像、姓名与密码，改密必须校验旧密码，两次密码需一致。
+- 新增 `GET /page_schema?sign=` 与「开发者工具 - 页面管理」：页面结构以 amis JSON 存 `admin_pages`，菜单 `url_type=4` 时由前端按 sign 拉取渲染。
+- 新增「开发者工具 - 动态 API / 动态关联 / 扩展」三组接口：提供列表、详情、增删改、模板下拉、关联类型下拉与 `preview_code` 预览。
+- 新增 `GET /_iconify_search`：内嵌 iconify 全量图标名（22 万条），首次访问解析后常驻内存，单次最多返回 1000 条。
+- 新增分块上传三接口 `upload_chunk_start` / `upload_chunk` / `upload_chunk_finish`：会话 10 分钟过期，分片按 md5 校验，合并目标目录走白名单，脚本类后缀直接拒绝。
+- 新增导出能力：列表「导出全部 / 本页 / 选中」按钮 + xlsx 生成 + `_download_export` 按 HMAC 签名与有效期下载，路径做穿越校验；用户列表已接入。
+- 新增 `admin:create-user`、`admin:reset-password`、`admin:doctor` 命令。`admin:doctor` 巡检 APP_KEY、数据库连通性、13 张核心表、管理员账号、首页菜单唯一性与菜单父级断链。
+- 新增 `core/captcha_test.go`，覆盖验证码「生成 → 正确校验 → 一次性失效」与空值/错误答案拒绝。
 - 新增 `example/` 最小宿主应用，用于验证 `package:install` 全流程（注册 Provider、迁移、`admin:init`、登录与列表接口）。
 - 新增 `setup install` / `setup uninstall`：安装器只注册 ServiceProvider 并生成可选配置骨架，不再改动宿主 `bootstrap/migrations.go`。
 - 新增 `migrations.All()` 与 `tools.AuthGuard()`。
+
+### Fixed
+
+- 修复图片/文件上传的配置键拼接错误：原代码读 `admin.upload.directoryimage`，导致文件落到存储根目录，现按 `admin.upload.directory.<type>` 读取，图片进 `images/`、文件进 `files/`。
+- 修复个人资料页保存地址错误：表单 `api` 原指向 `PUT /current-user`（该路由不存在），改为 `PUT /user_setting`。
+- 修复 `_settings` 的 `enabled_extensions` 恒为空数组，改为读取 `admin_extensions` 中已启用的扩展名。
 
 ### Changed
 
