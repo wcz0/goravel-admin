@@ -34,7 +34,7 @@
 - 本分支对应 goravel/framework v1.17.x。与 `main`（v1.18）的差异仅在框架契约层：
   - `middleware/*.go` 改为返回 `func(ctx http.Context)`（1.17 的 `http.Middleware` 是函数类型）
   - 校验规则字面量改为 `map[string]string`，并移除 `anyRules()` 转换层
-- v1.16 尚未提供对应分支。
+- 不提供 v1.16 支持线：Goravel 1.16 没有 `foundation.Setup()`，也没有 `packages.Setup.Paths()` 与 `modify.RegisterProvider`，扩展包安装机制在 1.16 上不存在，需要独立的应用骨架与安装器实现。
 
 ## [1.0.0] - 2025-11-27
 

@@ -25,15 +25,23 @@ goravel-admin 以**可安装扩展包**的形式提供，版本号与它适配�
 | --- | --- | --- | --- | --- |
 | v1.18.x（branch `main`） | v1.18.x | v6.13.x | 6.13.0 | v4.7.5 |
 | v1.17.x（branch `goravel-1.17`，**本分支**） | v1.17.x | v6.13.x | 6.13.0 | v4.7.5 |
-| v1.16.x（branch `goravel-1.16`） | v1.16.x | 待移植 | 6.13.0 | v4.7.5 |
 
 Goravel 每个 minor 版本都会调整契约接口，因此**不同 goravel 版本由不同分支维护**，而不是用一套代码兼容全部：
 
 - `main`：跟随最新的 goravel/framework（当前 v1.18），发布 tag 形如 `v1.18.x`
 - `goravel-1.17`：适配 v1.17 契约，发布 `v1.17.x`（本分支，已跑通安装流程）
-- `goravel-1.16`：适配 v1.16 契约，发布 `v1.16.x`
 
 > 已实测：v1.18 的代码直接降到 v1.17 无法编译（`http.Middleware` 由接口改回 `func(Context)`，`Request().Validate` 与 `Validation().Make` 的入参由 `map[string]any` 变回 `map[string]string`），所以低版本必须走对应分支。
+
+### 为什么没有 goravel-1.16
+
+Goravel 1.16 缺少支撑"扩展包"机制的前置能力，无法用同一套安装方式支持：
+
+- `foundation.Setup()` 不存在（1.17 才引入），宿主无法用 `WithProviders / WithMigrations` 组装应用
+- `packages.Setup` 没有 `Paths()`，`modify` 包也没有 `RegisterProvider / RegisterMigration`，只有底层的 `GoFile + match.Providers`
+- 1.16 的宿主在 `config/app.go` 里以 `config.Add("app", {"providers": [...]})` 注册 Provider，安装器要改的文件位置也不同
+
+因此 1.16 需要独立的应用骨架与安装器实现，属于另一套工程，当前不支持。
 
 ### 本分支（goravel-1.17）与 main 的差异
 
