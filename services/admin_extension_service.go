@@ -97,7 +97,7 @@ func (s *AdminExtensionService) Disable(ctx http.Context) http.Response {
 
 func (s *AdminExtensionService) toggle(ctx http.Context, enabled uint8) http.Response {
 	var extension admin.AdminExtension
-	if err := facades.Orm().Query().Find(&extension, ctx.Request().InputInt("id")); err != nil {
+	if err := firstByID(ctx.Request().InputInt("id"), &extension); err != nil {
 		return s.FailMsg(ctx, "扩展不存在")
 	}
 

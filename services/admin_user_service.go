@@ -158,7 +158,7 @@ func (a *AdminUserService) QuickEdit(ctx http.Context) http.Response {
 		return a.Fail(ctx, "ID不能为空")
 	}
 	var user admin.AdminUser
-	if err := facades.Orm().Query().Find(&user, id); err != nil {
+	if err := firstByID(id, &user); err != nil {
 		return a.Fail(ctx, "用户不存在")
 	}
 
@@ -194,7 +194,7 @@ func (a *AdminUserService) QuickEditItem(ctx http.Context) http.Response {
 // 避免拿到 token 后可直接改密。
 func (a *AdminUserService) UpdateUserSetting(id uint, data map[string]any) error {
 	var user admin.AdminUser
-	if err := facades.Orm().Query().Find(&user, id); err != nil {
+	if err := firstByID(id, &user); err != nil {
 		return errors.New("用户不存在")
 	}
 
@@ -240,7 +240,7 @@ func (a *AdminUserService) Update(ctx http.Context) http.Response {
 	}
 
 	var user admin.AdminUser
-	if err := facades.Orm().Query().Find(&user, id); err != nil {
+	if err := firstByID(id, &user); err != nil {
 		return a.Fail(ctx, "用户不存在")
 	}
 
@@ -401,7 +401,7 @@ func (a *AdminUserService) Destroy(ctx http.Context) http.Response {
 	}
 
 	var user admin.AdminUser
-	if err := facades.Orm().Query().Find(&user, id); err != nil {
+	if err := firstByID(id, &user); err != nil {
 		return a.Fail(ctx, "用户不存在")
 	}
 	if _, err := facades.Orm().Query().Delete(&user); err != nil {

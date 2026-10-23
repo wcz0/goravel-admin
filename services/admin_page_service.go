@@ -33,7 +33,8 @@ func (s *AdminPageService) Get(sign string) any {
 	}
 
 	var page admin.AdminPage
-	if err := facades.Orm().Query().Where("sign", sign).First(&page); err != nil {
+	// First 找不到记录时不会报错，返回的是零值结构体，得自己判断 ID
+	if err := facades.Orm().Query().Where("sign", sign).First(&page); err != nil || page.ID == 0 {
 		return nil
 	}
 
@@ -80,7 +81,7 @@ func (s *AdminPageService) List(ctx http.Context) http.Response {
 // SubFormControl("page") 表单结构。
 func (s *AdminPageService) Show(ctx http.Context) http.Response {
 	var page admin.AdminPage
-	if err := facades.Orm().Query().Find(&page, ctx.Request().InputInt("id")); err != nil {
+	if err := firstByID(ctx.Request().InputInt("id"), &page); err != nil {
 		return s.FailMsg(ctx, "页面不存在")
 	}
 
@@ -101,7 +102,8 @@ func (s *AdminPageService) Show(ctx http.Context) http.Response {
 
 // extractSchema 从请求里取出页面结构并序列化成字符串。
 //
-// 前端提交的是 page.schema 嵌套对象；同时兼容直接提交 schema 字段的情况。
+// 前端提交的是 page.schema 嵌套对象；同时兼容直接提交 schema 字段的情况，
+// 该字段既能是 amis 解析后的对象，也能是 JSON 文本（curl 直接调用时常见）。
 func extractSchema(all map[string]any) (string, error) {
 	if page, ok := all["page"].(map[string]any); ok {
 		if schema, ok := page["schema"]; ok && schema != nil {
@@ -114,7 +116,16 @@ func extractSchema(all map[string]any) (string, error) {
 		}
 	}
 
-	if raw, ok := all["schema"].(string); ok && raw != "" {
+	schema, ok := all["schema"]
+	if !ok || schema == nil {
+		return "", errors.New("页面结构不可为空")
+	}
+
+	// JSON 文本原样落库，避免二次序列化后出现转义字符串
+	if raw, isText := schema.(string); isText {
+		if raw == "" {
+			return "", errors.New("页面结构不可为空")
+		}
 		if !json.Valid([]byte(raw)) {
 			return "", errors.New("页面结构不是合法的 JSON")
 		}
@@ -122,7 +133,15 @@ func extractSchema(all map[string]any) (string, error) {
 		return raw, nil
 	}
 
-	return "", errors.New("页面结构不可为空")
+	raw, err := json.Marshal(schema)
+	if err != nil {
+		return "", err
+	}
+	if len(raw) <= 2 {
+		return "", errors.New("页面结构不可为空")
+	}
+
+	return string(raw), nil
 }
 
 // checkSign 校验 sign 唯一性（排除自身）。
@@ -175,7 +194,7 @@ func (s *AdminPageService) Store(ctx http.Context) http.Response {
 func (s *AdminPageService) Update(ctx http.Context) http.Response {
 	id := ctx.Request().InputInt("id")
 	var page admin.AdminPage
-	if err := facades.Orm().Query().Find(&page, id); err != nil {
+	if err := firstByID(id, &page); err != nil {
 		return s.FailMsg(ctx, "页面不存在")
 	}
 

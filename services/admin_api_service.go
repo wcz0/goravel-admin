@@ -109,7 +109,7 @@ func (s *AdminApiService) List(ctx http.Context) http.Response {
 // Show 返回单条动态 API。
 func (s *AdminApiService) Show(ctx http.Context) http.Response {
 	var api admin.AdminApi
-	if err := facades.Orm().Query().Find(&api, ctx.Request().InputInt("id")); err != nil {
+	if err := firstByID(ctx.Request().InputInt("id"), &api); err != nil {
 		return s.FailMsg(ctx, "接口不存在")
 	}
 
@@ -190,7 +190,7 @@ func (s *AdminApiService) Store(ctx http.Context) http.Response {
 func (s *AdminApiService) Update(ctx http.Context) http.Response {
 	id := ctx.Request().InputInt("id")
 	var api admin.AdminApi
-	if err := facades.Orm().Query().Find(&api, id); err != nil {
+	if err := firstByID(id, &api); err != nil {
 		return s.FailMsg(ctx, "接口不存在")
 	}
 

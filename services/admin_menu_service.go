@@ -57,7 +57,7 @@ func (s *AdminMenuService) List(ctx http.Context) http.Response {
 func (s *AdminMenuService) Show(ctx http.Context) http.Response {
     id := ctx.Request().InputInt("id")
     var m admin.AdminMenu
-    if err := facades.Orm().Query().Find(&m, id); err != nil { return s.FailMsg(ctx, "菜单不存在") }
+    if err := firstByID(id, &m); err != nil { return s.FailMsg(ctx, "菜单不存在") }
     return s.SuccessData(ctx, m)
 }
 
@@ -82,7 +82,7 @@ func (s *AdminMenuService) Store(ctx http.Context) http.Response {
 func (s *AdminMenuService) Update(ctx http.Context) http.Response {
     id := ctx.Request().InputInt("id")
     var m admin.AdminMenu
-    if err := facades.Orm().Query().Find(&m, id); err != nil { return s.FailMsg(ctx, "菜单不存在") }
+    if err := firstByID(id, &m); err != nil { return s.FailMsg(ctx, "菜单不存在") }
     m.ParentId = uint32(ctx.Request().InputInt("parent_id", int(m.ParentId)))
     if v := ctx.Request().Input("title"); v != "" { m.Title = v }
     if v := ctx.Request().Input("icon"); v != "" { m.Icon = v }
@@ -101,7 +101,7 @@ func (s *AdminMenuService) Update(ctx http.Context) http.Response {
 func (s *AdminMenuService) Destroy(ctx http.Context) http.Response {
     id := ctx.Request().InputInt("id")
     var m admin.AdminMenu
-    if err := facades.Orm().Query().Find(&m, id); err != nil { return s.FailMsg(ctx, "菜单不存在") }
+    if err := firstByID(id, &m); err != nil { return s.FailMsg(ctx, "菜单不存在") }
     if _, err := facades.Orm().Query().Delete(&m); err != nil { return s.FailMsg(ctx, err.Error()) }
     return s.SuccessMsg(ctx, "删除成功")
 }
@@ -133,7 +133,7 @@ func (s *AdminMenuService) QuickEditItem(ctx http.Context) http.Response {
     name := ctx.Request().Input("name")
     value := ctx.Request().Input("value")
     var m admin.AdminMenu
-    if err := facades.Orm().Query().Find(&m, id); err != nil { return s.FailMsg(ctx, "菜单不存在") }
+    if err := firstByID(id, &m); err != nil { return s.FailMsg(ctx, "菜单不存在") }
     switch name {
     case "custom_order":
         m.CustomOrder = ctx.Request().InputInt("value", m.CustomOrder)

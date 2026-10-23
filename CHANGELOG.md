@@ -25,6 +25,9 @@
 - 修复图片/文件上传的配置键拼接错误：原代码读 `admin.upload.directoryimage`，导致文件落到存储根目录，现按 `admin.upload.directory.<type>` 读取，图片进 `images/`、文件进 `files/`。
 - 修复个人资料页保存地址错误：表单 `api` 原指向 `PUT /current-user`（该路由不存在），改为 `PUT /user_setting`。
 - 修复 `_settings` 的 `enabled_extensions` 恒为空数组，改为读取 `admin_extensions` 中已启用的扩展名。
+- 修复主键为空或记录不存在时仍会写库的问题：Goravel ORM 的 `Find`/`First` 在「id=0」和「查无记录」两种情况下都不报错（`First` 会吞掉 `ErrRecordNotFound`），原代码拿到零值结构体后直接 `Save`，会 INSERT 出一条空记录——实测 `POST /dev_tools/extensions/enable` 传 `id=0` 时写出了一条 `name` 为空的扩展并下发到 `enabled_extensions`。新增 `services.firstByID`（先 `Count` 再取），页面、动态 API、动态关联、扩展、菜单、权限、用户的单条读写统一走它，并新增 `services/preview_test.go` 覆盖。
+- 修复 `POST /dev_tools/pages` 在 `schema` 直接以 JSON 对象提交时被判为"页面结构不可为空"：现在 `page.schema` 嵌套对象、`schema` 对象、`schema` JSON 文本三种形态都接受。
+- 修复动态关联 `preview_code` 生成的片段无法编译：`model` / `title` 原样拼进标识符（`Smoke Roles` 带空格），且返回了 Goravel 并不存在的 `orm.Relation`。现统一转成合法 Go 标识符，并改为 Goravel ORM 实际支持的显式查询骨架（中间表走 `Join`，一对多走 `Where`），表单默认参数同步为 `related` / `table` / `foreign_key` / `related_key`。
 
 ### Changed
 
