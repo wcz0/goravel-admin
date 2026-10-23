@@ -2,6 +2,8 @@ package commands
 
 import (
 	"fmt"
+	"slices"
+
 	"github.com/wcz0/goravel-admin/models/admin"
 
 	"github.com/goravel/framework/contracts/console"
@@ -135,9 +137,28 @@ func (receiver *Admin) initDatabase() error {
 
 	permissionsBySlug := make(map[string]*admin.AdminPermission, len(permissions))
 	for _, permission := range permissions {
-		if err := facades.Orm().Query().FirstOrCreate(permission, admin.AdminPermission{Slug: permission.Slug}); err != nil {
-			return fmt.Errorf("创建权限失败: %w", err)
+		var existing admin.AdminPermission
+		// Goravel 的 First 在查无记录时不返回 error，只能用主键是否为 0 判断是否存在。
+		_ = facades.Orm().Query().Where("slug", permission.Slug).First(&existing)
+
+		switch {
+		case existing.ID == 0:
+			if err := facades.Orm().Query().Create(permission); err != nil {
+				return fmt.Errorf("创建权限失败: %w", err)
+			}
+		default:
+			// 内置权限的名称与路由由本包维护：升级后如果沿用旧路径，非超管会被 403 拦住，
+			// 而旧版本种下的路径（/auth/roles 之类）在本包里根本不存在。
+			if existing.Name != permission.Name || !slices.Equal(existing.HttpPath, permission.HttpPath) {
+				existing.Name = permission.Name
+				existing.HttpPath = permission.HttpPath
+				if err := facades.Orm().Query().Save(&existing); err != nil {
+					return fmt.Errorf("更新权限失败: %w", err)
+				}
+			}
+			*permission = existing
 		}
+
 		permissionsBySlug[permission.Slug] = permission
 	}
 

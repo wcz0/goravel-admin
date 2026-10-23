@@ -119,7 +119,7 @@ go run . artisan vendor:publish --package=github.com/wcz0/goravel-admin --tag=go
 | `admin:init` | Create the administrator/operator roles, home menu and the default `admin` account |
 | `admin:create-user` | Create an administrator (`--username`, `--password`, `--name`, `--roles`) |
 | `admin:reset-password` | Reset a password (`--username`, `--password`; a random 12-char password is generated when omitted) |
-| `admin:doctor` | Sanity-check `APP_KEY`, database connectivity, the 13 core tables, admin accounts, home menu uniqueness and broken menu parents |
+| `admin:doctor` | Sanity-check `APP_KEY`, database connectivity, the 12 core tables, admin accounts, home menu uniqueness and broken menu parents |
 
 ## Configuration
 
