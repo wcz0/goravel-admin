@@ -39,24 +39,116 @@ func (s *AdminRelationshipService) Types() []map[string]string {
 	return relationshipTypes()
 }
 
-// previewCode 生成 Goravel ORM 的关联方法预览。
+// previewCode 生成关联查询的预览代码。
 //
-// 这是一个「可复制到模型里」的代码片段：Goravel 的关联必须写在 struct 上，
-// 没法像 Eloquent 那样运行时挂载，所以只能给开发者提供参考实现。
+// Goravel 的 ORM 没有 Eloquent 那种 resolveRelationUsing 动态关联，关联只能
+// 手写成查询方法，所以这里给的是「可复制进模型、再补两处 TODO 就能跑」的
+// 显式查询骨架，而不是伪造一个 orm.Relation 方法。标识符统一转成合法的 Go
+// 命名，避免标题里带空格或中文时拿到无法编译的片段。
 func previewCode(item admin.AdminRelationship) string {
 	var params map[string]any
 	if item.Args != nil {
 		_ = json.Unmarshal([]byte(*item.Args), &params)
 	}
 
-	related := "RelatedModel"
-	if v, ok := params["related_model"].(string); ok && v != "" {
-		related = v
+	model := goIdent(lastSegment(item.Model), true)
+	method := goIdent(item.Title, true)
+	related := goIdent(firstArg(params, "related", "related_model", "relatedModel", "model"), true)
+	if related == "" {
+		related = "Related"
 	}
 
-	return "func (m *" + item.Model + ") " + item.Title + "() orm.Relation {\n" +
-		"    return m." + item.Type + "(" + related + ")\n" +
-		"}"
+	var b strings.Builder
+	b.WriteString("// " + method + " 是 " + model + " 的 " + item.Type + " 关联，关联模型 " + related + "。\n")
+	b.WriteString("// Goravel ORM 未提供 Eloquent 式关联方法，这里用显式查询实现。\n")
+	b.WriteString("func (m *" + model + ") " + method + "() (items []" + related + ", err error) {\n")
+
+	pivot := firstArg(params, "table", "pivot_table", "pivotTable")
+	foreignKey := firstArg(params, "foreignKey", "foreign_key", "foreignPivotKey", "foreign_pivot_key")
+	relatedKey := firstArg(params, "relatedKey", "related_key", "relatedPivotKey", "related_pivot_key", "ownerKey", "owner_key")
+
+	switch {
+	case pivot != "":
+		// belongsToMany / morphToMany：先走中间表再用关联表的键打平
+		b.WriteString("    err = facades.Orm().Query().\n")
+		b.WriteString("        Join(\"inner join " + pivot + " on " + pivot + "." + orDefault(relatedKey, "related_id") + " = <关联表>.id\"). // TODO 补关联表名\n")
+		b.WriteString("        Where(\"" + pivot + "." + orDefault(foreignKey, "model_id") + "\", m.ID).\n")
+		b.WriteString("        Get(&items)\n")
+	case foreignKey != "":
+		b.WriteString("    err = facades.Orm().Query().\n")
+		b.WriteString("        Where(\"" + foreignKey + "\", m.ID).\n")
+		b.WriteString("        Get(&items)\n")
+	default:
+		b.WriteString("    err = facades.Orm().Query().Get(&items) // TODO 补上关联条件\n")
+	}
+
+	b.WriteString("    return\n")
+
+	return b.String() + "}"
+}
+
+// goIdent 把任意文本转成合法的 Go 标识符。
+//
+// exported 为真时按 PascalCase 拼接（admin_users -> AdminUsers，
+// Smoke Roles -> SmokeRoles），这样表名和带空格的标题都能得到像样的名字。
+func goIdent(raw string, exported bool) string {
+	parts := strings.FieldsFunc(raw, func(r rune) bool {
+		return !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9')
+	})
+
+	if !exported {
+		ident := strings.ToLower(strings.Join(parts, "_"))
+
+		return prefixDigit(ident)
+	}
+
+	var b strings.Builder
+	for _, part := range parts {
+		b.WriteString(strings.ToUpper(part[:1]) + part[1:])
+	}
+
+	return prefixDigit(b.String())
+}
+
+// prefixDigit 保证标识符不以数字开头。
+func prefixDigit(ident string) string {
+	if ident == "" {
+		return ""
+	}
+	if ident[0] >= '0' && ident[0] <= '9' {
+		return "R" + ident
+	}
+
+	return ident
+}
+
+// lastSegment 取 FQCN 风格字符串的最后一段（App\Models\User -> User）。
+func lastSegment(raw string) string {
+	raw = strings.ReplaceAll(raw, "\\", "/")
+	if idx := strings.LastIndex(raw, "/"); idx >= 0 {
+		raw = raw[idx+1:]
+	}
+
+	return strings.TrimSpace(raw)
+}
+
+// firstArg 按顺序取第一个非空的字符串参数。
+func firstArg(params map[string]any, keys ...string) string {
+	for _, key := range keys {
+		if v, ok := params[key].(string); ok && v != "" {
+			return v
+		}
+	}
+
+	return ""
+}
+
+func orDefault(value, fallback string) string {
+	if value == "" {
+		return fallback
+	}
+
+	return value
 }
 
 // castToString 安全取指针字符串。
@@ -105,7 +197,7 @@ func (s *AdminRelationshipService) List(ctx http.Context) http.Response {
 // Show 返回单条关联配置。
 func (s *AdminRelationshipService) Show(ctx http.Context) http.Response {
 	var item admin.AdminRelationship
-	if err := facades.Orm().Query().Find(&item, ctx.Request().InputInt("id")); err != nil {
+	if err := firstByID(ctx.Request().InputInt("id"), &item); err != nil {
 		return s.FailMsg(ctx, "关联配置不存在")
 	}
 
@@ -161,7 +253,7 @@ func (s *AdminRelationshipService) Store(ctx http.Context) http.Response {
 func (s *AdminRelationshipService) Update(ctx http.Context) http.Response {
 	id := ctx.Request().InputInt("id")
 	var item admin.AdminRelationship
-	if err := facades.Orm().Query().Find(&item, id); err != nil {
+	if err := firstByID(id, &item); err != nil {
 		return s.FailMsg(ctx, "关联配置不存在")
 	}
 

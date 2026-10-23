@@ -255,7 +255,7 @@ func (s *AdminPermissionService) Store(ctx http.Context) http.Response {
 func (s *AdminPermissionService) Update(ctx http.Context) http.Response {
 	id := ctx.Request().InputInt("id")
 	var permission admin.AdminPermission
-	if err := facades.Orm().Query().Find(&permission, id); err != nil {
+	if err := firstByID(id, &permission); err != nil {
 		return s.Fail(ctx, "权限不存在")
 	}
 
@@ -346,7 +346,7 @@ func (s *AdminPermissionService) Update(ctx http.Context) http.Response {
 func (s *AdminPermissionService) Destroy(ctx http.Context) http.Response {
 	id := ctx.Request().InputInt("id")
 	var permission admin.AdminPermission
-	if err := facades.Orm().Query().Find(&permission, id); err != nil {
+	if err := firstByID(id, &permission); err != nil {
 		return s.Fail(ctx, "权限不存在")
 	}
 
@@ -439,7 +439,7 @@ func (s *AdminPermissionService) Show(ctx http.Context) http.Response {
 	}
 
 	var permission admin.AdminPermission
-	if err := facades.Orm().Query().Find(&permission, id); err != nil {
+	if err := firstByID(id, &permission); err != nil {
 		return s.Fail(ctx, "权限不存在")
 	}
 

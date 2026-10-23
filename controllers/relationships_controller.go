@@ -99,7 +99,7 @@ func (r *RelationshipsController) form(ctx http.Context) *renderers.Form {
 			"name":   "args",
 			"label":  tools.AdminLang(ctx, "relationships.args"),
 			"height": 260,
-			"value":  map[string]any{"related_model": "", "foreign_key": "", "local_key": ""},
+			"value":  map[string]any{"related": "", "table": "", "foreign_key": "", "related_key": ""},
 		},
 	})
 }
