@@ -9,12 +9,20 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 
 BASE = os.environ.get("BASE", "http://127.0.0.1:3011")
 USERNAME = os.environ.get("ADMIN_USER", "smoke")
 PASSWORD = os.environ.get("ADMIN_PASS", "Smoke@12345")
 token = None
 failed = 0
+
+# 每次运行换一批唯一标识，脚本才能在同一套库上重复执行
+RUN = uuid.uuid4().hex[:6]
+PAGE_SIGN = "smoke_page_" + RUN
+API_PATH = "/smoke/test_" + RUN
+REL_TITLE = "Smoke Roles " + RUN
+EXT_NAME = "acme/smoke-" + RUN
 
 
 def call(method, path, body=None):
@@ -66,6 +74,22 @@ st, r = call("POST", "/admin-api/login", {"username": USERNAME, "password": PASS
 token = (r.get("data") or {}).get("token")
 check("login", st == 200 and r.get("status") == 0 and bool(token), "code=%s" % r.get("status"))
 
+# 1.1 匿名必须被拦住（用户管理曾因白名单配置漏在外网）
+saved, token = token, None
+st, r = call("GET", "/admin-api/system/admin_users?_action=getData")
+token = saved
+check("anonymous blocked", r.get("code") == 401, "code=%s" % r.get("code"))
+
+# 1.2 用户列表分页字段：amis 靠 total 才能渲染分页条
+st, r = call("GET", "/admin-api/system/admin_users?_action=getData&page=1&perPage=1")
+d = r.get("data") or {}
+check("user list paginated", st == 200 and "total" in d and len(d.get("items") or []) == 1,
+      "total=%s items=%s" % (d.get("total"), len(d.get("items") or [])))
+
+# 1.3 关键字过滤要真的生效（Where 未赋值会让条件被静默丢弃）
+st, r = call("GET", "/admin-api/system/admin_users?_action=getData&keyword=zzz_not_exist")
+check("user list keyword filter", st == 200 and not ((r.get("data") or {}).get("items")), "")
+
 # 2 站点设置
 st, r = call("GET", "/admin-api/_settings")
 d = r.get("data") or {}
@@ -85,15 +109,15 @@ check("_iconify_search", st == 200 and len(items) > 0, "count=%d" % len(items))
 # 5 自定义页面（前端契约：page.schema 嵌套）
 st, r = call("DELETE", "/admin-api/dev_tools/pages/1")
 st, r = call("POST", "/admin-api/dev_tools/pages", {
-    "title": "Smoke Page", "sign": "smoke_page",
+    "title": "Smoke Page " + RUN, "sign": PAGE_SIGN,
     "page": {"schema": {"type": "page", "body": [{"type": "tpl", "tpl": "hello"}]}},
 })
 created = r.get("status") == 0
 st, r2 = call("POST", "/admin-api/dev_tools/pages", {
-    "title": "Dup", "sign": "smoke_page", "page": {"schema": {"type": "page"}},
+    "title": "Dup", "sign": PAGE_SIGN, "page": {"schema": {"type": "page"}},
 })
 dup_rejected = r2.get("status") != 0
-st, r3 = call("GET", "/admin-api/page_schema?sign=smoke_page")
+st, r3 = call("GET", "/admin-api/page_schema?sign=" + PAGE_SIGN)
 schema = r3.get("data")
 check("pages store/unique/page_schema",
       created and dup_rejected and isinstance(schema, dict) and schema.get("type") == "page",
@@ -109,7 +133,7 @@ check("pages update ghost id rejected", r.get("status") != 0 and "Ghost" not in 
       "status=%s rows=%s" % (r.get("status"), titles))
 
 # 7 动态接口
-api = {"title": "Smoke Api", "path": "/smoke/test", "method": "get", "template": "list",
+api = {"title": "Smoke Api", "path": API_PATH, "method": "get", "template": "list",
        "enabled": True, "args": {"model": "admin_users"}}
 st, a1 = call("POST", "/admin-api/dev_tools/apis", api)
 st, a2 = call("POST", "/admin-api/dev_tools/apis", api)
@@ -122,29 +146,29 @@ check("apis store/dup/templates",
 st, r = call("GET", "/admin-api/dev_tools/relation/types")
 types = r.get("data") or []
 st, rr = call("POST", "/admin-api/dev_tools/relationships", {
-    "model": "admin_users", "title": "Smoke Roles", "type": "belongsToMany",
+    "model": "admin_users", "title": REL_TITLE, "type": "belongsToMany",
     "args": {"related": "admin_roles", "table": "role_user", "foreign_key": "user_id", "related_key": "role_id"},
 })
 st, rlist = call("GET", "/admin-api/dev_tools/relationships?_action=getData&page=1&perPage=20")
 rows = (rlist.get("data") or {}).get("items", [])
-code = next((i.get("preview_code", "") for i in rows if i.get("title") == "Smoke Roles"), "")
+code = next((i.get("preview_code", "") for i in rows if i.get("title") == REL_TITLE), "")
 check("relationships types/preview",
       len(types) >= 9 and rr.get("status") == 0
-      and "func (m *AdminUsers) SmokeRoles()" in code and "role_user" in code,
+      and "func (m *AdminUsers) SmokeRoles" in code and "role_user" in code,
       "types=%d create=%s" % (len(types), rr.get("status")))
 
 # 9 扩展：名单化 + 启用；非法 id 必须拒绝
 st, bad = call("POST", "/admin-api/dev_tools/extensions", {"name": "badname"})
-st, ok_ext = call("POST", "/admin-api/dev_tools/extensions", {"name": "acme/demo", "title": "Demo"})
+st, ok_ext = call("POST", "/admin-api/dev_tools/extensions", {"name": EXT_NAME, "title": "Demo " + RUN})
 st, elist = call("GET", "/admin-api/dev_tools/extensions?_action=getData&page=1&perPage=50")
-ext = next((i for i in (elist.get("data") or {}).get("items", []) if i.get("name") == "acme/demo"), {})
+ext = next((i for i in (elist.get("data") or {}).get("items", []) if i.get("name") == EXT_NAME), {})
 st, en = call("POST", "/admin-api/dev_tools/extensions/enable", {"id": ext.get("id")})
 st, en_bad = call("POST", "/admin-api/dev_tools/extensions/enable", {"id": 0})
 st, s2 = call("GET", "/admin-api/_settings")
 enabled = (s2.get("data") or {}).get("enabled_extensions") or []
 check("extensions store/enable/guard",
       bad.get("status") != 0 and ok_ext.get("status") == 0 and en.get("status") == 0
-      and en_bad.get("status") != 0 and "acme/demo" in enabled and "" not in enabled,
+      and en_bad.get("status") != 0 and EXT_NAME in enabled and "" not in enabled,
       "bad=%s ok=%s enable=%s guard=%s enabled=%s" % (
           bad.get("status"), ok_ext.get("status"), en.get("status"), en_bad.get("status"), enabled))
 

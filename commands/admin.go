@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 	"github.com/wcz0/goravel-admin/models/admin"
-	"time"
 
 	"github.com/goravel/framework/contracts/console"
 	"github.com/goravel/framework/contracts/console/command"
@@ -77,100 +76,107 @@ func (receiver *Admin) initDatabase() error {
 		return fmt.Errorf("创建管理员用户失败: %w", err)
 	}
 
-	// 4. 关联管理员用户和角色
-	// 使用 GORM 的原生方法处理 pivot table 时间戳
-	now := time.Now()
-	if _, err := facades.Orm().Query().Exec("INSERT INTO admin_role_users (role_id, user_id, created_at, updated_at) VALUES (?, ?, ?, ?)",
-		adminRole.ID, adminUser.ID, now, now); err != nil {
-		return fmt.Errorf("关联管理员用户和角色失败: %w", err)
-	}
-
-	// 5. 创建权限
+	// 4. 创建权限
+	// http_path 必须与真实路由一致：匹配时只会自动补 /admin-api 前缀，
+	// 写成 /auth/roles 这种旧路径会导致非超管用户即使有权限也全部 403。
 	permissions := []*admin.AdminPermission{
 		{
 			Name:        "All permission",
-			Slug:       "*",
+			Slug:        "*",
 			HttpMethod:  []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"},
 			HttpPath:    []string{"*"},
 			CustomOrder: 1,
 		},
 		{
 			Name:        "Dashboard",
-			Slug:       "dashboard",
+			Slug:        "dashboard",
 			HttpMethod:  []string{"GET"},
-			HttpPath:    []string{"/*"},
+			HttpPath:    []string{"/dashboard*"},
 			CustomOrder: 2,
 		},
 		{
-			Name:        "Login",
-			Slug:       "auth.login",
-			HttpMethod:  []string{"GET", "POST"},
-			HttpPath:    []string{"/auth/login", "/auth/logout"},
+			Name:        "Admin users",
+			Slug:        "admin_users",
+			HttpPath:    []string{"/system/admin_users*", "/system/users*"},
 			CustomOrder: 3,
 		},
 		{
-			Name:        "User setting",
-			Slug:       "auth.setting",
-			HttpMethod:  []string{"GET", "PUT"},
-			HttpPath:    []string{"/auth/setting"},
+			Name:        "Admin roles",
+			Slug:        "admin_roles",
+			HttpPath:    []string{"/system/admin_roles*"},
 			CustomOrder: 4,
 		},
 		{
-			Name:        "Auth management",
-			Slug:       "auth.management",
-			HttpMethod:  []string{"GET", "POST"},
-			HttpPath:    []string{"/auth/roles", "/auth/permissions", "/auth/menu", "/auth/logs"},
+			Name:        "Admin permissions",
+			Slug:        "admin_permissions",
+			HttpPath:    []string{"/system/permissions*", "/system/admin_permissions*", "/system/_admin_permissions_auto_generate"},
 			CustomOrder: 5,
+		},
+		{
+			Name:        "Admin menus",
+			Slug:        "admin_menus",
+			HttpPath:    []string{"/system/menus*", "/system/admin_menus*"},
+			CustomOrder: 6,
+		},
+		{
+			Name:        "Settings",
+			Slug:        "settings",
+			HttpPath:    []string{"/_settings*", "/system/settings*"},
+			CustomOrder: 7,
+		},
+		{
+			// 登录后人人需要的公共接口：当前用户、个人设置、上传、页面结构、图标检索
+			Name:        "Common",
+			Slug:        "common",
+			HttpPath:    []string{"/current-user", "/user_setting*", "/menus", "/upload_image", "/upload_file", "/upload_rich", "/upload_chunk*", "/page_schema*", "/_iconify_search*"},
+			CustomOrder: 8,
 		},
 	}
 
-    // 创建权限并保存ID用于后续关联
-    var systemPermissionID uint
-    for _, permission := range permissions {
-        if err := facades.Orm().Query().Create(permission); err != nil {
-            return fmt.Errorf("创建权限失败: %w", err)
-        }
-        // 保存"系统"权限的ID，用于设置其他权限的父级
-        if permission.Slug == "system" {
-            systemPermissionID = permission.ID
-        }
-    }
+	permissionsBySlug := make(map[string]*admin.AdminPermission, len(permissions))
+	for _, permission := range permissions {
+		if err := facades.Orm().Query().FirstOrCreate(permission, admin.AdminPermission{Slug: permission.Slug}); err != nil {
+			return fmt.Errorf("创建权限失败: %w", err)
+		}
+		permissionsBySlug[permission.Slug] = permission
+	}
 
-    // 更新子权限的ParentId
-    childSlugs := []string{"admin_users", "roles", "permissions", "menus", "settings"}
-    for _, slug := range childSlugs {
-        if _, err := facades.Orm().Query().Model(&admin.AdminPermission{}).
-            Where("slug = ?", slug).
-            Update("parent_id", uint32(systemPermissionID)); err != nil {
-            return fmt.Errorf("更新权限父级关系失败: %w", err)
-        }
-    }
-
-	// 6. 关联角色和权限
-	// 管理员角色拥有所有权限 - 使用自定义 pivot 模型处理时间戳
+	// 5. 关联角色和权限
+	// 管理员角色拥有全部权限
 	for _, permission := range permissions {
 		rolePermission := &admin.AdminRolePermission{
 			RoleID:       adminRole.ID,
 			PermissionID: permission.ID,
 		}
-		if err := facades.Orm().Query().Create(rolePermission); err != nil {
+		if err := facades.Orm().Query().FirstOrCreate(rolePermission, admin.AdminRolePermission{
+			RoleID:       adminRole.ID,
+			PermissionID: permission.ID,
+		}); err != nil {
 			return fmt.Errorf("关联管理员角色和权限失败: %w", err)
 		}
 	}
 
-	// 操作员角色只有基本权限
-	operatorPermissions := permissions[1:] // 除了All permission外的权限
-	for _, permission := range operatorPermissions {
+	// 操作员角色只拿到日常够用的权限，不含菜单管理与系统设置
+	operatorSlugs := []string{"dashboard", "admin_users", "admin_roles", "common"}
+	for _, slug := range operatorSlugs {
+		permission, ok := permissionsBySlug[slug]
+		if !ok {
+			continue
+		}
 		rolePermission := &admin.AdminRolePermission{
 			RoleID:       operatorRole.ID,
 			PermissionID: permission.ID,
 		}
-		if err := facades.Orm().Query().Create(rolePermission); err != nil {
+		if err := facades.Orm().Query().FirstOrCreate(rolePermission, admin.AdminRolePermission{
+			RoleID:       operatorRole.ID,
+			PermissionID: permission.ID,
+		}); err != nil {
 			return fmt.Errorf("关联操作员角色和权限失败: %w", err)
 		}
 	}
 
-	// 7. 创建菜单
+	// 6. 创建菜单
+	// 先建父级再建子级，父级 ID 按 URL 回填，避免硬编码 2 这类脆弱假设。
 	menus := []*admin.AdminMenu{
 		{
 			ParentId:    0,
@@ -186,7 +192,7 @@ func (receiver *Admin) initDatabase() error {
 		},
 		{
 			ParentId:    0,
-			CustomOrder: 0,
+			CustomOrder: 1,
 			Title:       "admin_system",
 			Icon:        "material-symbols:settings-outline",
 			Url:         "/system",
@@ -197,7 +203,6 @@ func (receiver *Admin) initDatabase() error {
 			IFrameUrl:   &[]string{""}[0],
 		},
 		{
-			ParentId:    2,
 			CustomOrder: 0,
 			Title:       "admin_users",
 			Icon:        "ph:user-gear",
@@ -208,8 +213,7 @@ func (receiver *Admin) initDatabase() error {
 			IFrameUrl:   &[]string{""}[0],
 		},
 		{
-			ParentId:    2,
-			CustomOrder: 0,
+			CustomOrder: 1,
 			Title:       "admin_roles",
 			Icon:        "carbon:user-role",
 			Url:         "/system/admin_roles",
@@ -219,8 +223,7 @@ func (receiver *Admin) initDatabase() error {
 			IFrameUrl:   &[]string{""}[0],
 		},
 		{
-			ParentId:    2,
-			CustomOrder: 0,
+			CustomOrder: 2,
 			Title:       "admin_permission",
 			Icon:        "fluent-mdl2:permissions",
 			Url:         "/system/admin_permission",
@@ -230,8 +233,7 @@ func (receiver *Admin) initDatabase() error {
 			IFrameUrl:   &[]string{""}[0],
 		},
 		{
-			ParentId:    2,
-			CustomOrder: 0,
+			CustomOrder: 3,
 			Title:       "admin_menu",
 			Icon:        "ant-design:menu-unfold-outlined",
 			Url:         "/system/admin_menus",
@@ -241,8 +243,7 @@ func (receiver *Admin) initDatabase() error {
 			IFrameUrl:   &[]string{""}[0],
 		},
 		{
-			ParentId:    2,
-			CustomOrder: 0,
+			CustomOrder: 4,
 			Title:       "admin_setting",
 			Icon:        "akar-icons:settings-horizontal",
 			Url:         "/system/settings",
@@ -253,31 +254,58 @@ func (receiver *Admin) initDatabase() error {
 		},
 	}
 
+	menusByUrl := make(map[string]*admin.AdminMenu, len(menus))
 	for _, menu := range menus {
-		if err := facades.Orm().Query().Create(menu); err != nil {
+		if err := facades.Orm().Query().FirstOrCreate(menu, admin.AdminMenu{Url: menu.Url}); err != nil {
 			return fmt.Errorf("创建菜单失败: %w", err)
+		}
+		menusByUrl[menu.Url] = menu
+	}
+
+	// 子菜单统一挂到 /system 下
+	if systemMenu, ok := menusByUrl["/system"]; ok {
+		for _, menu := range menus {
+			if menu.ParentId != 0 || menu.Url == "/system" || menu.Url == "/dashboard" {
+				continue
+			}
+			menu.ParentId = uint32(systemMenu.ID)
+			if _, err := facades.Orm().Query().Model(menu).Where("id", menu.ID).Update("parent_id", systemMenu.ID); err != nil {
+				return fmt.Errorf("更新菜单父级失败: %w", err)
+			}
 		}
 	}
 
-    // 8. 关联权限和菜单（按 slug 与菜单对应关系）
-    // home -> dashboard, system -> system, admin_users -> admin_users, roles -> admin_roles, permissions -> admin_permission, menus -> admin_menus, settings -> settings
-    slugToMenuIndex := map[string]int{
-        "home":         0,
-        "system":       1,
-        "admin_users":  2,
-        "roles":        3,
-        "permissions":  4,
-        "menus":        5,
-        "settings":     6,
-    }
-    for _, p := range permissions {
-        if idx, ok := slugToMenuIndex[p.Slug]; ok && idx >= 0 && idx < len(menus) {
-            pm := &admin.AdminPermissionMenu{PermissionID: p.ID, MenuID: menus[idx].ID}
-            if err := facades.Orm().Query().Create(pm); err != nil {
-                return fmt.Errorf("关联权限(%s)和菜单失败: %w", p.Slug, err)
-            }
-        }
-    }
+	// 7. 关联权限和菜单
+	// 非超管用户的菜单来自「角色 -> 权限 -> 菜单」这条链，缺了关联侧边栏就是空的。
+	permMenus := map[string][]string{
+		"*":                 {"/dashboard", "/system", "/system/admin_users", "/system/admin_roles", "/system/admin_permission", "/system/admin_menus", "/system/settings"},
+		"dashboard":         {"/dashboard"},
+		"admin_users":       {"/system", "/system/admin_users"},
+		"admin_roles":       {"/system", "/system/admin_roles"},
+		"admin_permissions": {"/system", "/system/admin_permission"},
+		"admin_menus":       {"/system", "/system/admin_menus"},
+		"settings":          {"/system", "/system/settings"},
+		"common":            nil,
+	}
+	for slug, urls := range permMenus {
+		permission, ok := permissionsBySlug[slug]
+		if !ok {
+			continue
+		}
+		for _, url := range urls {
+			menu, ok := menusByUrl[url]
+			if !ok {
+				continue
+			}
+			pm := &admin.AdminPermissionMenu{PermissionID: permission.ID, MenuID: menu.ID}
+			if err := facades.Orm().Query().FirstOrCreate(pm, admin.AdminPermissionMenu{
+				PermissionID: permission.ID,
+				MenuID:       menu.ID,
+			}); err != nil {
+				return fmt.Errorf("关联权限(%s)和菜单失败: %w", slug, err)
+			}
+		}
+	}
 
 	// 9. 创建系统设置
 	settings := []*admin.AdminSetting{
@@ -300,7 +328,7 @@ func (receiver *Admin) initDatabase() error {
 	}
 
 	for _, setting := range settings {
-		if err := facades.Orm().Query().Create(setting); err != nil {
+		if err := facades.Orm().Query().FirstOrCreate(setting, admin.AdminSetting{Key: setting.Key}); err != nil {
 			return fmt.Errorf("创建系统设置失败: %w", err)
 		}
 	}
@@ -311,7 +339,10 @@ func (receiver *Admin) initDatabase() error {
 		RoleID: adminRole.ID,
 		UserID: adminUser.ID,
 	}
-	if err := facades.Orm().Query().Create(adminUserRole); err != nil {
+	if err := facades.Orm().Query().FirstOrCreate(adminUserRole, admin.AdminRoleUser{
+		RoleID: adminRole.ID,
+		UserID: adminUser.ID,
+	}); err != nil {
 		return fmt.Errorf("关联管理员用户和角色失败: %w", err)
 	}
 

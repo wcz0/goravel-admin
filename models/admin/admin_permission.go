@@ -90,11 +90,10 @@ func (a *AdminPermission) ShouldPassThrough(ctx http.Context) bool {
 
 // matchRequest 检查请求是否匹配指定的路径和方法
 func (a *AdminPermission) matchRequest(pathPattern string, methods []string, ctx http.Context) bool {
-	// 处理根路径
-	if pathPattern == "/" {
-		pathPattern = "/"
-	} else {
-		pathPattern = strings.Trim(pathPattern, "/")
+	// 统一成带前导斜杠的形式：tools.RequestIs 拿它和 ctx.Request().Path() 比，
+	// 而后者是 "/admin-api/..." 这种带前导斜杠的完整路径，去掉斜杠就永远匹配不上。
+	if pathPattern != "/" {
+		pathPattern = "/" + strings.Trim(pathPattern, "/")
 	}
 
 	// 检查路径匹配

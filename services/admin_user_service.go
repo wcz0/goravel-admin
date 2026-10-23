@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -42,26 +43,48 @@ func (s *AdminUserService) Login(ctx http.Context) http.Response {
 	})
 }
 
+// List 返回用户列表（分页）。
+//
+// amis 的 CRUD 依赖 total 才能渲染分页条，缺了它前端会一直停在第 1 页并显示
+// 全量数据；角色关联以前是逐行查一次（N+1），这里改为 With 预加载。
 func (a *AdminUserService) List(ctx http.Context) http.Response {
-	query := facades.Orm().Query().Select("id", "username", "name", "avatar", "enabled", "created_at")
+	page := clampPage(ctx.Request().InputInt("page", 1))
+	perPage := clampPerPage(ctx.Request().InputInt("perPage", defaultPageSize))
 
-	if keyword := ctx.Request().Input("keyword"); keyword != "" {
-		query.Where("username", "like", "%"+keyword+"%").
-			OrWhere("name", "like", "%"+keyword+"%")
+	query := facades.Orm().Query().Model(&admin.AdminUser{})
+
+	// 关键字同时匹配用户名与姓名，必须用括号包住 OR，否则会逃出其它条件。
+	if keyword := strings.TrimSpace(ctx.Request().Input("keyword")); keyword != "" {
+		query = query.WhereAny([]string{"username", "name"}, "like", "%"+keyword+"%")
+	}
+
+	total, err := query.Count()
+	if err != nil {
+		return a.Fail(ctx, err.Error())
 	}
 
 	var users []admin.AdminUser
-	if err := query.Get(&users); err != nil {
+	if err := query.
+		Select("id", "username", "name", "avatar", "enabled", "created_at").
+		With("AdminRoles").
+		Order("id asc").
+		Offset((page - 1) * perPage).
+		Limit(perPage).
+		Get(&users); err != nil {
 		return a.Fail(ctx, err.Error())
 	}
 
 	items := make([]map[string]any, 0, len(users))
 	loc := time.FixedZone("CST", 8*3600)
 	for _, u := range users {
-		var roles []admin.AdminRole
-		_ = facades.Orm().Query().Model(&u).Association("AdminRoles").Find(&roles)
-		roleItems := make([]map[string]any, 0, len(roles))
-		for _, r := range roles {
+		roleItems := make([]map[string]any, 0, len(u.AdminRoles))
+		// 关联表历史上没有唯一约束，重复行会让前端出现重复角色标签，这里按角色 ID 去重。
+		seen := make(map[uint]bool, len(u.AdminRoles))
+		for _, r := range u.AdminRoles {
+			if r == nil || seen[r.ID] {
+				continue
+			}
+			seen[r.ID] = true
 			roleItems = append(roleItems, map[string]any{"id": r.ID, "name": r.Name})
 		}
 		items = append(items, map[string]any{
@@ -76,7 +99,10 @@ func (a *AdminUserService) List(ctx http.Context) http.Response {
 	}
 
 	return a.SuccessData(ctx, map[string]any{
-		"items": items,
+		"items":   items,
+		"total":   total,
+		"page":    page,
+		"perPage": perPage,
 	})
 }
 
@@ -87,11 +113,13 @@ func (a *AdminUserService) Export(ctx http.Context) http.Response {
 	query := facades.Orm().Query().Select("id", "username", "name", "enabled", "created_at").Order("id asc")
 
 	if ids := ctx.Request().Input("_ids"); ids != "" {
-		query.WhereIn("id", parseIDList(ids))
+		query = query.WhereIn("id", parseIDList(ids))
 	}
-	if keyword := ctx.Request().Input("keyword"); keyword != "" {
-		query.Where("username", "like", "%"+keyword+"%").
-			OrWhere("name", "like", "%"+keyword+"%")
+	// 关键字必须用 WhereAny 包成 (username like ? or name like ?)：
+	// 直接 Where(...).OrWhere(...) 会让 OR 逃出上面的 _ids 限制，
+	// 勾选两行导出却把全表都导出来。
+	if keyword := strings.TrimSpace(ctx.Request().Input("keyword")); keyword != "" {
+		query = query.WhereAny([]string{"username", "name"}, "like", "%"+keyword+"%")
 	}
 
 	var users []admin.AdminUser
@@ -134,7 +162,7 @@ func (a *AdminUserService) RoleOptions(ctx http.Context) []map[string]any {
 
 	// 如果不是超级管理员，则不能分配超级管理员角色
 	if !currentUser.IsAdministrator() {
-		query.Where("slug", "!=", "administrator")
+		query = query.Where("slug", "!=", "administrator")
 	}
 
 	if err := query.Get(&roles); err != nil {
@@ -278,40 +306,80 @@ func (a *AdminUserService) Update(ctx http.Context) http.Response {
 		return a.Fail(ctx, err.Error())
 	}
 
-	roleIDs := []interface{}{}
-	for _, v := range ctx.Request().InputArray("roles") {
-		if v == "" {
-			continue
-		}
-		roleIDs = append(roleIDs, v)
-	}
-	if len(roleIDs) == 0 {
-		all := ctx.Request().All()
-		if raw, ok := all["roles"]; ok {
-			if arr, ok := raw.([]any); ok {
-				for _, item := range arr {
-					switch it := item.(type) {
-					case map[string]any:
-						if idVal, ok := it["id"]; ok {
-							roleIDs = append(roleIDs, idVal)
-						}
-					}
-				}
-			}
-		}
-	}
-	if len(roleIDs) > 0 {
-		var roles []admin.AdminRole
-		if err := facades.Orm().Query().WhereIn("id", roleIDs).Find(&roles); err == nil {
-			rs := make([]*admin.AdminRole, 0, len(roles))
-			for i := range roles {
-				rs = append(rs, &roles[i])
-			}
-			_ = user.SyncRoles(rs)
+	if roleIDs := roleIDsFrom(ctx); len(roleIDs) > 0 {
+		if err := user.SyncRoles(loadRoles(roleIDs)); err != nil {
+			return a.Fail(ctx, err.Error())
 		}
 	}
 
 	return a.Success(ctx, "更新成功")
+}
+
+// roleIDsFrom 从请求里取出角色 ID，兼容 ["1","2"] 与 [{"id":1}] 两种前端写法，并去重。
+//
+// 去重是必须的：关联表没有唯一约束，同一个角色 ID 出现两次会插两行，
+// 用户列表就会渲染出重复的角色标签。
+func roleIDsFrom(ctx http.Context) []any {
+	ids := make([]any, 0, 4)
+	var appendID func(v any)
+	appendID = func(v any) {
+		switch it := v.(type) {
+		case nil:
+			return
+		case string:
+			if strings.TrimSpace(it) == "" {
+				return
+			}
+			ids = append(ids, it)
+		case float64, int, int64, uint:
+			ids = append(ids, it)
+		case map[string]any:
+			if idVal, ok := it["id"]; ok {
+				appendID(idVal)
+			}
+		}
+	}
+
+	for _, v := range ctx.Request().InputArray("roles") {
+		appendID(v)
+	}
+	if len(ids) == 0 {
+		if raw, ok := ctx.Request().All()["roles"]; ok {
+			if arr, ok := raw.([]any); ok {
+				for _, item := range arr {
+					appendID(item)
+				}
+			}
+		}
+	}
+
+	seen := make(map[string]bool, len(ids))
+	unique := ids[:0]
+	for _, id := range ids {
+		key := fmt.Sprintf("%v", id)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		unique = append(unique, id)
+	}
+
+	return unique
+}
+
+// loadRoles 按 ID 取角色实体，供 SyncRoles 使用。
+func loadRoles(ids []any) []*admin.AdminRole {
+	var roles []admin.AdminRole
+	if err := facades.Orm().Query().WhereIn("id", ids).Find(&roles); err != nil {
+		return nil
+	}
+
+	result := make([]*admin.AdminRole, 0, len(roles))
+	for i := range roles {
+		result = append(result, &roles[i])
+	}
+
+	return result
 }
 
 func (a *AdminUserService) Store(ctx http.Context) http.Response {
@@ -320,7 +388,7 @@ func (a *AdminUserService) Store(ctx http.Context) http.Response {
 	name := ctx.Request().Input("name")
 	avatar := ctx.Request().Input("avatar")
 	enabled := ctx.Request().InputInt("enabled", 1)
-	rawRoles := ctx.Request().InputArray("roles")
+
 
 	// 检查用户名是否已存在
 	var existingUser admin.AdminUser
@@ -345,15 +413,9 @@ func (a *AdminUserService) Store(ctx http.Context) http.Response {
 		return a.Fail(ctx, err.Error())
 	}
 
-	if len(rawRoles) > 0 {
-		var roles []admin.AdminRole
-		if err := facades.Orm().Query().Where("id IN ?", rawRoles).Get(&roles); err == nil {
-			// 关联角色
-			rs := make([]*admin.AdminRole, 0, len(roles))
-			for i := range roles {
-				rs = append(rs, &roles[i])
-			}
-			_ = user.SyncRoles(rs)
+	if roleIDs := roleIDsFrom(ctx); len(roleIDs) > 0 {
+		if err := user.SyncRoles(loadRoles(roleIDs)); err != nil {
+			return a.Fail(ctx, err.Error())
 		}
 	}
 

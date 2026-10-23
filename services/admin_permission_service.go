@@ -363,13 +363,12 @@ func (s *AdminPermissionService) List(ctx http.Context) http.Response {
 	query := facades.Orm().Query()
 
 	// 支持关键字搜索 name / slug
-	if keyword := ctx.Request().Input("keyword"); keyword != "" {
-		query.Where("name", "like", "%"+keyword+"%").
-			OrWhere("slug", "like", "%"+keyword+"%")
+	if keyword := strings.TrimSpace(ctx.Request().Input("keyword")); keyword != "" {
+		query = query.WhereAny([]string{"name", "slug"}, "like", "%"+keyword+"%")
 	}
 
 	// 排序：custom_order 升序，创建时间降序
-	query.Order("custom_order asc").Order("created_at desc")
+	query = query.Order("custom_order asc").Order("created_at desc")
 
 	var permissions []admin.AdminPermission
 	if err := query.Get(&permissions); err != nil {

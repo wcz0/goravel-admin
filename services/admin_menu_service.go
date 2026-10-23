@@ -19,8 +19,8 @@ func (s *AdminMenuService) List(ctx http.Context) http.Response {
     title := ctx.Request().Input("title")
     url := ctx.Request().Input("url")
     q := facades.Orm().Query().Model(&admin.AdminMenu{}).Order("custom_order asc").Order("id asc")
-    if title != "" { q.Where("title", "like", "%"+title+"%") }
-    if url != "" { q.Where("url", "like", "%"+url+"%") }
+    if title != "" { q = q.Where("title", "like", "%"+title+"%") }
+    if url != "" { q = q.Where("url", "like", "%"+url+"%") }
     var menus []admin.AdminMenu
     if err := q.Get(&menus); err != nil { return s.FailMsg(ctx, err.Error()) }
     parentMap := make(map[uint32][]admin.AdminMenu)
