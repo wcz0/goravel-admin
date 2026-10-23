@@ -20,6 +20,9 @@ const exportTTL = 10 * time.Minute
 // exportDir 是导出文件的存储目录。
 const exportDir = "exports"
 
+// maxSheetNameLen 是 Excel 允许的工作表名最大字符数。
+const maxSheetNameLen = 31
+
 // ExportFile 描述一次导出的结果。
 //
 // 前端拿到这三个字段后会直接拼出下载地址，后端在下载时重新校验签名，
@@ -30,13 +33,19 @@ type ExportFile struct {
 	Signature string `json:"signature"`
 }
 
-// signExport 用 APP_KEY 对「路径 + 过期时间」做 HMAC 签名。
-func signExport(path string, expires string) string {
-	key := facades.Config().GetString("app.key")
+// signWithKey 用给定密钥对「路径 + 过期时间」做 HMAC 签名。
+//
+// 单独拆出来是为了能在不启动应用容器的情况下测试签名算法本身。
+func signWithKey(key string, path string, expires string) string {
 	mac := hmac.New(sha256.New, []byte(key))
 	mac.Write([]byte(path + "|" + expires))
 
 	return hex.EncodeToString(mac.Sum(nil))
+}
+
+// signExport 用 APP_KEY 对「路径 + 过期时间」做 HMAC 签名。
+func signExport(path string, expires string) string {
+	return signWithKey(facades.Config().GetString("app.key"), path, expires)
 }
 
 // BuildExport 把表头与数据行渲染成 xlsx 并返回签名后的下载信息。
@@ -107,8 +116,18 @@ func BuildExport(disk string, sheetName string, headers []string, rows [][]any) 
 
 // VerifyExport 校验下载请求的签名与有效期。
 func VerifyExport(path string, expires string, signature string) error {
+	return verifyExport(facades.Config().GetString("app.key"), path, expires, signature)
+}
+
+// verifyExport 是 VerifyExport 的实际实现，密钥由调用方传入。
+//
+// APP_KEY 为空时直接拒绝：此时任何人都能算出同样的签名，校验形同虚设。
+func verifyExport(key string, path string, expires string, signature string) error {
 	if path == "" || expires == "" || signature == "" {
 		return errors.New("参数不完整")
+	}
+	if key == "" {
+		return errors.New("APP_KEY 未配置，无法校验导出链接")
 	}
 	if strings.ContainsRune(path, 0) || strings.Contains(path, "..") {
 		return errors.New("路径不合法")
@@ -125,7 +144,7 @@ func VerifyExport(path string, expires string, signature string) error {
 		return errors.New("下载链接已过期")
 	}
 
-	if !hmac.Equal([]byte(signExport(path, expires)), []byte(signature)) {
+	if !hmac.Equal([]byte(signWithKey(key, path, expires)), []byte(signature)) {
 		return errors.New("签名校验失败")
 	}
 
@@ -133,14 +152,19 @@ func VerifyExport(path string, expires string, signature string) error {
 }
 
 // sanitizeSheetName 去掉工作表名里 Excel 不允许的字符。
+//
+// Excel 限制工作表名最多 31 个字符。这里按 rune 截断而不是按字节：
+// 按字节切会把中文表名切成非法 UTF-8，open 时会报错。
 func sanitizeSheetName(name string) string {
 	replacer := strings.NewReplacer("/", "_", "\\", "_", ":", "_", "*", "_", "?", "_", "[", "_", "]", "_")
 	cleaned := replacer.Replace(name)
 	if cleaned == "" {
 		return "export"
 	}
-	if len(cleaned) > 32 {
-		cleaned = cleaned[:32]
+
+	runes := []rune(cleaned)
+	if len(runes) > maxSheetNameLen {
+		cleaned = string(runes[:maxSheetNameLen])
 	}
 
 	return cleaned

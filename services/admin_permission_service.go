@@ -3,9 +3,11 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
+
 	"github.com/wcz0/goravel-admin/models"
 	"github.com/wcz0/goravel-admin/models/admin"
-	"strings"
 
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
@@ -492,29 +494,36 @@ func buildPermissionTree(permissions []admin.AdminPermission, parentID uint) []*
 }
 
 // buildPermissionTree 构建权限树状结构
+//
+// 子节点按 custom_order 升序、同序按 id 升序排列。之前用 map 保存同级节点，
+// Go 的 map 迭代顺序随机，导致前端权限树每次刷新顺序都在变。
 func (s *AdminPermissionService) buildPermissionTree(permissions []admin.AdminPermission) []map[string]any {
-	// 创建权限映射
-	permissionMap := make(map[uint]admin.AdminPermission)
+	childrenByParent := make(map[uint][]admin.AdminPermission, len(permissions))
 	for _, permission := range permissions {
-		permissionMap[permission.ID] = permission
+		childrenByParent[permission.ParentId] = append(childrenByParent[permission.ParentId], permission)
+	}
+	for parentID := range childrenByParent {
+		children := childrenByParent[parentID]
+		sort.SliceStable(children, func(i, j int) bool {
+			if children[i].CustomOrder != children[j].CustomOrder {
+				return children[i].CustomOrder < children[j].CustomOrder
+			}
+
+			return children[i].ID < children[j].ID
+		})
 	}
 
-	// 构建树状结构
-	var tree []map[string]any
-
-	for _, permission := range permissions {
-		// 只处理顶级权限（parent_id = 0）
-		if permission.ParentId == 0 {
-			node := s.buildPermissionNode(permission, permissionMap)
-			tree = append(tree, node)
-		}
+	roots := childrenByParent[0]
+	tree := make([]map[string]any, 0, len(roots))
+	for _, permission := range roots {
+		tree = append(tree, s.buildPermissionNode(permission, childrenByParent))
 	}
 
 	return tree
 }
 
 // buildPermissionNode 构建权限节点（包含子节点）
-func (s *AdminPermissionService) buildPermissionNode(permission admin.AdminPermission, permissionMap map[uint]admin.AdminPermission) map[string]any {
+func (s *AdminPermissionService) buildPermissionNode(permission admin.AdminPermission, childrenByParent map[uint][]admin.AdminPermission) map[string]any {
 	// 处理 HttpMethod：空数组显示为 "ANY"
 	httpMethod := "ANY"
 	if len(permission.HttpMethod) > 0 {
@@ -541,11 +550,9 @@ func (s *AdminPermissionService) buildPermissionNode(permission admin.AdminPermi
 	}
 
 	// 递归构建子节点
-	for _, childPermission := range permissionMap {
-		if childPermission.ParentId == permission.ID {
-			childNode := s.buildPermissionNode(childPermission, permissionMap)
-			node["children"] = append(node["children"].([]map[string]any), childNode)
-		}
+	for _, childPermission := range childrenByParent[permission.ID] {
+		childNode := s.buildPermissionNode(childPermission, childrenByParent)
+		node["children"] = append(node["children"].([]map[string]any), childNode)
 	}
 
 	return node

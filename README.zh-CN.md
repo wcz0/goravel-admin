@@ -171,13 +171,26 @@ owl-admin 是 PHP 运行时，部分能力在 Go 的静态编译模型下没有�
 
 ## 测试
 
-仓库内包含单元测试与端到端契约冒烟脚本：
+分三层，全部由 [`.github/workflows/tests.yml`](./.github/workflows/tests.yml) 在每次 push / PR 时执行：
+
+**单元测试** —— 不启动应用容器、不连数据库。覆盖前端依赖的响应信封、导出签名与路径穿越防护、权限树排序、
+`preview_code` 的标识符转换、上传校验、图标检索、`StringSlice` 历史数据兼容与迁移清单。
 
 ```shell
-go test ./...
+go test ./...                 # 全部
+go test ./tools/ -v           # 单个包
+go test ./... -cover          # 带覆盖率
 ```
 
-冒烟脚本会把 owl-admin 前端依赖的接口逐个打一遍：
+**集成测试** —— 启动真实 Goravel 应用，覆盖单测够不到的部分：真实渲染 xlsx、写入存储磁盘、完整校验签名。
+
+```shell
+cd example
+cp .env.example .env          # 必须设置 APP_KEY；DB_CONNECTION=sqlite 即可
+go test ./tests/... -v
+```
+
+**契约冒烟脚本** —— 把 owl-admin 前端依赖的接口逐个打一遍：
 
 ```shell
 cd example

@@ -38,8 +38,36 @@ Release notes per version live in [`docs/releases`](./docs/releases).
 - `services/preview_test.go` covering identifier sanitization, relationship `preview_code`, page schema extraction and
   primary-key guards.
 - `example/smoke_admin.py`: an end-to-end contract smoke test covering every endpoint the owl-admin frontend calls.
+- Layered test suite alongside the smoke test: package-level unit tests that need neither container nor database
+  (response envelope, export signing and traversal guards, permission tree ordering, identifier conversion, upload
+  validation, icon search, legacy `StringSlice` decoding, migration inventory), plus container-backed integration
+  tests in `example/tests/feature` that render a real xlsx, write it to the local disk and verify the signature round
+  trip.
+- `.github/workflows/tests.yml`: build, `go vet` and unit tests with coverage on every push and pull request, plus a
+  second job that boots the example application and runs the integration tests.
 
 ### Fixed
+
+- `enums.CodeEnum.Message()` returned `Unknown error` for `401 Unauthorized` and `403 PermissionDenied` — both were
+  missing from the switch.
+- Permission tree children came back in random order: sibling nodes were collected in a `map`, and Go randomises map
+  iteration, so "Roles" could appear above "Users" on one refresh and below it on the next. Siblings are now sorted by
+  `custom_order` and then by `id`.
+- Export worksheet names were truncated by **bytes**, so a Chinese sheet name longer than 32 bytes was cut mid-rune and
+  produced invalid UTF-8 that Excel refused to open. Truncation is now rune-based and respects Excel's 31-character
+  limit.
+- `response.Unauthorized` / `TokenExpired` / `FormError` / `LimitError` / `PermissionError` had no `status` field. The
+  frontend decides whether a body is an AMis-style envelope with `typeof backend.status === 'number'`, so missing
+  `status` made these error responses fall through as raw axios responses.
+- `FormError` / `LimitError` / `UnauthorizedError` / `PermissionError` discarded the caller's message (`if msg != ""
+  { msg = "fixed text" }`, with the variable never used). They now return the template default when no message is
+  given and the custom message otherwise, and never mutate the shared package-level template.
+- `FailMsg` / `FailData` / `FailMsgData` omitted the `code` field that every other failure response carries; they now
+  include `code: 400`.
+- `safeExtension` compared extensions case-sensitively, so `PHP` / `.EXE` slipped through if a future upload entry
+  point forgot to lowercase. The check now normalizes case and a leading dot itself.
+- `VerifyExport` accepted any signature when `APP_KEY` was empty (empty HMAC key = anyone can forge a link). It now
+  fails closed with an explicit error.
 
 - Image and file upload configuration keys were concatenated incorrectly (`admin.upload.directoryimage`), so uploads
   landed in the storage root. Files now resolve `admin.upload.directory.<type>`: images go to `images/`, files to

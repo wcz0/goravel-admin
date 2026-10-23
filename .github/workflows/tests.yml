@@ -1,0 +1,72 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, goravel-1.17]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          check-latest: true
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./... -race -covermode=atomic -coverprofile=coverage.out
+
+      - name: Coverage summary
+        run: go tool cover -func=coverage.out | tail -1
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.out
+
+  integration:
+    name: Integration tests (example)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          check-latest: true
+
+      - name: Prepare environment
+        working-directory: example
+        run: |
+          cp .env.example .env
+          # 导出签名依赖 APP_KEY，CI 里现场生成一个
+          sed -i "s|^APP_KEY=.*|APP_KEY=base64:$(openssl rand -base64 32)|" .env
+          # 集成测试不查库，切到 sqlite 避免依赖 mysql 服务
+          sed -i "s|^DB_CONNECTION=.*|DB_CONNECTION=sqlite|" .env
+
+      - name: Build example
+        working-directory: example
+        run: go build ./...
+
+      - name: Vet example
+        working-directory: example
+        run: go vet ./...
+
+      - name: Test example
+        working-directory: example
+        run: go test ./tests/... -v

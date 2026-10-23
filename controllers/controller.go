@@ -852,8 +852,11 @@ func validChunkID(uploadID string) bool {
 }
 
 // safeExtension 挡掉脚本类后缀，避免上传目录被当成可执行入口。
+//
+// 这里自己再做一次小写与前导点归一：调用方目前已经 ToLower 过了，但把安全
+// 判断建立在调用方的预处理上，一旦有人新增上传入口忘了处理就会漏过去。
 func safeExtension(ext string) bool {
-	switch ext {
+	switch strings.ToLower(strings.TrimPrefix(ext, ".")) {
 	case "php", "php3", "php4", "php5", "php7", "php8", "phtml", "phar",
 		"sh", "py", "asp", "aspx", "jsp", "env", "exe", "bat", "cmd", "vbs", "htaccess":
 		return false
