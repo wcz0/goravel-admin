@@ -178,13 +178,28 @@ owl-admin runs on PHP; some of its features have no equivalent under Go's static
 
 ## Testing
 
-Unit tests plus an end-to-end contract smoke test live in the repo:
+Three layers, all wired into [`.github/workflows/tests.yml`](./.github/workflows/tests.yml):
+
+**Unit tests** — no application container, no database. They pin the response envelope the frontend depends on, the
+export signing and path-traversal guards, permission tree ordering, identifier conversion for `preview_code`, upload
+validation, icon search, legacy `StringSlice` decoding and the migration inventory.
 
 ```shell
-go test ./...
+go test ./...                 # everything
+go test ./tools/ -v           # one package
+go test ./... -cover          # with coverage
 ```
 
-The smoke test drives every endpoint the owl-admin frontend relies on against a running instance:
+**Integration tests** — boot a real Goravel app to cover what unit tests cannot: rendering an xlsx, writing it through
+the storage disk, and verifying the signature end to end.
+
+```shell
+cd example
+cp .env.example .env          # APP_KEY must be set; DB_CONNECTION=sqlite is enough
+go test ./tests/... -v
+```
+
+**Contract smoke test** — drives every endpoint the owl-admin frontend calls against a running instance:
 
 ```shell
 cd example

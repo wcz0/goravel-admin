@@ -80,6 +80,7 @@ func (e *ErrorHandler) Fail(ctx http.Context) http.Response {
 func (e *ErrorHandler) FailMsg(ctx http.Context, msg any) http.Response {
 	return ctx.Response().Success().Json(http.Json{
 		"status":            enums.StatusFailed,
+		"code":              enums.Failed,
 		"msg":               msg,
 		"data":              []any{},
 		"doNotDisplayToast": 0,
@@ -89,6 +90,7 @@ func (e *ErrorHandler) FailMsg(ctx http.Context, msg any) http.Response {
 func (e *ErrorHandler) FailData(ctx http.Context, data any) http.Response {
 	return ctx.Response().Success().Json(http.Json{
 		"status":            enums.StatusFailed,
+		"code":              enums.Failed,
 		"msg":               "Error.",
 		"data":              data,
 		"doNotDisplayToast": 0,
@@ -98,6 +100,7 @@ func (e *ErrorHandler) FailData(ctx http.Context, data any) http.Response {
 func (e *ErrorHandler) FailMsgData(ctx http.Context, msg any, data any) http.Response {
 	return ctx.Response().Success().Json(http.Json{
 		"status":            enums.StatusFailed,
+		"code":              enums.Failed,
 		"msg":               msg,
 		"data":              data,
 		"doNotDisplayToast": 0,
@@ -114,30 +117,35 @@ func (e *ErrorHandler) FailCodeMsg(ctx http.Context, code int, msg string) http.
 	})
 }
 
-func (e *ErrorHandler) FormError(ctx http.Context, msg any) http.Response {
-	if msg != "" {
-		msg = "Form validation error."
+// failWith 复制一份全局模板并可选覆盖 msg。
+//
+// 必须复制：全局模板是包级变量，直接改会污染后续请求。
+func (e *ErrorHandler) failWith(ctx http.Context, template map[string]any, msg any) http.Response {
+	payload := make(map[string]any, len(template)+1)
+	for key, value := range template {
+		payload[key] = value
 	}
-	return ctx.Response().Success().Json(FormError)
+
+	// 传了自定义消息就用传入的，否则保留模板里的默认文案
+	if custom, ok := msg.(string); ok && custom != "" {
+		payload["msg"] = custom
+	}
+
+	return ctx.Response().Success().Json(payload)
+}
+
+func (e *ErrorHandler) FormError(ctx http.Context, msg any) http.Response {
+	return e.failWith(ctx, FormError, msg)
 }
 
 func (e *ErrorHandler) LimitError(ctx http.Context, msg any) http.Response {
-	if msg != "" {
-		msg = "Too many requests."
-	}
-	return ctx.Response().Success().Json(LimitError)
+	return e.failWith(ctx, LimitError, msg)
 }
 
 func (e *ErrorHandler) UnauthorizedError(ctx http.Context, msg any) http.Response {
-	if msg != "" {
-		msg = "Unauthorized."
-	}
-	return ctx.Response().Success().Json(Unauthorized)
+	return e.failWith(ctx, Unauthorized, msg)
 }
 
 func (e *ErrorHandler) PermissionError(ctx http.Context, msg any) http.Response {
-	if msg != "" {
-		msg = "Permission denied."
-	}
-	return ctx.Response().Success().Json(PermissionError)
+	return e.failWith(ctx, PermissionError, msg)
 }

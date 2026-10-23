@@ -9,6 +9,7 @@ require (
 	github.com/goravel/sqlite v1.18.0
 	github.com/stretchr/testify v1.11.1
 	github.com/wcz0/goravel-admin v0.0.0-00010101000000-000000000000
+	github.com/xuri/excelize/v2 v2.11.0
 )
 
 require (
@@ -119,7 +120,6 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/xrash/smetrics v0.0.0-20250705151800-55b8f293f342 // indirect
 	github.com/xuri/efp v0.0.1 // indirect
-	github.com/xuri/excelize/v2 v2.11.0 // indirect
 	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
 	go.mongodb.org/mongo-driver/v2 v2.5.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect

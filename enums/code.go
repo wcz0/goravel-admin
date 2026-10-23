@@ -17,6 +17,10 @@ func (c CodeEnum) Message() string {
 		return "Success"
 	case NotFound:
 		return "NotFound"
+	case Unauthorized:
+		return "Unauthorized"
+	case PermissionDenied:
+		return "PermissionDenied"
 	case ServerError:
 		return "ServerError"
 	case Failed:
