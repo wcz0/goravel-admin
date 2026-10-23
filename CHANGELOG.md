@@ -28,7 +28,7 @@ Release notes per version live in [`docs/releases`](./docs/releases).
 - Export: "export all / this page / selected" toolbar actions, xlsx generation, and an HMAC-signed, expiring
   `_download_export` URL with path traversal protection. Wired up for the user list.
 - `admin:create-user`, `admin:reset-password` and `admin:doctor` commands. `admin:doctor` checks `APP_KEY`, database
-  connectivity, the 13 core tables, admin accounts, home menu uniqueness and broken menu parents.
+  connectivity, the 12 core tables, admin accounts, home menu uniqueness and broken menu parents.
 - `core/captcha_test.go` covering "generate → verify → single-use expiry" plus rejection of empty and wrong answers.
 - `example/`: a minimal host application that verifies the full `setup install` flow (provider registration,
   migrations, `admin:init`, login and list endpoints).
@@ -113,6 +113,9 @@ Release notes per version live in [`docs/releases`](./docs/releases).
   clamped to 500, and roles are preloaded.
 - `admin:init` seeded the child menus with a hard-coded `parent_id = 2`; children are now attached to the `/system`
   menu by its actual ID.
+- `admin:init` used `FirstOrCreate` for the built-in permissions, so an existing database kept the old `http_path`
+  values (`/auth/roles`, …) after an upgrade and non-superadmins stayed blocked. It now compares and updates `name` and
+  `http_path` for the eight built-in slugs when they differ.
 
 ### Changed
 
@@ -148,6 +151,11 @@ Release notes per version live in [`docs/releases`](./docs/releases).
   no backend implementation: Go has no equivalent of owl-admin's `amis()->Xxx()` PHP codegen, so the request returned
   an empty `200`. The amis schema editor itself (`custom-amis-editor`) is unchanged and still edits `admin_pages`
   schemas.
+- Removed the code generator leftovers: the `admin_code_generators` table had no model, controller or route behind it,
+  and came with a dead `/dev_tools/code_generator` menu entry and ~100 lines of unused copy in both language packs. The
+  migration, the `admin:doctor` check and the menu entry are gone, so the migration count drops from 13 to 12.
+- Removed `core.Menu.Extra()` and `core.Menu.devToolMenus()`. Nothing ever called `Extra()`, and the routes it built
+  pointed at frontend pages that do not exist (`user_setting`, `/dev_tools/editor`, `/dev_tools/code_generator`).
 - README no longer carries the "Differences from owl-admin" table. Runtime extension install, the PHP code generator
   and multi-module sub-admins are out of scope rather than gaps in the package, so the scope is stated in one
   paragraph instead of an inventory of missing features.

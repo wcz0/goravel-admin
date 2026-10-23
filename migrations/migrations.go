@@ -18,7 +18,6 @@ func All() []schema.Migration {
 		&M20240424000001CreateAdminRoleUsersTable{},
 		&M20240424000002CreateAdminRolePermissionsTable{},
 		&M20240424000003CreateAdminApisTable{},
-		&M20240424000004CreateAdminCodeGeneratorsTable{},
 		&M20240424000005CreateAdminPagesTable{},
 		&M20240424000006CreateAdminRelationshipsTable{},
 	}

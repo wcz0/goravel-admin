@@ -36,8 +36,8 @@ func TestAllSignaturesWellFormed(t *testing.T) {
 
 // TestAllCount 表数量是安装契约的一部分，改动需要同步文档与 doctor 检查。
 func TestAllCount(t *testing.T) {
-	if got := len(All()); got != 13 {
-		t.Errorf("迁移数量为 %d，期望 13（新增表请同时更新 admin:doctor 与文档）", got)
+	if got := len(All()); got != 12 {
+		t.Errorf("迁移数量为 %d，期望 12（新增表请同时更新 admin:doctor 与文档）", got)
 	}
 }
 

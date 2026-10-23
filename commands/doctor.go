@@ -38,7 +38,6 @@ var coreTables = []string{
 	"admin_pages",
 	"admin_apis",
 	"admin_relationships",
-	"admin_code_generators",
 }
 
 // Doctor 巡检后台运行环境，输出问题与修复建议。

@@ -113,7 +113,7 @@ go run . artisan vendor:publish --package=github.com/wcz0/goravel-admin --tag=go
 | `admin:init` | 创建管理员/操作员角色、首页菜单与默认 `admin` 账号 |
 | `admin:create-user` | 创建管理员（`--username`、`--password`、`--name`、`--roles`） |
 | `admin:reset-password` | 重置密码（`--username`、`--password`；不传密码时随机生成 12 位） |
-| `admin:doctor` | 巡检 `APP_KEY`、数据库连通性、13 张核心表、管理员账号、首页菜单唯一性与菜单父级断链 |
+| `admin:doctor` | 巡检 `APP_KEY`、数据库连通性、12 张核心表、管理员账号、首页菜单唯一性与菜单父级断链 |
 
 ## 配置
 
