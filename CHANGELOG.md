@@ -28,9 +28,11 @@
 
 - 移除 `goravel-authz` 依赖，以及遗留的 Casbin 配置、`admin_rule` 模型、`casbin_rules` 相关迁移和数据库导出文件；权限完全由内置 RBAC 实现。
 
-### Known issues
+### Compatibility
 
-- 已实测 v1.18 代码无法直接降级编译到 goravel/framework v1.17（`Request().Validate` 入参类型与 `http.Middleware` 契约变更），1.17 / 1.16 支持需要独立分支适配，尚未提供。
+- 本分支对应 goravel/framework v1.18.x。
+- Goravel 1.17 由 `goravel-1.17` 分支提供（已跑通安装流程），与 main 的差异：中间件改为 `func(ctx http.Context)` 闭包、校验规则字面量改为 `map[string]string`、移除 `anyRules()` 转换层。
+- 不提供 v1.16 支持线：Goravel 1.16 没有 `foundation.Setup()`，也没有 `packages.Setup.Paths()` 与 `modify.RegisterProvider`，扩展包安装机制在 1.16 上不存在，需要独立的应用骨架与安装器实现。
 
 ## [1.0.0] - 2025-11-27
 
