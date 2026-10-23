@@ -21,7 +21,7 @@
 - **全 amis schema**：列表、表单、详情页都由服务端用 [gamis](https://github.com/wcz0/gamis) 生成，页面即 Go 代码。
 - **内置 RBAC**：用户、角色、权限、菜单，不依赖外部授权包。
 - **对齐 owl-admin**：验证码、分块上传、xlsx 导出、自定义页面、动态 API、动态关联与扩展名单均已实现，
-  差异见[与 owl-admin 的差异](#与-owl-admin-的差异)。
+  适用范围见[适用范围](#适用范围)。
 
 变更记录见 [CHANGELOG.md](./CHANGELOG.md)（英文），各版本发布说明见 [docs/releases](./docs/releases)。
 
