@@ -82,12 +82,30 @@ func (a *AdminUser) SyncRoles(roles []*AdminRole) error {
 }
 
 // AllPermissions 获取用户所有权限
+// AllPermissions 汇总用户所有角色下的权限（按权限 ID 去重）。
+//
+// 之前这里写成 Model(a).With("AdminPermissions").Association("AdminRoles").Find(&permissions)：
+// 关联名是 AdminRoles，接收的却是 []AdminPermission，类型对不上必然报错，
+// 于是非超管用户永远拿到空权限、所有接口 403。
 func (a *AdminUser) AllPermissions() []AdminPermission {
-	var adminPermissions []AdminPermission
-	if err := facades.Orm().Query().Model(a).With("AdminPermissions").Association("AdminRoles").Find(&adminPermissions); err != nil {
+	var roles []AdminRole
+	if err := facades.Orm().Query().Model(a).With("AdminPermissions").Association("AdminRoles").Find(&roles); err != nil {
 		return nil
 	}
-	return adminPermissions
+
+	seen := make(map[uint]bool)
+	result := make([]AdminPermission, 0, len(roles))
+	for i := range roles {
+		for _, permission := range roles[i].AdminPermissions {
+			if permission == nil || seen[permission.ID] {
+				continue
+			}
+			seen[permission.ID] = true
+			result = append(result, *permission)
+		}
+	}
+
+	return result
 }
 
 // HasPermission 检查用户是否拥有指定权限

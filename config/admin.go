@@ -46,17 +46,14 @@ func New() map[string]any {
 			"token_expiration": config.Env("ADMIN_TOKEN_EXPIRATION", 86400),
 			// 使用的 auth guard，需要在 config/auth.go 中存在
 			"guard": config.Env("ADMIN_AUTH_GUARD", "admin"),
-			"except": []string{
-				"system/admin_users",
-			},
+			// 只放登录相关接口；不要在这里放业务路由，否则会绕过登录校验
+			"except": []string{},
 		},
 
 		// 权限
 		"permission": map[string]any{
 			"enable": config.Env("ADMIN_ENABLE_PERMISSION", true),
-			"except": []string{
-				"system/admin_users",
-			},
+			"except": []string{},
 		},
 
 		// 上传

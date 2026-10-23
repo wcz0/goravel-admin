@@ -50,10 +50,10 @@ func (s *AdminPageService) Get(sign string) any {
 func (s *AdminPageService) List(ctx http.Context) http.Response {
 	query := facades.Orm().Query().Model(&admin.AdminPage{}).Order("id desc")
 	if title := ctx.Request().Input("title"); title != "" {
-		query.Where("title", "like", "%"+title+"%")
+		query = query.Where("title", "like", "%"+title+"%")
 	}
 	if sign := ctx.Request().Input("sign"); sign != "" {
-		query.Where("sign", "like", "%"+sign+"%")
+		query = query.Where("sign", "like", "%"+sign+"%")
 	}
 
 	var pages []admin.AdminPage
@@ -148,7 +148,7 @@ func extractSchema(all map[string]any) (string, error) {
 func (s *AdminPageService) checkSign(sign string, excludeID int) error {
 	query := facades.Orm().Query().Model(&admin.AdminPage{}).Where("sign", sign)
 	if excludeID > 0 {
-		query.Where("id != ?", excludeID)
+		query = query.Where("id != ?", excludeID)
 	}
 
 	total, err := query.Count()

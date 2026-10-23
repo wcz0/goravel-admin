@@ -86,6 +86,32 @@ Release notes per version live in [`docs/releases`](./docs/releases).
   supports (pivot tables via `Join`, one-to-many via `Where`). Form defaults are `related` / `table` / `foreign_key` /
   `related_key`.
 
+- `query.Where(...)` returns a **new** query object in Goravel (the conditions are copied into a fresh instance), so
+  every call that ignored the return value silently dropped its filter. Thirteen sites were affected across pages,
+  dynamic APIs, relationships, menus, permissions, roles and users — the search boxes in those lists returned the whole
+  table, and the `id != ?` guard in the uniqueness checks was never applied (editing a page without touching its `sign`
+  reported a duplicate). All of them now assign the result, and OR pairs go through `WhereAny` so they stay grouped.
+- `admin:init` inserted the admin↔role pivot twice per run: a raw `INSERT` at step 4 and a `Create` at step 10. A single
+  run therefore left two identical rows, and the user list rendered duplicate role tags. The command is now idempotent
+  end to end (`FirstOrCreate` for roles, the user, permissions, menus, settings and every pivot), so running it again
+  changes nothing.
+- Seeded permissions carried paths that do not exist in this package (`/auth/roles`, `/auth/menu`, …); no request could
+  ever match them, and `admin_permission_menu` stayed empty, so any non-superadmin user logged in to an empty sidebar.
+  Permissions now describe the real routes, they are mapped to menus, and the Operator role receives a working subset.
+- `AdminUser.AllPermissions()` asked the `AdminRoles` association to fill a `[]AdminPermission` slice. The types never
+  matched, the call always errored and returned `nil`, so **every** non-superadmin request was answered with 403.
+  It now aggregates permissions across the user's roles with de-duplication.
+- Permission path matching stripped the leading slash from the pattern before comparing it with
+  `ctx.Request().Path()` (`/admin-api/...`), so wildcards never matched anything. `tools.MatchPath` now normalises both
+  sides consistently and has unit tests.
+- `admin.auth.except` and `admin.permission.except` whitelisted `system/admin_users`, which left the user list readable
+  **without logging in**. Both lists are empty now; only the login-related endpoints are exempt.
+- `AdminUserService.List` returned every user with no pagination metadata (`total` / `page` / `perPage`), so amis could
+  not render the pager, and it issued one extra query per row to load roles. Pagination is implemented, `perPage` is
+  clamped to 500, and roles are preloaded.
+- `admin:init` seeded the child menus with a hard-coded `parent_id = 2`; children are now attached to the `/system`
+  menu by its actual ID.
+
 ### Changed
 
 - **Breaking: the repository changed from a full skeleton app into an installable package.** Controllers, middleware,

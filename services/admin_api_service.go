@@ -77,10 +77,10 @@ func templateTitle(name string) string {
 func (s *AdminApiService) List(ctx http.Context) http.Response {
 	query := facades.Orm().Query().Model(&admin.AdminApi{}).Order("id desc")
 	if title := ctx.Request().Input("title"); title != "" {
-		query.Where("title", "like", "%"+title+"%")
+		query = query.Where("title", "like", "%"+title+"%")
 	}
 	if path := ctx.Request().Input("path"); path != "" {
-		query.Where("path", "like", "%"+path+"%")
+		query = query.Where("path", "like", "%"+path+"%")
 	}
 
 	var apis []admin.AdminApi
@@ -134,7 +134,7 @@ func normalizePath(path string) (string, error) {
 func (s *AdminApiService) checkPath(path string, excludeID int) error {
 	query := facades.Orm().Query().Model(&admin.AdminApi{}).Where("path", path)
 	if excludeID > 0 {
-		query.Where("id != ?", excludeID)
+		query = query.Where("id != ?", excludeID)
 	}
 
 	total, err := query.Count()

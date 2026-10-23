@@ -48,3 +48,30 @@ type integer interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 |
 		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64
 }
+
+// 列表分页的边界。perPage 直接来自请求，不设上限会变成一次全表查询。
+const (
+	defaultPageSize = 15
+	maxPageSize     = 500
+)
+
+// clampPage 把页码收敛到 >= 1。
+func clampPage(page int) int {
+	if page < 1 {
+		return 1
+	}
+
+	return page
+}
+
+// clampPerPage 把每页条数收敛到 [1, maxPageSize]，非法值回落到默认值。
+func clampPerPage(perPage int) int {
+	if perPage <= 0 {
+		return defaultPageSize
+	}
+	if perPage > maxPageSize {
+		return maxPageSize
+	}
+
+	return perPage
+}

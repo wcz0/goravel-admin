@@ -164,10 +164,10 @@ func castToString(value *string) string {
 func (s *AdminRelationshipService) List(ctx http.Context) http.Response {
 	query := facades.Orm().Query().Model(&admin.AdminRelationship{}).Order("id desc")
 	if model := ctx.Request().Input("model"); model != "" {
-		query.Where("model", "like", "%"+model+"%")
+		query = query.Where("model", "like", "%"+model+"%")
 	}
 	if title := ctx.Request().Input("title"); title != "" {
-		query.Where("title", "like", "%"+title+"%")
+		query = query.Where("title", "like", "%"+title+"%")
 	}
 
 	var list []admin.AdminRelationship
@@ -209,7 +209,7 @@ func (s *AdminRelationshipService) checkUnique(model, title string, excludeID in
 	query := facades.Orm().Query().Model(&admin.AdminRelationship{}).
 		Where("model", model).Where("title", title)
 	if excludeID > 0 {
-		query.Where("id != ?", excludeID)
+		query = query.Where("id != ?", excludeID)
 	}
 
 	total, err := query.Count()

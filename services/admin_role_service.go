@@ -323,15 +323,15 @@ func (a *AdminRoleService) Destroy(ctx http.Context) http.Response {
 
 // List 获取角色列表
 func (a *AdminRoleService) List(ctx http.Context) http.Response {
-	page := ctx.Request().InputInt("page", 1)
-	perPage := ctx.Request().InputInt("perPage", 15)
+	page := clampPage(ctx.Request().InputInt("page", 1))
+	perPage := clampPerPage(ctx.Request().InputInt("perPage", defaultPageSize))
 	name := ctx.Request().Input("name")
 
 	query := facades.Orm().Query().Model(&admin.AdminRole{})
 
 	// 搜索条件
 	if name != "" {
-		query.Where("name", "like", "%"+name+"%")
+		query = query.Where("name", "like", "%"+name+"%")
 	}
 
 	// 分页查询
