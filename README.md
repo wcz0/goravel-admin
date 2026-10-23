@@ -24,13 +24,13 @@ goravel-admin 以**可安装扩展包**的形式提供，版本号与它适配�
 | goravel-admin | goravel/framework | gamis | amis | owl-admin 前端 |
 | --- | --- | --- | --- | --- |
 | v1.18.x（main） | v1.18.x | v6.13.x | 6.13.0 | v4.7.5 |
-| v1.17.x | v1.17.x | 待移植 | 6.13.0 | v4.7.5 |
-| v1.16.x | v1.16.x | 待移植 | 6.13.0 | v4.7.5 |
+| v1.17.x（branch `goravel-1.17`） | v1.17.x | 待移植 | 6.13.0 | v4.7.5 |
+| v1.16.x（branch `goravel-1.16`） | v1.16.x | 待移植 | 6.13.0 | v4.7.5 |
 
 Goravel 每个 minor 版本都会调整契约接口，因此**不同 goravel 版本由不同分支维护**，而不是用一套代码兼容全部：
 
 - `main`：跟随最新的 goravel/framework（当前 v1.18），发布 tag 形如 `v1.18.x`
-- `1.17` / `1.16`：在对应分支上适配框架接口差异后发布 `v1.17.x` / `v1.16.x`
+- `goravel-1.17` / `goravel-1.16`：在对应分支上适配框架接口差异后发布 `v1.17.x` / `v1.16.x`（与 goravel-authz 的分支约定一致）
 
 > 已实测：v1.18 的代码直接降到 v1.17 无法编译（`Request().Validate` 的入参类型由 `map[string]any` 变为 `map[string]string`，`http.Middleware` 契约也发生了变化），所以低版本必须走对应分支。
 
