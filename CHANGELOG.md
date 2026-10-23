@@ -4,16 +4,33 @@
 
 ## [Unreleased]
 
+### Added
+
+- 新增 `example/` 最小宿主应用，用于验证 `package:install` 全流程（注册 Provider、迁移、`admin:init`、登录与列表接口）。
+- 新增 `setup install` / `setup uninstall`：安装器只注册 ServiceProvider 并生成可选配置骨架，不再改动宿主 `bootstrap/migrations.go`。
+- 新增 `migrations.All()` 与 `tools.AuthGuard()`。
+
 ### Changed
 
+- **破坏性：仓库形态由完整 skeleton app 改为可安装扩展包。** `app/**` 下的控制器、中间件、模型、迁移、命令、路由整体上移到包根目录，import 路径统一为 `github.com/wcz0/goravel-admin/...`；宿主的 `main.go`、`bootstrap/`、`config/` 骨架移入 `example/`。
+- 默认配置改由包内 `config.New()` 提供，并在 `ServiceProvider.Register` 阶段与宿主配置深度合并（宿主优先），宿主不再需要拷贝配置。
+- 后台路由、静态资源、内嵌入口页在 `ServiceProvider.Boot` 注册，`/admin` 与 `/admin-assets`、`/admin-api` 前缀与原 Gin 路由保持一致。
+- 迁移改为 `ServiceProvider.Boot` 阶段通过 `facades.Schema().Register()` 自注册，修复安装器为宿主生成的 `bootstrap/migrations.go` 中包内 `migrations` 与宿主 `migrations` 同名导致无法编译的问题。
+- 登录、注销、token 解析统一读取 `admin.auth.guard`（默认 `admin`），修复登录走默认 guard 导致签发 token 的 `sub` 为 `user`、带 token 请求被判未认证的问题。
 - 升级 `github.com/wcz0/gamis/v6` 到 v6.13.0，后台页面切换到 amis 6.13.0 映射，并同步控制器 import 路径。
-- 同步 owl-admin v4.7.5 前端源码与构建产物（amis 6.13.0），更新 `public/admin` 静态资源。
+- 同步 owl-admin v4.7.5 前端源码与构建产物（amis 6.13.0），更新后台静态资源。
+- 登录页提交按钮与用户下拉菜单按钮从 `VanillaAction`（输出 `type: button`）改为 `Button`/`Action`（输出 `type: action`），与 amis 6.13 的按钮类型对齐。
 - 清理数据库敏感文件：密码哈希、备份脚本和过时的权限系统文档。
 - 权限表 `value` 字段重命名为 `slug`，同步更新数据库结构和测试数据，并补充服务协议相关表。
+- README 重写为扩展包安装方式，并补充 goravel 版本对应矩阵与分支策略。
 
 ### Removed
 
 - 移除 `goravel-authz` 依赖，以及遗留的 Casbin 配置、`admin_rule` 模型、`casbin_rules` 相关迁移和数据库导出文件；权限完全由内置 RBAC 实现。
+
+### Known issues
+
+- 已实测 v1.18 代码无法直接降级编译到 goravel/framework v1.17（`Request().Validate` 入参类型与 `http.Middleware` 契约变更），1.17 / 1.16 支持需要独立分支适配，尚未提供。
 
 ## [1.0.0] - 2025-11-27
 

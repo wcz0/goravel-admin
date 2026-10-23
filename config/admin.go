@@ -1,46 +1,57 @@
+// Package config 提供 goravel-admin 的默认配置。
+//
+// 宿主应用无需复制任何文件即可获得这些默认值：admin.ServiceProvider 会在
+// Register 阶段把它们深度合并进 app 的 "admin" 配置键。若需要覆盖，只要在宿主的
+// config 目录里新增自己的 admin 配置（可执行 `artisan package:install` 生成骨架），
+// 未显式设置的项仍会回落到这里的默认值。
 package config
 
 import (
 	"github.com/goravel/framework/facades"
 )
 
-func init() {
+// New 返回 goravel-admin 的默认配置。
+func New() map[string]any {
 	config := facades.Config()
-	config.Add("admin", map[string]any{
-		// App Name
-		"name": "Goravel Admin",
 
-		"logo": config.Env("ADMIN_LOGO", "/admin/logo.png"),
+	return map[string]any{
+		// 后台名称
+		"name": config.Env("ADMIN_NAME", "Goravel Admin"),
 
-		"default_avatar": "/admin/avatar.png",
+		// 后台 Logo，由内嵌静态资源提供
+		"logo": config.Env("ADMIN_LOGO", "/admin-assets/logo.png"),
 
-		// TODO: 未实现
+		// 默认头像
+		"default_avatar": config.Env("ADMIN_DEFAULT_AVATAR", "/admin-assets/default-avatar.png"),
+
 		// 应用路由
 		"route": map[string]any{
+			// 后端 API 前缀
 			"prefix": config.Env("ADMIN_ROUTE_PREFIX", "admin-api"),
-			"domain": config.Env("ADMIN_DOMAIN"),
-			// "middleware": []string{
-			// 	"admin",
-			// },
+			// 后台页面挂载路径
+			"path": config.Env("ADMIN_ROUTE_PATH", "/admin"),
+			// 静态资源挂载路径，需要与前端构建时的 base 保持一致
+			"assets_path": config.Env("ADMIN_ASSETS_PATH", "/admin-assets"),
+			// 不注册额外路由的白名单
 			"without_extra_routes": []string{
 				"/dashboard",
 			},
 		},
 
+		// 认证
 		"auth": map[string]any{
 			"login_captcha":    config.Env("ADMIN_LOGIN_CAPTCHA", true),
 			"enable":           config.Env("ADMIN_ENABLE_AUTH", true),
 			"permission":       config.Env("ADMIN_ENABLE_PERMISSION", true),
 			"token_expiration": config.Env("ADMIN_TOKEN_EXPIRATION", 86400),
-			// TODO: 未实现
-			// 	"model":         "admin_user",
-			// 	"controller":    "admin",
-			// 	"guard":         "admin_user",
+			// 使用的 auth guard，需要在 config/auth.go 中存在
+			"guard": config.Env("ADMIN_AUTH_GUARD", "admin"),
 			"except": []string{
 				"system/admin_users",
 			},
 		},
 
+		// 权限
 		"permission": map[string]any{
 			"enable": config.Env("ADMIN_ENABLE_PERMISSION", true),
 			"except": []string{
@@ -48,8 +59,9 @@ func init() {
 			},
 		},
 
+		// 上传
 		"upload": map[string]any{
-			"disk": "public",
+			"disk": config.Env("ADMIN_UPLOAD_DISK", "public"),
 			"directory": map[string]any{
 				"image": "images",
 				"file":  "files",
@@ -57,21 +69,16 @@ func init() {
 			},
 		},
 
+		// 是否强制 HTTPS
 		"https": config.Env("ADMIN_HTTPS", false),
 
-		// TODO: 未实现
-		// 是否显示 [开发者工具]
+		// 是否显示 [开发者工具] 菜单
 		"show_development_tools": config.Env("ADMIN_SHOW_DEVELOPMENT_TOOLS", false),
 
-		// TODO: 未实现
-		// 是否显示 [权限] 功能中的自动生成按钮
+		// 是否显示 [权限] 功能中的自动生成按钮（前端预留，暂未实现）
 		"show_auto_generate_permission_button": config.Env("ADMIN_SHOW_AUTO_GENERATE_PERMISSION_BUTTON", false),
 
-		// TODO: 未实现 扩展
-		// "extension": map[string]any{
-		// 	"dir": base_path("extensions"),
-		// },
-
+		// 布局
 		"layout": map[string]any{
 			// 浏览器标题, 功能名称使用 %title% 代替
 			"title": config.Env("ADMIN_SITE_TITLE", "%title% | Goravel Admin"),
@@ -105,5 +112,5 @@ func init() {
 			// 底部信息
 			"footer": "<a href='https://github.com/wcz0/goravel-admin' target='_blank'>Goravel Admin</a>",
 		},
-	})
+	}
 }

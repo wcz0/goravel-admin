@@ -25,3 +25,7 @@ php-admin
 owl-admin/
 # 前端源码构建配置（无敏感信息）
 !a-admin/.env
+
+# example 运行产物
+example/*.exe
+example/database/*.db
