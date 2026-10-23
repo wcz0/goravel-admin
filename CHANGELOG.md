@@ -142,6 +142,13 @@ Release notes per version live in [`docs/releases`](./docs/releases).
 
 - Removed the `goravel-authz` dependency along with the leftover Casbin configuration, the `admin_rule` model, the
   `casbin_rules` migrations and the database dump. Permissions are fully handled by the built-in RBAC.
+- Removed the "Get PHP Code" button and the `/dev_tools/editor` page. Both called `/dev_tools/editor_parse`, which had
+  no backend implementation: Go has no equivalent of owl-admin's `amis()->Xxx()` PHP codegen, so the request returned
+  an empty `200`. The amis schema editor itself (`custom-amis-editor`) is unchanged and still edits `admin_pages`
+  schemas.
+- README no longer carries the "Differences from owl-admin" table. Runtime extension install, the PHP code generator
+  and multi-module sub-admins are out of scope rather than gaps in the package, so the scope is stated in one
+  paragraph instead of an inventory of missing features.
 
 ### Compatibility
 

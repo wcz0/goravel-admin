@@ -162,19 +162,16 @@ The frontend is the owl-admin v4.7.5 build, so the backend implements the same c
 | Admin management | `system/admin_users`, `admin_roles`, `admin_permissions`, `admin_menus` | RBAC built in |
 | Dev tools | `dev_tools/pages`, `apis`, `relationships`, `extensions` | Requires `ADMIN_SHOW_DEVELOPMENT_TOOLS=true` |
 
-### Differences from owl-admin
+### Scope
 
-owl-admin runs on PHP; some of its features have no equivalent under Go's static compilation model. The honest list:
+owl-admin is a PHP application; this package reimplements its admin backend on Goravel. It covers RBAC, the menu and
+permission model, amis page rendering, uploads and exports. Features that only work by executing PHP at runtime —
+hot-installing extension zips, generating PHP model/controller code, mounting sub-admin modules — are outside the
+scope of this package and are not part of its API surface.
 
-| owl-admin capability | This package |
-| --- | --- |
-| Runtime extension install (drop a zip, register PSR-4 on the fly) | **Not possible.** `dev_tools/extensions` only keeps a registry with enable/disable state; extension code must be registered at host compile time. `enabled_extensions` is still reported to the frontend. |
-| Code generator (read tables → generate PHP model/controller/service/migration) | **Not implemented.** The output is PHP + Eloquent specific; a Go version would need struct/controller/migration generators — a project of its own. |
-| Visual editor (amis JSON → `amis()->Xxx()` PHP chains) | **Not possible.** Go has no equivalent amis DSL; only the `/dev_tools/editor` frontend entry point is kept. |
-| Dynamic API templates (write PHP classes at runtime and take effect instantly) | **Partial.** API records (path/template/args) are manageable, and the 10 built-in templates are metadata only; runtime dispatch is not wired yet. |
-| Dynamic relationships (`resolveRelationUsing` at runtime) | **Partial.** Relationship configs are stored and `preview_code` is generated, but Goravel relationships live on the struct and do not take effect at runtime. |
-| Multi-module / multiple sub-admins | **Not implemented.** For multi-tenant cases prefer a tenant column or separate deployments; duplicating all 7 tables per module is too costly. |
-| `admin:ide-helper` (PHPStorm metadata) | **Not applicable.** gopls provides completion in Go; no stub files needed. |
+`dev_tools` keeps what does translate: page schemas, API records with templates and argument schemas, relationship
+configs with `preview_code`, and an extension registry that stores enable/disable state (extension code itself is
+registered in the host application at compile time, and `enabled_extensions` is reported to the frontend).
 
 ## Testing
 

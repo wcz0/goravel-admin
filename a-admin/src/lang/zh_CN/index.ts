@@ -85,6 +85,5 @@ export default {
         preview: '预览',
         edit: '编辑',
         editor: '可视化编辑器',
-        get_php_code: '获取PHP代码',
     }
 }

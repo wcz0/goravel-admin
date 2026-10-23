@@ -1,0 +1,1 @@
+import{Oo as e,Sr as t,j as n,ko as r}from"./index-CoZjsCDf.js";var i=function(n){r(i,n);function i(){return n!==null&&n.apply(this,arguments)||this}return i=e([t({type:`button-group`})],i),i}(n);export{i as ButtonGroupRenderer,n as default};

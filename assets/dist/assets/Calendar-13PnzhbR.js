@@ -1,0 +1,1 @@
+import{Eo as e,Oo as t,Sr as n,ko as r}from"./index-CoZjsCDf.js";import{DateControlRenderer as i}from"./InputDate-BE0ZHhey.js";var a=function(a){r(o,a);function o(){return a!==null&&a.apply(this,arguments)||this}return o.defaultProps=e(e({},i.defaultProps),{embed:!0}),o=t([n({type:`calendar`})],o),o}(i);export{a as CalendarRenderer};

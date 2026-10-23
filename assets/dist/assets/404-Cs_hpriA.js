@@ -1,0 +1,1 @@
+import{t as e}from"./result-BqLssUQq.js";import{Lo as t,Xo as n,d as r,do as i,u as a}from"./index-CoZjsCDf.js";var o=n(a()),s=()=>{let{t:n}=r(),a=t();return(0,o.jsx)(e,{status:`404`,title:`404`,subTitle:n(`not_found.title`),extra:(0,o.jsx)(i,{type:`primary`,onClick:()=>a.replace(`/`),children:n(`not_found.back_home`)})})};export{s as default};

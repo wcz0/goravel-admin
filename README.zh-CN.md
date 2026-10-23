@@ -155,19 +155,14 @@ go run .
 | 后台管理 | `system/admin_users`、`admin_roles`、`admin_permissions`、`admin_menus` | 内置 RBAC |
 | 开发者工具 | `dev_tools/pages`、`apis`、`relationships`、`extensions` | 需 `ADMIN_SHOW_DEVELOPMENT_TOOLS=true` |
 
-### 与 owl-admin 的差异
+### 适用范围
 
-owl-admin 是 PHP 运行时，部分能力在 Go 的静态编译模型下没有等价实现，下面是明确的差异：
+owl-admin 是一套 PHP 应用，本包在 Goravel 上重建它的后台：RBAC、菜单与权限模型、amis 页面渲染、上传与导出。
+那些只能靠 PHP 在运行时执行代码才成立的能力——热装扩展包、生成 PHP Model/Controller 代码、挂载子后台模块——
+不在本包的范围内，也不属于它的 API 面。
 
-| owl-admin 能力 | 本包的处理 |
-| --- | --- |
-| 扩展动态安装（zip 投放 + 运行时注册 PSR-4） | **不可行**。`dev_tools/extensions` 只维护「扩展名单 + 启停状态」，扩展代码需在宿主编译期注册；`enabled_extensions` 会照常下发给前端 |
-| 代码生成器（读表 → 生成 PHP Model/Controller/Service/Migration） | **未实现**。产物是 PHP + Eloquent 专属，Go 侧需重写为 struct/控制器/迁移生成器，属独立工程 |
-| 可视化编辑器（amis JSON → `amis()->Xxx()` PHP 链式代码） | **不可行**。Go 没有等价的 amis DSL，只保留了 `/dev_tools/editor` 的前端入口 |
-| 动态 API 模板（运行时写 PHP 类并即时生效） | **部分实现**。接口记录（路径/模板/参数）可维护，10 个内置模板只作为元信息，运行时分发尚未接入 |
-| 动态关联（Eloquent `resolveRelationUsing` 运行时挂载） | **部分实现**。可登记关联配置并给出 `preview_code`，Goravel 的关联需写进 struct，不会即时生效 |
-| 多模块 / 多子后台 | **未实现**。单后台场景建议用租户字段或独立部署，复制整套 7 张表成本过高 |
-| `admin:ide-helper`（PHPStorm 元数据） | **不适用**。Go 由 gopls 提供补全，无需生成桩文件 |
+`dev_tools` 保留能等价落地的部分：页面 schema、带模板与参数 schema 的 API 记录、带 `preview_code` 的关联配置，
+以及只存启停状态的扩展登记表（扩展代码本身在宿主应用编译期注册，`enabled_extensions` 会照常下发给前端）。
 
 ## 测试
 
