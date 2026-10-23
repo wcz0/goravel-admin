@@ -20,8 +20,19 @@ func NewUserController() *UserController {
 	}
 }
 
+// PutUserSetting 保存当前登录用户的个人资料。
 func (u *UserController) PutUserSetting(c http.Context) http.Response {
-	return u.Success(c)
+	userValue := c.Value("admin_user")
+	user, ok := userValue.(*admin.AdminUser)
+	if !ok || user == nil {
+		return u.FailMsg(c, tools.AdminLang(c, "please_login"))
+	}
+
+	if err := u.ControllerImpl.Service.UpdateUserSetting(user.ID, c.Request().All()); err != nil {
+		return u.FailMsg(c, err.Error())
+	}
+
+	return u.SuccessMsg(c, tools.AdminLang(c, "save_success"))
 }
 
 func (r *UserController) Index(ctx http.Context) http.Response {
@@ -45,6 +56,7 @@ func (r *UserController) list(ctx http.Context) *renderers.Page {
         r.CreateButton(ctx, r.form(ctx), true, "md", "", "drawer"),
     }
 	HeaderToolbar = append(HeaderToolbar, r.BaseHeaderToolBar()...)
+	HeaderToolbar = append(HeaderToolbar, r.ExportAction(ctx, false))
     notAdmin := "true"
 	currentUser, ok := ctx.Value("admin_user").(*admin.AdminUser)
     if !ok || currentUser == nil {
@@ -177,7 +189,7 @@ func (a *UserController) GetUserSetting(ctx http.Context) http.Response {
 		PanelClassName("px-48 m:px-0").
 		Mode("horizontal").
 		InitApi("/current-user").
-		Api("put:" + tools.GetAdmin("/current-user")).
+		Api("put:" + tools.GetAdmin("/user_setting")).
 		Body([]any{
 			gamis.ImageControl().Label(tools.AdminLang(ctx, "admin_user.avatar")).Name("avatar").Receiver(tools.GetAdmin("upload_image")),
 			gamis.TextControl().Label(tools.AdminLang(ctx, "admin_user.name")).Name("name").Required(true),

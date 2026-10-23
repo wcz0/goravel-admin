@@ -348,7 +348,9 @@
         "validation": {
             "file": "请选择文件",
             "invalid_package": "无效的扩展包"
-        }
+        },
+        "name": "扩展名称",
+        "name_desc": "格式为 vendor/name；扩展代码需在宿主编译期注册"
     },
     "export": {
         "title": "导出",
@@ -365,7 +367,9 @@
         "sign": "标识",
         "page": "页面结构",
         "schema_cannot_be_empty": "页面结构不可为空",
-        "sign_exists": "页面标识已存在"
+        "sign_exists": "页面标识已存在",
+        "sign_desc": "页面的唯一标识，菜单选择「页面」类型时填这里",
+        "schema_not_found": "页面不存在或页面结构为空"
     },
     "relationships": {
         "menu": "动态关联",
@@ -379,7 +383,8 @@
         "related_model": "关联模型",
         "through_model": "中间模型",
         "model_exists": "模型已存在: ",
-        "rel_name_exists": "该模型下存在同名关联"
+        "rel_name_exists": "该模型下存在同名关联",
+        "model_desc": "Go 模型 struct 名，用于生成关联方法预览"
     },
     "apis": {
         "menu": "动态API",
@@ -394,7 +399,8 @@
         "add_template": "添加模板",
         "add_template_tips": "请注意模板来源, 如果你无法辨别模板是否安全, 建议不要使用模板",
         "paste_template": "请粘贴模板内容",
-        "overlay": "如果模板已存在, 是否覆盖"
+        "overlay": "如果模板已存在, 是否覆盖",
+        "path_desc": "接口路径需以 / 开头，注册后随服务启动生效"
     },
     "api_templates": {
         "data_list": "获取列表(分页)",
@@ -402,5 +408,6 @@
         "data_update": "更新数据",
         "data_delete": "删除数据",
         "data_detail": "获取详情"
-    }
+    },
+    "upload_file_success": "上传成功"
 }
